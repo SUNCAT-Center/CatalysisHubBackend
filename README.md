@@ -1,0 +1,29 @@
+## Flask GraphQL ASE DB Demo
+
+To run this demo, first clone this repository to a local directory
+
+    git clone ....
+
+Change into the created directory and create a virtualenv inside and activate it
+
+    virtualenv .
+    . bin/activate
+
+You can always deactivate it by typing `deactivate`.
+
+Then install required python libraries
+
+    pip install -r requirements.txt
+
+Copy a `SQLite` database file into the directory and set the path in `database.py`
+
+    engine = sqlalchemy.create_engine('sqlite:///<PATH_TO_SQLITE_DB>')
+
+
+Possibly extend the database DB schema in `schema.py` according to [SQAlchemy Types](http://docs.sqlalchemy.org/en/latest/core/type_basics.html)
+
+Run App from command line
+
+    ./app.py
+
+And open a browser in [http://localhost:5000/graphql](http://localhost:5000/graphql)
