@@ -3,7 +3,11 @@ import sqlalchemy
 import sqlalchemy.types
 import sqlalchemy.ext.declarative
 import graphene.types.json
-import StringIO
+try:
+    import io as StringIO
+except:
+    # Fallback solution for python2.7
+    import StringIO
 
 import numpy as np
 
