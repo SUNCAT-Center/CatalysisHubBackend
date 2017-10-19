@@ -56,7 +56,7 @@ class Information(Base):
 class System(Base):
     __tablename__ = 'systems'
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
-    unique_id = sqlalchemy.Column(sqlalchemy.Integer, )
+    unique_id = sqlalchemy.Column(sqlalchemy.String, )
     ctime = sqlalchemy.Column(sqlalchemy.Float, )
     mtime = sqlalchemy.Column(sqlalchemy.Float, )
     username = sqlalchemy.Column(sqlalchemy.String)

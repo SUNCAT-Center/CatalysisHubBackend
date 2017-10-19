@@ -7,10 +7,12 @@ from flask_cors import CORS
 
 # local imports
 import models
+import models_catapp
 import api
 
 
 app = flask.Flask(__name__)
+app.debug = True
 
 cors = CORS(app, resources={r"/graphql/*":
     {"origins":
@@ -30,7 +32,7 @@ app.add_url_rule('/graphql',
             schema=api.schema,
             graphiql=True,
             context={
-                'session': models.db_session
+                'session': models_catapp.db_session,
                 }
             )
         )
