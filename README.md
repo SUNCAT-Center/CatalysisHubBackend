@@ -6,10 +6,14 @@ To run this demo, first clone this repository to a local directory
 
 Change into the created directory and create a virtualenv inside and activate it
 
-    virtualenv .
+    virtualenv -p python3.6 .
     . bin/activate
 
 You can always deactivate it by typing `deactivate`.
+
+While you are at it you could ensure that you are using the latest `pip` version
+
+    pip install --upgrade pip
 
 Then install required python libraries
 
@@ -27,3 +31,5 @@ Run App from command line
     ./app.py
 
 And open a browser in [http://localhost:5000/graphql](http://localhost:5000/graphql)
+
+Have fun!
