@@ -51,6 +51,7 @@ import graphene
 import graphene.relay
 import graphene_sqlalchemy
 import sqlalchemy
+import six
 
 # local imports
 import models
@@ -126,7 +127,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                     op = value
 
             if field not in (cls.RELAY_ARGS + cls.SPECIAL_ARGS):
-                if type(value) is unicode and value.startswith("~"):
+                if isinstance(value, six.string_types) and value.startswith("~"):
                     search_string = '%' + value[1:] + '%'
                     query = query.filter(
                         getattr(model, field, None).ilike(search_string))
