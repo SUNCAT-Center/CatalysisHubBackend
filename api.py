@@ -129,8 +129,15 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
             if field not in (cls.RELAY_ARGS + cls.SPECIAL_ARGS):
                 if isinstance(value, six.string_types) and value.startswith("~"):
                     search_string = '%' + value[1:] + '%'
-                    query = query.filter(
-                        getattr(model, field, None).ilike(search_string))
+                    if distinct_filter:
+                        query = query.filter(
+                            getattr(model, field, None) \
+                            .ilike(search_string)) \
+                            .distinct(getattr(model, field, None)) \
+                            .group_by(getattr(model, field, None))
+                    else:
+                        query = query.filter(
+                            getattr(model, field, None).ilike(search_string))
                 else:
                     if distinct_filter:
                         query = query.filter(getattr(model, field, None) == value).distinct(
