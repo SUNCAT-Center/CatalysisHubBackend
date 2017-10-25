@@ -60,7 +60,4 @@ class Catapp(Base):
     reference = Column(String, )
     doi = Column(String, )
     year = Column(Integer, )
-    reactant_ids = Column(String, ) 
-    TS_id = Column(String, )
-    product_ids = Column(String, )
-    reference_ids = Column(String, )
+    ase_ids = Column(String, )
