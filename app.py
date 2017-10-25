@@ -41,8 +41,12 @@ if __name__ == '__main__':
     import optparse
 
     parser = optparse.OptionParser()
-    parser.add_option('-s', '--debug-sql', help="Print executed SQL statement to commandline",
-                      dest="debug_sql", action="store_true", default=False)
+    parser.add_option('-s',
+                      '--debug-sql',
+                      help="Print executed SQL statement to commandline",
+                      dest="debug_sql",
+                      action="store_true",
+                      default=False)
 
     options, args = parser.parse_args()
 
@@ -51,4 +55,5 @@ if __name__ == '__main__':
         logging.basicConfig()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
-    app.run()
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
