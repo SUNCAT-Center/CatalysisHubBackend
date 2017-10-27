@@ -26,6 +26,12 @@ cors = CORS(app, resources={r"/graphql/*":
     }
     )
 
+@app.route('/')
+
+def index():
+	return "Yo, it's working!"
+
+
 app.add_url_rule('/graphql',
         view_func=flask_graphql.GraphQLView.as_view(
             'graphql',
@@ -55,5 +61,5 @@ if __name__ == '__main__':
         logging.basicConfig()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+
+    app.run()
