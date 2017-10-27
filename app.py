@@ -26,6 +26,12 @@ cors = CORS(app, resources={r"/graphql/*":
     }
     )
 
+@app.route('/')
+
+def index():
+	return "Welcome to the catapp database!"
+
+
 app.add_url_rule('/graphql',
         view_func=flask_graphql.GraphQLView.as_view(
             'graphql',
@@ -38,4 +44,22 @@ app.add_url_rule('/graphql',
         )
 
 if __name__ == '__main__':
+    import optparse
+
+    parser = optparse.OptionParser()
+    parser.add_option('-s',
+                      '--debug-sql',
+                      help="Print executed SQL statement to commandline",
+                      dest="debug_sql",
+                      action="store_true",
+                      default=False)
+
+    options, args = parser.parse_args()
+
+    if options.debug_sql:
+        import logging
+        logging.basicConfig()
+        logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
+
     app.run()

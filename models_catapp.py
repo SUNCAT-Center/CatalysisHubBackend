@@ -3,7 +3,10 @@ import sqlalchemy
 import sqlalchemy.types
 import sqlalchemy.ext.declarative
 import graphene.types.json
-import StringIO
+try:
+    import io as StringIO
+except:
+    import StringIO
 
 import numpy as np
 
@@ -60,7 +63,4 @@ class Catapp(Base):
     reference = Column(String, )
     doi = Column(String, )
     year = Column(Integer, )
-    reactant_ids = Column(String, ) 
-    TS_id = Column(String, )
-    product_ids = Column(String, )
-    reference_ids = Column(String, )
+    ase_ids = Column(String, )
