@@ -4,12 +4,13 @@
 import flask
 import flask_graphql
 from flask_cors import CORS
+from flask import Blueprint
 
 # local imports
 import models
 import models_catapp
 import api
-
+from apps.AtoML.run_atoml import atoml_blueprint
 
 app = flask.Flask(__name__)
 app.debug = True
@@ -29,9 +30,17 @@ cors = CORS(app, resources={r"/graphql/*":
 @app.route('/')
 
 def index():
-	return "Welcome to the catapp database!"
+        return "Welcome to the catapp database!"
 
+@app.route('/apps/')
 
+def apps():
+        return "Apps: AtoML"
+
+# AtoML app
+app.register_blueprint(atoml_blueprint)
+
+# Graphql view
 app.add_url_rule('/graphql',
         view_func=flask_graphql.GraphQLView.as_view(
             'graphql',

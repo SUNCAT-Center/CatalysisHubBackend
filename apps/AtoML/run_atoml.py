@@ -3,14 +3,12 @@ import pickle
 import numpy as np
 import flask
 from flask_cors import CORS
+from flask import Blueprint
+from .feature_generator import return_features
 
-from feature_generator import return_features
+atoml_blueprint = Blueprint('atoml', __name__)
+@atoml_blueprint.route('/apps/atoml/', methods=['GET', 'POST'])
 
-app = flask.Flask(__name__)
-CORS(app)
-
-
-@app.route('/', methods=['GET', 'POST'])
 def run_atoml_app():
     """The actual app to predict and generate output."""
     data = flask.request.json
@@ -23,7 +21,7 @@ def run_atoml_app():
 
 def _get_model():
     """Load the generated model."""
-    with open('model/gp_model_01.pickle', 'rb') as modelfile:
+    with open('apps/AtoML/model/gp_model_01.pickle', 'rb') as modelfile:
         model = pickle.load(modelfile)
     return model
 
@@ -37,8 +35,8 @@ def _get_output(data):
     f = return_features(data)
 
     # Some global scaling data generated previously.
-    scale_mean = np.load(file='data/feature_mean.npy')
-    scale_dif = np.load(file='data/feature_dif.npy')
+    scale_mean = np.load(file='apps/AtoML/data/feature_mean.npy')
+    scale_dif = np.load(file='apps/AtoML/data/feature_dif.npy')
 
     # Scale the test features.
     tfp = (np.array([f], np.float64) - scale_mean) / scale_dif
