@@ -29,7 +29,7 @@ cors = CORS(app, resources={r"/graphql/*":
 @app.route('/')
 
 def index():
-	return "Yo, it's working!"
+	return "Welcome to the catapp database!"
 
 
 app.add_url_rule('/graphql',
