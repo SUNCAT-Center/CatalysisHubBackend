@@ -34,7 +34,10 @@ class JsonEncodedDict(sqla.TypeDecorator):
 
 # set to local database path
 engine = sqlalchemy.create_engine(
-    'sqlite:///database/atoms.db', convert_unicode=True)
+    #'sqlite:///database/atoms.db',
+    #'postgres:///atoms',
+    'postgres://whxhyhzccoekas:c0a840c31a260f1009d7eae18c326af59443256fc350d7d3752d6d149bfc9aaa@ec2-54-221-235-12.compute-1.amazonaws.com:5432/d6gjci8nb9cs1i',
+    convert_unicode=True)
 
 db_session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(
     autocommit=False,

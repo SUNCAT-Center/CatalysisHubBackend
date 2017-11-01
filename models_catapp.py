@@ -34,7 +34,10 @@ class JsonEncodedDict(sqla.TypeDecorator):
 
 # set to local database path
 engine = sqlalchemy.create_engine(
-    'sqlite:///database/catapp.db', convert_unicode=True)
+    #'sqlite:///database/catapp.db',
+    #'postgres:///catapp',
+    'postgres://lotoqewsbqixgj:bcd5ae5d07fbe87fa416bbfc26c0442fa8b91a1eabfbcd33bb5c9bd00bcb460d@ec2-54-221-229-64.compute-1.amazonaws.com:5432/d2jm87f56r69bn',
+    convert_unicode=True)
 
 db_session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(
     autocommit=False,
@@ -58,8 +61,8 @@ class Catapp(Base):
     products = Column(String, )
     reaction_energy = Column(Float, )
     activation_energy = Column(Float, )
-    DFT_code = Column(String, )
-    DFT_functional = Column(String, )
+    dft_code = Column(String, )
+    dft_functional = Column(String, )
     reference = Column(String, )
     doi = Column(String, )
     year = Column(Integer, )
