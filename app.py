@@ -4,12 +4,13 @@
 import flask
 import flask_graphql
 from flask_cors import CORS
+from flask import Blueprint
 
 # local imports
 import models
 import models_catapp
 import api
-
+from apps.AtoML.run_atoml import atoml_blueprint
 
 app = flask.Flask(__name__)
 app.debug = True
@@ -26,6 +27,20 @@ cors = CORS(app, resources={r"/graphql/*":
     }
     )
 
+@app.route('/')
+
+def index():
+        return "Welcome to the catapp database!"
+
+@app.route('/apps/')
+
+def apps():
+        return "Apps: AtoML"
+
+# AtoML app
+app.register_blueprint(atoml_blueprint)
+
+# Graphql view
 app.add_url_rule('/graphql',
         view_func=flask_graphql.GraphQLView.as_view(
             'graphql',
@@ -41,8 +56,12 @@ if __name__ == '__main__':
     import optparse
 
     parser = optparse.OptionParser()
-    parser.add_option('-s', '--debug-sql', help="Print executed SQL statement to commandline",
-                      dest="debug_sql", action="store_true", default=False)
+    parser.add_option('-s',
+                      '--debug-sql',
+                      help="Print executed SQL statement to commandline",
+                      dest="debug_sql",
+                      action="store_true",
+                      default=False)
 
     options, args = parser.parse_args()
 
@@ -50,5 +69,6 @@ if __name__ == '__main__':
         import logging
         logging.basicConfig()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
 
     app.run()
