@@ -19,7 +19,7 @@ matplotlib==2.1.0
 mendeleev==0.3.6
 numpy==1.13.3
 pandas==0.20.3
-promise==2.1.dev20170724043809
+promise==2.1.dev0
 psycopg2==2.7.3.2
 pudb==2017.1.4
 Pygments==2.2.0
@@ -33,4 +33,3 @@ SQLAlchemy==1.1.14
 typing==3.6.2
 urwid==1.3.1
 Werkzeug==0.12.2
-git+https://gitlab.com/jennings.p.c/AtoML.git@restructure
