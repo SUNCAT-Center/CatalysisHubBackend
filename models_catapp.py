@@ -53,7 +53,7 @@ Base.query = db_session.query_property()
 class Catapp(Base):
     __tablename__ = 'catapp'
     id = Column(Integer, primary_key=True)
-    rowid = sqlalchemy.Column(sqlalchemy.Integer)
+    #rowid = sqlalchemy.Column(sqlalchemy.Integer)
     chemical_composition = Column(String, )
     surface_composition = Column(String, )
     facet = Column(String, )
