@@ -38,7 +38,7 @@ def apps():
         return "Apps: AtoML"
 
 # AtoML app
-app.register_blueprint(atoml_blueprint)
+#app.register_blueprint(atoml_blueprint)
 
 # Graphql view
 app.add_url_rule('/graphql',
