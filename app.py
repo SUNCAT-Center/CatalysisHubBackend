@@ -37,8 +37,8 @@ def index():
 def apps():
         return "Apps: AtoML"
 
-## AtoML app
-#app.register_blueprint(atoml_blueprint)
+# AtoML app
+app.register_blueprint(atoml_blueprint)
 
 # Graphql view
 app.add_url_rule('/graphql',
