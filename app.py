@@ -8,7 +8,6 @@ from flask import Blueprint
 
 # local imports
 import models
-import models_catapp
 import api
 #import qmdb_api
 from apps.AtoML.run_atoml import atoml_blueprint
@@ -48,7 +47,7 @@ app.add_url_rule('/graphql',
             schema=api.schema,
             graphiql=True,
             context={
-                'session': models_catapp.db_session,
+                'session': models.db_session,
                 }
             )
         )

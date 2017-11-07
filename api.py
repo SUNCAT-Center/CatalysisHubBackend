@@ -55,12 +55,11 @@ import six
 
 # local imports
 import models
-import models_catapp
 
 class Catapp(graphene_sqlalchemy.SQLAlchemyObjectType):
 
     class Meta:
-        model = models_catapp.Catapp
+        model = models.Catapp
         interfaces = (graphene.relay.Node, )
 
 class System(graphene_sqlalchemy.SQLAlchemyObjectType):
@@ -212,7 +211,7 @@ class Query(graphene.ObjectType):
     number_keys = FilteringConnectionField(
         NumberKeyValue, **get_filter_fields(models.NumberKeyValue))
     catapp = FilteringConnectionField(
-        Catapp, **get_filter_fields(models_catapp.Catapp))
+        Catapp, **get_filter_fields(models.Catapp))
 
 schema = graphene.Schema(
     query=Query, types=[System, Species, TextKeyValue, NumberKeyValue, Key, Catapp],)

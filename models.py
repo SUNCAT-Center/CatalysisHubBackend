@@ -33,10 +33,16 @@ class JsonEncodedDict(sqla.TypeDecorator):
         return json.loads(value)
 
 # set to local database path
+
+url = sqlalchemy.engine.url.URL('postgres', username='catappuser',
+                                password='catappdb',
+                                host='catappdatabase.cjlis1fysyzx.us-west-1.rds.amazonaws.com',
+                                port=5432, database='catappdatabase')
+
+
 engine = sqlalchemy.create_engine(
-    #'sqlite:///database/atoms.db',
-    #'postgres:///atoms',
-    'postgres://whxhyhzccoekas:c0a840c31a260f1009d7eae18c326af59443256fc350d7d3752d6d149bfc9aaa@ec2-54-221-235-12.compute-1.amazonaws.com:5432/d6gjci8nb9cs1i',
+    #'postgres://whxhyhzccoekas:c0a840c31a260f1009d7eae18c326af59443256fc350d7d3752d6d149bfc9aaa@ec2-54-221-235-12.compute-1.amazonaws.com:5432/d6gjci8nb9cs1i',
+    url,
     convert_unicode=True)
 
 db_session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(
@@ -45,9 +51,28 @@ db_session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(
     bind=engine,
 ))
 
-
 Base = sqlalchemy.ext.declarative.declarative_base()
 Base.query = db_session.query_property()
+
+
+class Catapp(Base):
+    __tablename__ = 'catapp'
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    #rowid = sqlalchemy.sqlalchemy.Column(sqlalchemy.Integer)
+    chemical_composition = sqlalchemy.Column(sqlalchemy.String, )
+    surface_composition = sqlalchemy.Column(sqlalchemy.String, )
+    facet = sqlalchemy.Column(sqlalchemy.String, )
+    sites = sqlalchemy.Column(sqlalchemy.String, )
+    reactants = sqlalchemy.Column(sqlalchemy.String, )
+    products = sqlalchemy.Column(sqlalchemy.String, )
+    reaction_energy = sqlalchemy.Column(sqlalchemy.Float, )
+    activation_energy = sqlalchemy.Column(sqlalchemy.Float, )
+    dft_code = sqlalchemy.Column(sqlalchemy.String, )
+    dft_functional = sqlalchemy.Column(sqlalchemy.String, )
+    reference = sqlalchemy.Column(sqlalchemy.String, )
+    doi = sqlalchemy.Column(sqlalchemy.String, )
+    year = sqlalchemy.Column(sqlalchemy.Integer, )
+    ase_ids = sqlalchemy.Column(sqlalchemy.String, )
 
 
 class Information(Base):
