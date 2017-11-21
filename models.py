@@ -1,7 +1,10 @@
 # global imports
+import os
 import sqlalchemy
 import sqlalchemy.types
 import sqlalchemy.ext.declarative
+from sqlalchemy import or_
+from sqlalchemy.dialects.postgresql import JSONB
 import graphene.types.json
 try:
     import io as StringIO
@@ -34,14 +37,15 @@ class JsonEncodedDict(sqla.TypeDecorator):
 
 # set to local database path
 
-url = sqlalchemy.engine.url.URL('postgres', username='catappuser',
-                                password='catappdb',
+url = sqlalchemy.engine.url.URL('postgres',
+                                username='catappuser',
+                                password=os.environ['DB_PASSWORD'],
                                 host='catappdatabase.cjlis1fysyzx.us-west-1.rds.amazonaws.com',
-                                port=5432, database='catappdatabase')
+                                port=5432,
+                                database='catappdatabase')
 
 
 engine = sqlalchemy.create_engine(
-    #'postgres://whxhyhzccoekas:c0a840c31a260f1009d7eae18c326af59443256fc350d7d3752d6d149bfc9aaa@ec2-54-221-235-12.compute-1.amazonaws.com:5432/d6gjci8nb9cs1i',
     url,
     convert_unicode=True)
 
@@ -54,7 +58,6 @@ db_session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(
 Base = sqlalchemy.ext.declarative.declarative_base()
 Base.query = db_session.query_property()
 
-
 class Catapp(Base):
     __tablename__ = 'catapp'
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
@@ -63,17 +66,81 @@ class Catapp(Base):
     surface_composition = sqlalchemy.Column(sqlalchemy.String, )
     facet = sqlalchemy.Column(sqlalchemy.String, )
     sites = sqlalchemy.Column(sqlalchemy.String, )
-    reactants = sqlalchemy.Column(sqlalchemy.String, )
-    products = sqlalchemy.Column(sqlalchemy.String, )
+    reactants = sqlalchemy.Column(JSONB, )
+    products = sqlalchemy.Column(JSONB, )
     reaction_energy = sqlalchemy.Column(sqlalchemy.Float, )
     activation_energy = sqlalchemy.Column(sqlalchemy.Float, )
     dft_code = sqlalchemy.Column(sqlalchemy.String, )
     dft_functional = sqlalchemy.Column(sqlalchemy.String, )
-    reference = sqlalchemy.Column(sqlalchemy.String, )
+    publication = sqlalchemy.Column(JSONB, )
     doi = sqlalchemy.Column(sqlalchemy.String, )
     year = sqlalchemy.Column(sqlalchemy.Integer, )
-    ase_ids = sqlalchemy.Column(sqlalchemy.String, )
+    ase_ids = sqlalchemy.Column(JSONB, )
 
+    @hybrid_property
+    def _publication_title(self):
+        return self.publication['title']
+    
+    @hybrid_property
+    def _publication_publisher(self):
+        return self.publication['publisher']
+    
+    @hybrid_property
+    def _publication_journal(self):
+        return self.publication['journal']
+    
+    @hybrid_property
+    def _publication_volume(self):
+        return self.publication['volume']
+    
+    @hybrid_property
+    def _publication_number(self):
+        return self.publication['number']
+    
+    @hybrid_property
+    def _publication_authors(self):
+        return self.publication['authors']
+    
+    @hybrid_property
+    def _publication_doi(self):
+        return self.publication['doi']
+    
+    @hybrid_property
+    def _publication_year(self):
+        return self.publication['year']
+    
+    @hybrid_property
+    def _publication_pages(self):
+        return self.publication['pages']
+
+    @hybrid_property
+    def _reaction(self):
+        reaction = ''
+        arrow = 0
+        for column in (self.reactants, self.products):
+            if arrow == 1:
+                reaction += ' -> '
+            arrow += 1
+            i = 0
+            for key in sorted(column, key=len, reverse=True):
+                prefactor = column[key][1]
+                state = column[key][0]
+                if state == 'gas':
+                    state = '(g)'
+                if state == 'star':
+                    state = '*'
+                if not i == 0:
+                    if prefactor > 0:
+                        reaction += ' + '
+                    else:
+                        reaction += ' - '
+                        prefactor *= -1
+                if prefactor == 1:
+                    prefactor = ''
+
+                reaction += str(prefactor) + key + state
+                i += 1
+        return reaction
 
 class Information(Base):
     __tablename__ = 'information'

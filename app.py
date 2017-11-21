@@ -37,6 +37,7 @@ def index():
 def apps():
         return "Apps: AtoML"
 
+#print api.schema
 # AtoML app
 #app.register_blueprint(atoml_blueprint)
 

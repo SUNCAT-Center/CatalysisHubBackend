@@ -1,9 +1,45 @@
 """
-API for GraphQL enhanced queries again ase-db database
+API for GraphQL enhanced queries against catapp and ase-db database
 
 Some Examples:
 
- - Filter by author-name
+
+- Filter by reactants and products from catapp:
+    {catapp(reactants: "OH", products: "H2O") {
+      edges {
+        node {
+  	  Reaction
+          reactionEnergy
+          activationEnergy
+        }
+      }
+    }}
+
+   
+- Author-name from catapp:
+    {catapp(publication_Authors: "~Bajdich") {
+      edges {
+        node {
+          chemicalComposition
+          Reaction
+          reactionEnergy
+        }
+      }
+    }}
+
+- Full text search in catapp (title, authors, year, reactants and products ):
+    {catapp(search: "oxygen evolution bajdich 2017 OOH") {
+      edges {
+        node {
+          Reaction      
+	  PublicationTitle
+          PublicationAuthors
+          year
+        }
+      }
+    }}
+
+- Author-name from ase-db:
     {textKeys(key: "publication_authors", value: "~Bajdich") {
       edges {
         node {
@@ -16,8 +52,7 @@ Some Examples:
     }}
 
 - Get all distinct DOIs
-
-    {textKeys(key: "publication_doi", distinct: true) {
+   {textKeys(key: "publication_doi", distinct: true) {
       edges {
         node {
           key
@@ -26,9 +61,9 @@ Some Examples:
       }
     }}
 
+
 - Get all entries published since (and including) 2015
     allowed comparisons
-
 {
   numberKeys(key: "publication_year", value: 2015, op: "ge") {
     edges {
@@ -41,9 +76,8 @@ Some Examples:
   }
 }
 
-
-
 """
+
 # global imports
 import re
 import json
@@ -106,60 +140,96 @@ class Species(graphene_sqlalchemy.SQLAlchemyObjectType):
 
 class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
     RELAY_ARGS = ['first', 'last', 'before', 'after']
-    SPECIAL_ARGS = ['distinct', 'op']
+    SPECIAL_ARGS = ['distinct', 'op', 'jsonkey']
 
     @classmethod
     def get_query(cls, model, info, **args):
+        from sqlalchemy import or_
         query = super(FilteringConnectionField, cls).get_query(model, info)
         distinct_filter = False  # default value for distinct
         op = 'eq'
-        ALLOWED_OPS = ['gt', 'lt', 'le', 'ge', 'eq', 'ne'
+        jsonop = None
+        jsonkey = None
+        jsonop = None
+        ALLOWED_OPS = ['gt', 'lt', 'le', 'ge', 'eq', 'ne',
                        '=',  '>',  '<',  '>=', '<=', '!=']
-        #print("\n\nMODEL:: {model}".format(**locals()))
+        ALLOWED_JSON_OPS = ['->','->>', '@>', '<@', '?',
+                            '?|', '?&', '||', '-', '#-']
+        # print("\n\nMODEL:: {model}".format(**locals()))
         # print(dir(model))
-
-        for field, value in sorted(args.items()):
+        for field, value in args.items():
             if field == 'distinct':
                 distinct_filter = value
             elif field == 'op':
                 if value in ALLOWED_OPS:
                     op = value
+                    #print op
+            elif field == 'jsonop':
+                if value in ALLOWED_JSON_OPS:
+                    jsonop = value
+            elif field == 'jsonkey':
+                jsonkey = value
 
+        for field, value in args.items():
             if field not in (cls.RELAY_ARGS + cls.SPECIAL_ARGS):
+                if '__' in field:  # JSON
+                    field, key = field.split('__')
+                    column = getattr(model, field, None)[key].astext
+                else:
+                    column = getattr(model, field, None)
+
+                if field == "search":
+                    from sqlalchemy.sql.expression import cast
+                    reactant_string = cast(model.reactants, sqlalchemy.String)
+                    product_string = cast(model.products, sqlalchemy.String)
+                    reaction_string = sqlalchemy.sql.expression.func.replace(sqlalchemy.sql.expression.func.replace(reactant_string + product_string, 'gas', ''), 'star', '')
+                    author_string = model.publication["authors"].astext
+                    title_string = model.publication["title"].astext
+                    year = model.publication["year"].astext
+                    search_string = title_string + " " + author_string + " " + reaction_string \
+                                    + " " + year
+                    ts_vector = sqlalchemy.sql.expression.func.to_tsvector(search_string)
+
+                    query = query.filter(ts_vector.match("'{}'".format(value)))
+                    continue
+                    
+                if str(column.type) == "JSONB":
+                    if jsonkey is not None:  
+                        column = getattr(model, field, None)[jsonkey].astext
+                    else:
+                        column = getattr(model, field, None)
+                        query = query.filter(column.has_key(value))
+                        continue
+                        
                 if isinstance(value, six.string_types) and value.startswith("~"):
                     search_string = '%' + value[1:] + '%'
                     if distinct_filter:
                         query = query.filter(
-                            getattr(model, field, None) \
+                            column\
                             .ilike(search_string)) \
-                            .distinct(getattr(model, field, None)) \
-                            .group_by(getattr(model, field, None))
+                            .distinct(column) \
+                            .group_by(column)
                     else:
                         query = query.filter(
-                            getattr(model, field, None).ilike(search_string))
+                            column.ilike(search_string))
                 else:
                     if distinct_filter:
-                        query = query.filter(getattr(model, field, None) == value).distinct(
+                        query = query.filter(column == value).distinct(
                             getattr(model, field)).group_by(getattr(model, field))
                     else:
                         if op in ['ge', '>=']:
-                            query = query.filter(
-                                getattr(model, field, None) >= value)
+                            query = query.filter(column >= value)
                         elif op in ['gt', '>']:
-                            query = query.filter(
-                                getattr(model, field, None) > value)
+                            query = query.filter(column > value)
                         elif op in ['lt', '<']:
-                            query = query.filter(
-                                getattr(model, field, None) < value)
+                            query = query.filter(column < value)
                         elif op in ['le', '<=']:
-                            query = query.filter(
-                                getattr(model, field, None) <= value)
-                        elif op in ['!=']:
-                            query = query.filter(
-                                getattr(model, field, None) != value)
+                            query = query.filter(column <= value)
+                        elif op in ['ne', '!=']:
+                            query = query.filter(column != value)
                         else:
-                            query = query.filter(
-                                getattr(model, field, None) == value)
+                            query = query.filter(column == value)
+                            
         return query
 
 
@@ -167,6 +237,8 @@ def get_filter_fields(model):
     """Generate filter fields (= comparison)
     from graphene_sqlalcheme model
     """
+
+    publication_keys = ['publisher', 'doi', 'title', 'journal', 'authors', 'year']
     filter_fields = {}
     for column_name in dir(model):
         #print('FF {model} => {column_name}'.format(**locals()))
@@ -184,16 +256,23 @@ def get_filter_fields(model):
 
             #column_type = repr(column_expression).split(',')[1].strip(' ()')
             column_type = re.split('\W+', repr(column_expression))
-            # print(column_type)
+
             column_type = column_type[2]
             if column_type == 'Integer':
                 filter_fields[column_name] = getattr(graphene, 'Int')()
+            elif column_type == 'JSONB':
+                filter_fields[column_name] = getattr(graphene, 'String')()
+                if column_name == 'publication':
+                    for key in publication_keys:
+                        filter_fields['publication__' + key] = getattr(graphene, 'String')()
             else:
                 filter_fields[column_name] = getattr(graphene, column_type)()
     # always add a distinct filter
     filter_fields['distinct'] = graphene.Boolean()
     filter_fields['op'] = graphene.String()
-
+    filter_fields['search'] = graphene.String()
+    #print('FILTER!')
+    #print(filter_fields)
     return filter_fields
 
 
@@ -212,6 +291,8 @@ class Query(graphene.ObjectType):
         NumberKeyValue, **get_filter_fields(models.NumberKeyValue))
     catapp = FilteringConnectionField(
         Catapp, **get_filter_fields(models.Catapp))
+
+
 
 schema = graphene.Schema(
     query=Query, types=[System, Species, TextKeyValue, NumberKeyValue, Key, Catapp],)
