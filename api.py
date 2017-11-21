@@ -271,6 +271,7 @@ def get_filter_fields(model):
     filter_fields['distinct'] = graphene.Boolean()
     filter_fields['op'] = graphene.String()
     filter_fields['search'] = graphene.String()
+    filter_fields['jsonkey'] = graphene.String()
     #print('FILTER!')
     #print(filter_fields)
     return filter_fields
