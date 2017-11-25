@@ -11,6 +11,8 @@ branches:
         - master
 
 
+env:
+    - DB_PASSWORD=''
 
 install:
     - pip install -r requirements.txt
