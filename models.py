@@ -123,12 +123,13 @@ class Catapp(Base):
             arrow += 1
             i = 0
             for key in sorted(column, key=len, reverse=True):
-                prefactor = column[key][1]
-                state = column[key][0]
-                if state == 'gas':
-                    state = '(g)'
-                if state == 'star':
-                    state = '*'
+                prefactor = column[key]#[1]
+                #state = column[key][0]
+                
+                if 'gas' in key:
+                    key = key.replace('gas', '(g)')
+                if 'star' in key:
+                    key = key.replace('star', '*')
                 if not i == 0:
                     if prefactor > 0:
                         reaction += ' + '
@@ -138,7 +139,7 @@ class Catapp(Base):
                 if prefactor == 1:
                     prefactor = ''
 
-                reaction += str(prefactor) + key + state
+                reaction += str(prefactor) + key
                 i += 1
         return reaction
 
