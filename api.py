@@ -48,7 +48,7 @@ Some Examples:
       }
     }}
 
-- Distinct ase ids for a particular adsorbate:
+- Distinct ase ids for a particular adsorbate key (only works if full key is given + 'gas'/'star'):
     {catapp(aseIds: "~", key: "OOHstar", distinct: true, chemicalComposition: "~Co24") {
       edges {
         node {
