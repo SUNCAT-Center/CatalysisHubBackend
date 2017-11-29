@@ -48,8 +48,8 @@ Some Examples:
       }
     }}
 
-- Distinct ase ids for a particular adsorbate key (only works if full key is given + 'gas'/'star'):
-    {catapp(aseIds: "~", key: "OOHstar", distinct: true, chemicalComposition: "~Co24") {
+- Distinct ase ids for a particular adsorbate jsonkey (only works if full key is given + 'gas'/'star'):
+    {catapp(aseIds: "~", jsonkey: "OOHstar", distinct: true, chemicalComposition: "~Co24") {
       edges {
         node {
   	  chemicalComposition
@@ -161,7 +161,7 @@ class Species(graphene_sqlalchemy.SQLAlchemyObjectType):
 
 class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
     RELAY_ARGS = ['first', 'last', 'before', 'after']
-    SPECIAL_ARGS = ['distinct', 'op', 'key']
+    SPECIAL_ARGS = ['distinct', 'op', 'jsonkey']
 
     @classmethod
     def get_query(cls, model, info, **args):
@@ -169,7 +169,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
         query = super(FilteringConnectionField, cls).get_query(model, info)
         distinct_filter = False  # default value for distinct
         op = 'eq'
-        key = None
+        jsonkey = None
         ALLOWED_OPS = ['gt', 'lt', 'le', 'ge', 'eq', 'ne',
                        '=',  '>',  '<',  '>=', '<=', '!=']
         #ALLOWED_JSON_OPS = ['->','->>', '@>', '<@', '?',
@@ -183,8 +183,8 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
             elif field == 'op':
                 if value in ALLOWED_OPS:
                     op = value
-            elif field == 'key':
-                key = value
+            elif field == 'jsonkey':
+                jsonkey = value
 
         for field, value in args.items():
             if field not in (cls.RELAY_ARGS + cls.SPECIAL_ARGS):
@@ -192,15 +192,15 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                 
                 jsonb = False
                 if '__' in field: 
-                    field, key = field.split('__')
+                    field, jsonkey = field.split('__')
 
                 column = getattr(model, field, None)
 
                 if str(column.type) == "JSONB":
                     jsonb = True
-                    if key is not None:
-                        query = query.filter(column.has_key(key))
-                        column = column[key].astext                        
+                    if jsonkey is not None:
+                        query = query.filter(column.has_key(jsonkey))
+                        column = column[jsonkey].astext                        
                 if field == "search":
                     reactant_str = cast(model.reactants, sqlalchemy.String)
                     product_str = cast(model.products, sqlalchemy.String)
@@ -218,7 +218,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                     continue
                     
                 if jsonb and not value.startswith("~"):
-                    if key is not None:  
+                    if jsonkey is not None:  
                         if distinct_filter:
                             query = query.filter(column == value).distinct(column)
                         else:
@@ -313,7 +313,7 @@ def get_filter_fields(model):
     filter_fields['distinct'] = graphene.Boolean()
     filter_fields['op'] = graphene.String()
     filter_fields['search'] = graphene.String()
-    filter_fields['key'] = graphene.String()
+    filter_fields['jsonkey'] = graphene.String()
     #print('FILTER!')
     #print(filter_fields)
     return filter_fields
