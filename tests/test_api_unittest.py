@@ -81,7 +81,7 @@ class CatappBackendTestCase(unittest.TestCase):
         assert len(uniqueId) == 32
 
         rv_data = self.get_data("{systems(uniqueId: \"" + uniqueId + "\") { edges { node { Cifdata } } }}")
-        pprint.pprint(rv_data)
+        #pprint.pprint(rv_data)
         # TODO: Current CifData is None
         #       Analyze and consider fixing
 
@@ -116,23 +116,35 @@ class CatappBackendTestCase(unittest.TestCase):
 
         # TEST if we can query by DOI
         query = '{systems(keyValuePairs: "~doi\\": \\"10.1021/acs.jpcc.6b03375") { edges { node { natoms Formula Facet uniqueId energy DftCode DftFunctional PublicationTitle PublicationAuthors PublicationYear PublicationDoi } } }}'
-        rv_data = self.get_data(query, verbose=True)
+        rv_data = self.get_data(query, )
         results = rv_data['data']['systems']['edges']
 
         print(len(results))
         print(results[0])
         assert len(results) == 242
 
+        # TEST if we can query parts of catapp DB for autocompletion
+        query = '{catapp(last: 10, products: "~CHgas", reactants: "~", distinct: true) { edges { node { reactants products } } }}'
+        rv_data = self.get_data(query, )
+
+        assert len(rv_data['data']['catapp']['edges']) == 3
+        assert 'reactants' in rv_data['data']['catapp']['edges'][0]['node']
+        assert 'products' in rv_data['data']['catapp']['edges'][0]['node']
+
+        # TEST if distinct switch makes the expected difference
+        query = '{catapp(last: 10, reactants: "~COH", products: "~", distinct: true) { edges { node { reactants } } }}'
+        rv_data = self.get_data(query, )
+        assert len(rv_data['data']['catapp']['edges']) == 2
+
+        query = '{catapp(last: 10, reactants: "~COH", products: "~") { edges { node { reactants } } }}'
+        rv_data = self.get_data(query, verbose=True)
+        assert len(rv_data['data']['catapp']['edges']) == 4
+
+
+
+        return
         # CONTINUE HERE BY PUSHING THE RETURN STATEMENT DOWN
         # AND SUCCESSIVELY ADD assertions
-        return
-
-        # TEST if we can query parts of catapp DB for autocompletion
-        query = '{catapp(last: 10, products: "~COH", reactants: "~", distinct: true) { edges { node { reactants } } }}'
-        rv_data = self.get_data(query, verbose=True)
-
-        query = '{catapp(last: 10, reactants: "~COH", products: "~", distinct: true) { edges { node { reactants } } }}'
-        rv_data = self.get_data(query, verbose=True)
 
         query = """{catapp ( last: 5, surfaceComposition: "~", facet: "~", reactants: "~", products: "~" ) {
                    edges {
