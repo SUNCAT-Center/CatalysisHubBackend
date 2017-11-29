@@ -3,7 +3,6 @@ API for GraphQL enhanced queries against catapp and ase-db database
 
 Some Examples:
 
-
 - Filter by reactants and products from catapp:
     {catapp(reactants: "OH", products: "H2O") {
       edges {
@@ -38,6 +37,28 @@ Some Examples:
         }
       }
     }}
+
+- Distinct reactants and products from catapp (works with and without "~"):
+    {catapp(reactants: "~OH", products: "~", distinct: true) {
+      edges {
+        node {
+     	  Reaction
+          reactionEnergy
+        }
+      }
+    }}
+
+- Distinct ase ids for a particular adsorbate:
+    {catapp(aseIds: "~", key: "OOHstar", distinct: true, chemicalComposition: "~Co24") {
+      edges {
+        node {
+  	  chemicalComposition
+          Reaction
+          aseIds
+        }
+      }
+    }}
+
 
 - Author-name from ase-db:
     {textKeys(key: "publication_authors", value: "~Bajdich") {
@@ -140,7 +161,7 @@ class Species(graphene_sqlalchemy.SQLAlchemyObjectType):
 
 class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
     RELAY_ARGS = ['first', 'last', 'before', 'after']
-    SPECIAL_ARGS = ['distinct', 'op', 'jsonkey']
+    SPECIAL_ARGS = ['distinct', 'op', 'key']
 
     @classmethod
     def get_query(cls, model, info, **args):
@@ -148,13 +169,12 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
         query = super(FilteringConnectionField, cls).get_query(model, info)
         distinct_filter = False  # default value for distinct
         op = 'eq'
-        jsonop = None
-        jsonkey = None
-        jsonop = None
+        key = None
         ALLOWED_OPS = ['gt', 'lt', 'le', 'ge', 'eq', 'ne',
                        '=',  '>',  '<',  '>=', '<=', '!=']
-        ALLOWED_JSON_OPS = ['->','->>', '@>', '<@', '?',
-                            '?|', '?&', '||', '-', '#-']
+        #ALLOWED_JSON_OPS = ['->','->>', '@>', '<@', '?',
+        #                    '?|', '?&', '||', '-', '#-']
+        
         # print("\n\nMODEL:: {model}".format(**locals()))
         # print(dir(model))
         for field, value in args.items():
@@ -163,52 +183,75 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
             elif field == 'op':
                 if value in ALLOWED_OPS:
                     op = value
-                    #print op
-            elif field == 'jsonop':
-                if value in ALLOWED_JSON_OPS:
-                    jsonop = value
-            elif field == 'jsonkey':
-                jsonkey = value
+            elif field == 'key':
+                key = value
 
         for field, value in args.items():
             if field not in (cls.RELAY_ARGS + cls.SPECIAL_ARGS):
-                if '__' in field:  # JSON
+                from sqlalchemy.sql.expression import func, cast
+                
+                jsonb = False
+                if '__' in field: 
                     field, key = field.split('__')
-                    column = getattr(model, field, None)[key].astext
-                else:
-                    column = getattr(model, field, None)
 
+                column = getattr(model, field, None)
+
+                if str(column.type) == "JSONB":
+                    jsonb = True
+                    if key is not None:
+                        query = query.filter(column.has_key(key))
+                        column = column[key].astext                        
                 if field == "search":
-                    from sqlalchemy.sql.expression import cast
-                    reactant_string = cast(model.reactants, sqlalchemy.String)
-                    product_string = cast(model.products, sqlalchemy.String)
-                    reaction_string = sqlalchemy.sql.expression.func.replace(sqlalchemy.sql.expression.func.replace(reactant_string + product_string, 'gas', ''), 'star', '')
-                    author_string = model.publication["authors"].astext
-                    title_string = model.publication["title"].astext
-                    year = model.publication["year"].astext
-                    search_string = title_string + " " + author_string + " " + reaction_string \
-                                    + " " + year
-                    ts_vector = sqlalchemy.sql.expression.func.to_tsvector(search_string)
+                    reactant_str = cast(model.reactants, sqlalchemy.String)
+                    product_str = cast(model.products, sqlalchemy.String)
+                    reaction_str = func.replace(func.replace(reactant_str + product_str, 'gas', '')
+                                                , 'star', '')
+                    composition_str = model.chemical_composition
+                    author_str = model.publication["authors"].astext
+                    title_str = model.publication["title"].astext
+                    year_str = model.publication["year"].astext
+                    search_str = title_str + " " + author_str + " " + reaction_str \
+                                    + " " + year_str + " " + composition_str
+                    ts_vector = sqlalchemy.sql.expression.func.to_tsvector(search_str)
 
                     query = query.filter(ts_vector.match("'{}'".format(value)))
                     continue
                     
-                if str(column.type) == "JSONB":
-                    if jsonkey is not None:  
-                        column = getattr(model, field, None)[jsonkey].astext
+                if jsonb and not value.startswith("~"):
+                    if key is not None:  
+                        if distinct_filter:
+                            query = query.filter(column == value).distinct(column)
+                        else:
+                            query = query.filter(column == value)
                     else:
-                        column = getattr(model, field, None)
-                        query = query.filter(column.has_key(value))
-                        continue
+                        if field == 'reactants' or field == 'products':
+                            query = query.filter(or_(column.has_key(value),
+                                                     column.has_key(value + 'gas'),
+                                                     column.has_key(value + 'star')))
+                        else:    
+                            query = query.filter(column.has_key(value))
+                    continue
                         
                 if isinstance(value, six.string_types) and value.startswith("~"):
+                    if value == "~":  # No filter needed
+                        if distinct_filter:
+                            query = query.distinct(column).group_by(column, model.id)
+                        continue    
+                        
+                    if jsonb:
+                        # TO DO: SELECT DISTINCT jsonb_object_keys(reactants) FROM catapp
+                        # For now cast as string
+                        
+                        column = cast(column, sqlalchemy.String)
+                        if field == 'reactants' or field == 'products':
+                            column = func.replace(func.replace(column, 'gas', ''), 'star', '')
+                            
                     search_string = '%' + value[1:] + '%'
                     if distinct_filter:
-                        query = query.filter(
-                            column\
-                            .ilike(search_string)) \
-                            .distinct(column) \
-                            .group_by(column)
+                        query = query.filter(column.ilike(search_string)) \
+                                     .distinct(column) \
+                                     .group_by(column, model.id)
+
                     else:
                         query = query.filter(
                             column.ilike(search_string))
@@ -229,7 +272,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                             query = query.filter(column != value)
                         else:
                             query = query.filter(column == value)
-                            
+        #print query                    
         return query
 
 
@@ -237,7 +280,6 @@ def get_filter_fields(model):
     """Generate filter fields (= comparison)
     from graphene_sqlalcheme model
     """
-
     publication_keys = ['publisher', 'doi', 'title', 'journal', 'authors', 'year']
     filter_fields = {}
     for column_name in dir(model):
@@ -271,7 +313,7 @@ def get_filter_fields(model):
     filter_fields['distinct'] = graphene.Boolean()
     filter_fields['op'] = graphene.String()
     filter_fields['search'] = graphene.String()
-    filter_fields['jsonkey'] = graphene.String()
+    filter_fields['key'] = graphene.String()
     #print('FILTER!')
     #print(filter_fields)
     return filter_fields
