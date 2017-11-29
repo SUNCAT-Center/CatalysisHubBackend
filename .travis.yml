@@ -18,4 +18,4 @@ install:
     - pip install -r requirements.txt
 
 script:
-    nosetests --process-restartworker --processes=1 --process-timeout=60
+    nosetests --process-restartworker --process-timeout=60
