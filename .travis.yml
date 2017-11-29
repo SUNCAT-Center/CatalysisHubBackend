@@ -1,0 +1,21 @@
+sudo: false
+language: python
+python:
+    - "2.7"
+    - "3.4"
+    - "3.5"
+    - "3.6"
+
+branches:
+    only:
+        - master
+
+
+env:
+    - DB_PASSWORD=''
+
+install:
+    - pip install -r requirements.txt
+
+script:
+    nosetests --process-restartworker --processes=1 --process-timeout=60
