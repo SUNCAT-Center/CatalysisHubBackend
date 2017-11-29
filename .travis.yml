@@ -10,6 +10,10 @@ branches:
     only:
         - master
 
+cache:
+    apt: true
+    pip: true
+
 
 env:
     - DB_PASSWORD=''
