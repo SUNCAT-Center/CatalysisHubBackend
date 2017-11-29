@@ -49,7 +49,7 @@ class CatappBackendTestCase(unittest.TestCase):
         if verbose == True:
             print('\n\nQUERY {query}'.format(**locals()))
         data = json.loads(
-            self.app.post('/graphql?query={query}'.format(**locals())).data.decode('utf8)
+            self.app.post('/graphql?query={query}'.format(**locals())).data.decode('utf8')
                 )
         if verbose == True:
             print('DATA')
