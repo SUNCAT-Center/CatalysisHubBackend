@@ -80,13 +80,13 @@ class CatappBackendTestCase(unittest.TestCase):
         uniqueId = rv_data['data']['systems']['edges'][0]['node']['uniqueId']
         assert len(uniqueId) == 32
 
-        rv_data = self.get_data("{systems(uniqueId: \"" + uniqueId + "\") { edges { node { Cifdata } } }}", verbose=True)
+        rv_data = self.get_data("{systems(uniqueId: \"" + uniqueId + "\") { edges { node { Cifdata } } }}")
         pprint.pprint(rv_data)
         # TODO: Current CifData is None
         #       Analyze and consider fixing
 
         # TEST that 10 elements with energy are returned
-        rv_data = self.get_data("{systems(last: 10 ) { edges { node { energy Cifdata } } }}", verbose=True)
+        rv_data = self.get_data("{systems(last: 10 ) { edges { node { energy Cifdata } } }}")
         #pprint.pprint(rv_data)
         assert len(rv_data['data']['systems']['edges']) == 10
         for node in rv_data['data']['systems']['edges']:
@@ -94,16 +94,38 @@ class CatappBackendTestCase(unittest.TestCase):
 
         # TEST that querying for years, gives meaningful in publications
         query = '{numberKeys(last: 10, key:"publication_year") { edges { node { value } } }}'
-        rv_data = self.get_data(query, verbose=True)
+        rv_data = self.get_data(query)
 
         # TEST if we can filter catapp reactions by yearko
         query = '{catapp(last: 10, year: 2017) { edges { node { year publication doi dftCode dftFunctional } } }}'
-        rv_data = self.get_data(query, verbose=True)
+        rv_data = self.get_data(query)
+        results = rv_data['data']['catapp']['edges']
+        assert 'node' in results[0]
+        assert 'dftCode' in results[0]['node']
+        assert results[0]['node']['dftCode'] == 'VASP_5.4.1'
+        assert 'dftFunctional' in results[0]['node']
+        assert results[0]['node']['dftFunctional'] == 'PBE+U=3.32'
+
+        assert 'publication' in results[0]['node']
+
+        publication = (eval(results[0]['node']['publication']))
+        assert publication['doi'] == '10.1021/jacs.7b02622'
+        assert publication['journal'] == 'JACS'
+
 
 
         # TEST if we can query by DOI
-        query = '{systems(last: 10, keyValuePairs: "~doi\\": \\"10.1021/acs.jpcc.6b03375") { edges { node { natoms Formula Facet uniqueId energy DftCode DftFunctional PublicationTitle PublicationAuthors PublicationYear PublicationDoi } } }}'
+        query = '{systems(keyValuePairs: "~doi\\": \\"10.1021/acs.jpcc.6b03375") { edges { node { natoms Formula Facet uniqueId energy DftCode DftFunctional PublicationTitle PublicationAuthors PublicationYear PublicationDoi } } }}'
         rv_data = self.get_data(query, verbose=True)
+        results = rv_data['data']['systems']['edges']
+
+        print(len(results))
+        print(results[0])
+        assert len(results) == 242
+
+        # CONTINUE HERE BY PUSHING THE RETURN STATEMENT DOWN
+        # AND SUCCESSIVELY ADD assertions
+        return
 
         # TEST if we can query parts of catapp DB for autocompletion
         query = '{catapp(last: 10, products: "~COH", reactants: "~", distinct: true) { edges { node { reactants } } }}'
