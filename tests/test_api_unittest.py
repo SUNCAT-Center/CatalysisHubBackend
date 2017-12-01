@@ -124,17 +124,19 @@ class CatappBackendTestCase(unittest.TestCase):
         assert len(results) == 242
 
         # TEST if we can query parts of catapp DB for autocompletion
-        query = '{catapp(last: 10, products: "~CHgas", reactants: "~", distinct: true) { edges { node { reactants products } } }}'
+        query = '{catapp(products: "~", reactants: "~NO", distinct: true) { edges { node { reactants products } } }}'
         rv_data = self.get_data(query, )
 
-        assert len(rv_data['data']['catapp']['edges']) == 3
+        assert len(rv_data['data']['catapp']['edges']) == 18
         assert 'reactants' in rv_data['data']['catapp']['edges'][0]['node']
         assert 'products' in rv_data['data']['catapp']['edges'][0]['node']
 
         # TEST if distinct switch makes the expected difference
         query = '{catapp(last: 10, reactants: "~COH", products: "~", distinct: true) { edges { node { reactants } } }}'
         rv_data = self.get_data(query, )
-        assert len(rv_data['data']['catapp']['edges']) == 2
+        pprint.pprint(rv_data['data']['catapp']['edges'])
+        print(len(rv_data['data']['catapp']['edges']))
+        assert len(rv_data['data']['catapp']['edges']) == 4
 
         query = '{catapp(last: 10, reactants: "~COH", products: "~") { edges { node { reactants } } }}'
         rv_data = self.get_data(query, verbose=True)
