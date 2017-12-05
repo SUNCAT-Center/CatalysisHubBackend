@@ -3,6 +3,11 @@ API for GraphQL enhanced queries against catapp and ase-db database
 
 Some Examples:
 
+- Get total number of rows in table (in this case catapp):
+    {catapp (first: 0) {
+      totalCount
+    }}
+
 - Filter by reactants and products from catapp:
     {catapp(reactants: "OH", products: "H2O") {
       edges {
@@ -111,48 +116,88 @@ import six
 # local imports
 import models
 
-class Catapp(graphene_sqlalchemy.SQLAlchemyObjectType):
+
+class CountableConnection(graphene.relay.Connection):
+    class Meta:
+        abstract = True
+
+    total_count = graphene.Int()
+
+    @staticmethod
+    def resolve_total_count(root, info):
+        return root.length
+
+
+class CustomSQLAlchemyObjectType(graphene_sqlalchemy.SQLAlchemyObjectType):
+
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def __init_subclass_with_meta__(cls, model=None, registry=None, skip_registry=False,
+                                    only_fields=(), exclude_fields=(), connection=None,
+                                    use_connection=None, interfaces=(), id=None, **options):
+        # Force it to use the countable connection
+        countable_conn = connection or CountableConnection.create_type(
+            "{}CountableConnection".format(model.__name__),
+            node=cls)
+
+        super(CustomSQLAlchemyObjectType, cls).__init_subclass_with_meta__(
+            model,
+            registry,
+            skip_registry,
+            only_fields,
+            exclude_fields, 
+            countable_conn,
+            use_connection, 
+            interfaces, 
+            id,
+            **options)
+
+
+class Catapp(CustomSQLAlchemyObjectType):
 
     class Meta:
         model = models.Catapp
         interfaces = (graphene.relay.Node, )
 
-class System(graphene_sqlalchemy.SQLAlchemyObjectType):
+
+class System(CustomSQLAlchemyObjectType):
 
     class Meta:
         model = models.System
         interfaces = (graphene.relay.Node, )
 
 
-class NumberKeyValue(graphene_sqlalchemy.SQLAlchemyObjectType):
+class NumberKeyValue(CustomSQLAlchemyObjectType):
 
     class Meta:
         model = models.NumberKeyValue
         interfaces = (graphene.relay.Node, )
 
 
-class TextKeyValue(graphene_sqlalchemy.SQLAlchemyObjectType):
+class TextKeyValue(CustomSQLAlchemyObjectType):
 
     class Meta:
         model = models.TextKeyValue
         interfaces = (graphene.relay.Node, )
 
 
-class Information(graphene_sqlalchemy.SQLAlchemyObjectType):
+class Information(CustomSQLAlchemyObjectType):
 
     class Meta:
         model = models.Information
         interfaces = (graphene.relay.Node, )
 
 
-class Key(graphene_sqlalchemy.SQLAlchemyObjectType):
+class Key(CustomSQLAlchemyObjectType):
 
     class Meta:
         model = models.Key
         interfaces = (graphene.relay.Node, )
 
 
-class Species(graphene_sqlalchemy.SQLAlchemyObjectType):
+class Species(CustomSQLAlchemyObjectType):
 
     class Meta:
         model = models.Species
