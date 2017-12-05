@@ -10,6 +10,10 @@ branches:
     only:
         - master
 
+cache:
+    apt: true
+    pip: true
+
 
 env:
     - DB_PASSWORD=''
@@ -18,4 +22,5 @@ install:
     - pip install -r requirements.txt
 
 script:
-    nosetests --process-restartworker --processes=1 --process-timeout=60
+    - nosetests --with-coverage --cover-inclusive --cover-package=. --cover-erase
+    - coverage report --omit 'lib/*,tests/*' --show-missing

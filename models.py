@@ -37,17 +37,26 @@ class JsonEncodedDict(sqla.TypeDecorator):
 
 # set to local database path
 
-url = sqlalchemy.engine.url.URL('postgres',
-                                username='catappuser',
-                                password=os.environ['DB_PASSWORD'],
-                                host='catappdatabase.cjlis1fysyzx.us-west-1.rds.amazonaws.com',
-                                port=5432,
-                                database='catappdatabase')
+if os.environ.get('DB_PASSWORD', ''):
+    url = sqlalchemy.engine.url.URL('postgres',
+                                    username='catappuser',
+                                    password=os.environ['DB_PASSWORD'],
+                                    host='catappdatabase.cjlis1fysyzx.us-west-1.rds.amazonaws.com',
+                                    port=5432,
+                                    database='catappdatabase')
+else:
+    url = sqlalchemy.engine.url.URL('sqlite', database='./test_database.db')
 
 
 engine = sqlalchemy.create_engine(
     url,
     convert_unicode=True)
+
+# work-around needed for testing
+# api locally w/o postgreSQL available:
+# simply JSON dictionaries as String
+if engine.driver != 'psycopg2':
+    JSONB = sqla.String
 
 db_session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(
     autocommit=False,

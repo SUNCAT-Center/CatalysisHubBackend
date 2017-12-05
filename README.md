@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/mhoffman/flask_graphQL.svg?branch=master)](https://travis-ci.org/mhoffman/flask_graphQL)
+
 ## Flask GraphQL ASE DB Demo
 
 To run this demo, first clone this repository to a local directory
