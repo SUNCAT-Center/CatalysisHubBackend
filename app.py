@@ -10,7 +10,11 @@ from flask import Blueprint
 import models
 import api
 #import qmdb_api
-from apps.AtoML.run_atoml import atoml_blueprint
+try:
+    from apps.AtoML.run_atoml import atoml_blueprint
+except:
+    print('Warning: import atoml_blueprint failed. It may not be available.')
+    atoml_blueprint = None
 
 app = flask.Flask(__name__)
 app.debug = True
