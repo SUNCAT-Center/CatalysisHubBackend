@@ -21,12 +21,12 @@ Then install required python libraries
 
     pip install -r requirements.txt
 
-Copy a `SQLite` database file into the directory and set the path in `database.py`
+Copy a `SQLite` database file into the directory and set the path in `models.py`
 
     engine = sqlalchemy.create_engine('sqlite:///<PATH_TO_SQLITE_DB>')
 
 
-Possibly extend the database DB schema in `schema.py` according to [SQAlchemy Types](http://docs.sqlalchemy.org/en/latest/core/type_basics.html)
+Possibly extend the database DB schema in `models.py` according to [SQAlchemy Types](http://docs.sqlalchemy.org/en/latest/core/type_basics.html)
 
 Run App from command line
 
