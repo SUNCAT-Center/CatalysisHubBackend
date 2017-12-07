@@ -241,11 +241,6 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
 
                 column = getattr(model, field, None)
 
-                if str(column.type) == "JSONB":
-                    jsonb = True
-                    if jsonkey is not None:
-                        query = query.filter(column.has_key(jsonkey))
-                        column = column[jsonkey].astext                        
                 if field == "search":
                     reactant_str = cast(model.reactants, sqlalchemy.String)
                     product_str = cast(model.products, sqlalchemy.String)
@@ -261,7 +256,13 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
 
                     query = query.filter(ts_vector.match("'{}'".format(value)))
                     continue
-                    
+
+                if str(column.type) == "JSONB":
+                    jsonb = True
+                    if jsonkey is not None:
+                        query = query.filter(column.has_key(jsonkey))
+                        column = column[jsonkey].astext                        
+
                 if jsonb and not value.startswith("~"):
                     if jsonkey is not None:  
                         if distinct_filter:
