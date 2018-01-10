@@ -1,3 +1,10 @@
+try:
+    import io as StringIO
+except:
+    # Fallback solution for python2.7
+    import StringIO
+
+
 """
 API for GraphQL enhanced queries against catapp and ase-db database
 
@@ -164,9 +171,55 @@ class Catapp(CustomSQLAlchemyObjectType):
 
 class System(CustomSQLAlchemyObjectType):
 
+    _input_file = graphene.String(format=graphene.String())
+
     class Meta:
         model = models.System
         interfaces = (graphene.relay.Node, )
+
+    @staticmethod
+    def resolve__input_file(self, info, format="py"):
+        """Return the structure as input for one of several
+        DFT codes as supported by ASE. Default format is "py".
+        Run
+
+            {systems(last: 1) {
+              totalCount
+              edges {
+                node {
+                  InputFile(format:"")
+                }
+              }
+            }}
+
+        to show available formats. Try one of the available formats like,
+
+        {systems(last: 10) {
+          totalCount
+          edges {
+            node {
+              InputFile(format:"espresso-in")
+            }
+          }
+        }}
+
+        to generate QE input.
+
+        """
+        import ase.io
+        import ase.io.formats
+        supported_fileformats = [
+                key for key, value in ase.io.formats.all_formats.items()
+                if value[1].find('F') > 0
+                ]
+        if format in supported_fileformats:
+            mem_file = StringIO.StringIO()
+            mem_file.name = 'Export from http://catappdatabase.herokuapp.com/graphql'
+            ase.io.write(mem_file, self._toatoms(), format)
+            return mem_file.getvalue()
+        else:
+            return 'Unsupported format. Should be one of %s' % str(supported_fileformats)
+
 
 
 class NumberKeyValue(CustomSQLAlchemyObjectType):

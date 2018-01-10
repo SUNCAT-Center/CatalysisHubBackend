@@ -143,6 +143,9 @@ class CatappBackendTestCase(unittest.TestCase):
         assert len(rv_data['data']['catapp']['edges']) == 4
 
 
+        query = '{catapp (first: 0) { totalCount }}'
+        rv_data = self.get_data(query, verbose=True)
+        assert rv_data['data']['catapp']['totalCount'] == 210, "Sample db has 210 entries"
 
         return
         # CONTINUE HERE BY PUSHING THE RETURN STATEMENT DOWN
