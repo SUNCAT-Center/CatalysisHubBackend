@@ -330,12 +330,10 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                     query = query.filter(ts_vector.match("'{}'".format(value)))
 
                 elif str(column.type) == "JSONB":
-                    print 'JSONB!'
                     jsonb = True
                     if jsonkey is not None:
                         query = query.filter(column.has_key(jsonkey))
                         column = column[jsonkey].astext
-                    print jsonkey
                     values = value.split('+')
                         
                     for value in values:    
@@ -372,7 +370,6 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                         #TO DO: SELECT DISTINCT jsonb_object_keys(reactants) FROM catapp
                             
                 elif isinstance(value, six.string_types):
-                    print 'HEP!'
                     if value.startswith("~"):
                         search_string = '%' + value[1:] + '%'
                         if not query == "~":
@@ -400,7 +397,6 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
 
                 if distinct_filter:
                     query = query.distinct(column)#.group_by(getattr(model, field))
-        print query
         return query
 
 
@@ -416,7 +412,7 @@ def get_filter_fields(model):
                 and not column_name in ['metadata', 'query', 'cifdata']:
             column = getattr(model, column_name)
             column_expression = column.expression
-            # print(repr(column_expression))
+
             if '=' in str(column_expression):  # filter out foreign keys
                 continue
             elif column_expression is None:  # filter out hybrid properties
@@ -442,8 +438,7 @@ def get_filter_fields(model):
     filter_fields['op'] = graphene.String()
     filter_fields['search'] = graphene.String()
     filter_fields['jsonkey'] = graphene.String()
-    #print('FILTER!')
-    #print(filter_fields)
+
     return filter_fields
 
 
