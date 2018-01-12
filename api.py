@@ -19,14 +19,24 @@ Some Examples:
     {catapp(reactants: "OH", products: "H2O") {
       edges {
         node {
-  	  Reaction
+          Reaction
           reactionEnergy
           activationEnergy
         }
       }
     }}
 
-   
+- Filter by several reactants or products from catapp:
+    {catapp(reactants: "COstar+NOstar") {
+      edges {
+        node {
+          Reaction
+          reactionEnergy
+          activationEnergy
+        }
+      }
+    }}
+
 - Author-name from catapp:
     {catapp(publication_Authors: "~Bajdich") {
       edges {
@@ -42,8 +52,8 @@ Some Examples:
     {catapp(search: "oxygen evolution bajdich 2017 OOH") {
       edges {
         node {
-          Reaction      
-	  PublicationTitle
+          Reaction
+          PublicationTitle
           PublicationAuthors
           year
         }
@@ -54,14 +64,17 @@ Some Examples:
     {catapp(reactants: "~OH", products: "~", distinct: true) {
       edges {
         node {
-     	  Reaction
+          Reaction
           reactionEnergy
         }
       }
     }}
 
-- Distinct ase ids for a particular adsorbate jsonkey (only works if full key is given + 'gas'/'star'):
-    {catapp(aseIds: "~", jsonkey: "OOHstar", distinct: true, chemicalComposition: "~Co24") {
+
+- Distinct ase ids for a particular adsorbate jsonkey (only works if full key
+  is given + 'gas'/'star'):
+(aseIds: "~", jsonkey: "OOHstar", distinct: true,
+            chemicalComposition: "~Co24") {
       edges {
         node {
   	  chemicalComposition
@@ -85,7 +98,7 @@ Some Examples:
     }}
 
 - Get all distinct DOIs
-   {textKeys(key: "publication_doi", distinct: true) {
+   {textKeys(key: "publication_doi", value: "~", distinct: true) {
       edges {
         node {
           key
@@ -141,9 +154,11 @@ class CustomSQLAlchemyObjectType(graphene_sqlalchemy.SQLAlchemyObjectType):
         abstract = True
 
     @classmethod
-    def __init_subclass_with_meta__(cls, model=None, registry=None, skip_registry=False,
-                                    only_fields=(), exclude_fields=(), connection=None,
-                                    use_connection=None, interfaces=(), id=None, **options):
+    def __init_subclass_with_meta__(cls, model=None, registry=None,
+                                    skip_registry=False, only_fields=(),
+                                    exclude_fields=(), connection=None,
+                                    use_connection=None, interfaces=(),
+                                    id=None, **options):
         # Force it to use the countable connection
         countable_conn = connection or CountableConnection.create_type(
             "{}CountableConnection".format(model.__name__),
@@ -154,10 +169,10 @@ class CustomSQLAlchemyObjectType(graphene_sqlalchemy.SQLAlchemyObjectType):
             registry,
             skip_registry,
             only_fields,
-            exclude_fields, 
+            exclude_fields,
             countable_conn,
-            use_connection, 
-            interfaces, 
+            use_connection,
+            interfaces,
             id,
             **options)
 
@@ -218,8 +233,8 @@ class System(CustomSQLAlchemyObjectType):
             ase.io.write(mem_file, self._toatoms(), format)
             return mem_file.getvalue()
         else:
-            return 'Unsupported format. Should be one of %s' % str(supported_fileformats)
-
+            return 'Unsupported format. Should be one of %s'\
+                % str(supported_fileformats)
 
 
 class NumberKeyValue(CustomSQLAlchemyObjectType):
@@ -267,11 +282,11 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
         query = super(FilteringConnectionField, cls).get_query(model, info)
         distinct_filter = False  # default value for distinct
         op = 'eq'
-        jsonkey = None
+        jsonkey_input = None
         ALLOWED_OPS = ['gt', 'lt', 'le', 'ge', 'eq', 'ne',
                        '=',  '>',  '<',  '>=', '<=', '!=']
-        #ALLOWED_JSON_OPS = ['->','->>', '@>', '<@', '?',
-        #                    '?|', '?&', '||', '-', '#-']
+        # ALLOWED_JSON_OPS = ['->','->>', '@>', '<@', '?',
+        #                     '?|', '?&', '||', '-', '#-']
         
         # print("\n\nMODEL:: {model}".format(**locals()))
         # print(dir(model))
@@ -282,96 +297,110 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                 if value in ALLOWED_OPS:
                     op = value
             elif field == 'jsonkey':
-                jsonkey = value
+                jsonkey_input = value
 
         for field, value in args.items():
             if field not in (cls.RELAY_ARGS + cls.SPECIAL_ARGS):
                 from sqlalchemy.sql.expression import func, cast
-                
                 jsonb = False
-                if '__' in field: 
+                jsonkey = None
+                if '__' in field:
                     field, jsonkey = field.split('__')
+                if jsonkey is None:
+                    jsonkey = jsonkey_input
 
                 column = getattr(model, field, None)
 
                 if field == "search":
                     reactant_str = cast(model.reactants, sqlalchemy.String)
                     product_str = cast(model.products, sqlalchemy.String)
-                    reaction_str = func.replace(func.replace(reactant_str + product_str, 'gas', '')
-                                                , 'star', '')
+                    reaction_str = func.replace(func.replace(reactant_str +
+                                                             product_str,
+                                                             'gas', ''),
+                                                'star', '')
                     composition_str = model.chemical_composition
                     author_str = model.publication["authors"].astext
                     title_str = model.publication["title"].astext
                     year_str = model.publication["year"].astext
-                    search_str = title_str + " " + author_str + " " + reaction_str \
-                                    + " " + year_str + " " + composition_str
-                    ts_vector = sqlalchemy.sql.expression.func.to_tsvector(search_str)
+                    search_str = title_str + " " + author_str + " " + \
+                                 reaction_str + " " + year_str + " " + \
+                                 composition_str
+                    ts_vector = func.to_tsvector(search_str)
 
                     query = query.filter(ts_vector.match("'{}'".format(value)))
-                    continue
 
-                if str(column.type) == "JSONB":
+                elif str(column.type) == "JSONB":
+                    print 'JSONB!'
                     jsonb = True
                     if jsonkey is not None:
                         query = query.filter(column.has_key(jsonkey))
-                        column = column[jsonkey].astext                        
+                        column = column[jsonkey].astext
+                    print jsonkey
+                    values = value.split('+')
+                        
+                    for value in values:    
+                        if value.startswith("~"):
+                            column = cast(column, sqlalchemy.String)
+                            #if field == 'reactants' or field == 'products':
+                            #    column = func.replace(func.replace(column, 'gas', ''), 'star', '')
 
-                if jsonb and not value.startswith("~"):
-                    if jsonkey is not None:  
-                        if distinct_filter:
-                            query = query.filter(column == value).distinct(column)
-                        else:
-                            query = query.filter(column == value)
-                    else:
-                        if field == 'reactants' or field == 'products':
-                            query = query.filter(or_(column.has_key(value),
-                                                     column.has_key(value + 'gas'),
-                                                     column.has_key(value + 'star')))
-                        else:    
-                            query = query.filter(column.has_key(value))
-                    continue
-                        
-                if isinstance(value, six.string_types) and value.startswith("~"):
-                    if value == "~":  # No filter needed
-                        if distinct_filter:
-                            query = query.distinct(column).group_by(column, model.id)
-                        continue    
-                        
-                    if jsonb:
-                        # TO DO: SELECT DISTINCT jsonb_object_keys(reactants) FROM catapp
-                        # For now cast as string
-                        
-                        column = cast(column, sqlalchemy.String)
-                        if field == 'reactants' or field == 'products':
-                            column = func.replace(func.replace(column, 'gas', ''), 'star', '')
+                            search_string = '%' + value[1:] + '%'
                             
-                    search_string = '%' + value[1:] + '%'
-                    if distinct_filter:
-                        query = query.filter(column.ilike(search_string)) \
-                                     .distinct(column) \
-                                     .group_by(column, model.id)
-
-                    else:
-                        query = query.filter(
-                            column.ilike(search_string))
-                else:
-                    if distinct_filter:
-                        query = query.filter(column == value).distinct(
-                            getattr(model, field)).group_by(getattr(model, field))
-                    else:
-                        if op in ['ge', '>=']:
-                            query = query.filter(column >= value)
-                        elif op in ['gt', '>']:
-                            query = query.filter(column > value)
-                        elif op in ['lt', '<']:
-                            query = query.filter(column < value)
-                        elif op in ['le', '<=']:
-                            query = query.filter(column <= value)
-                        elif op in ['ne', '!=']:
-                            query = query.filter(column != value)
+                            if not query == "~":
+                                query = query.filter(
+                                    column.ilike(search_string))
+                            
                         else:
-                            query = query.filter(column == value)
-        #print query                    
+                            if field == 'reactants' or field == 'products':
+                                if not 'star' in value and not 'gas' in value:
+                                    or_statement = or_(column.has_key(value),
+                                                       column.has_key(value +
+                                                                      'gas'),
+                                                       column.has_key(value +
+                                                                      'star'))
+                                                   
+                                    query = query.filter(or_statement)
+                                else:
+                                    query = query.filter(column.has_key(value))
+                            else:
+                                if jsonkey is not None:
+                                    query = query.filter(column == value)
+                                else:
+                                    query = query.filter(column.has_key(value))
+
+                    #if distinct_filter:
+                        #TO DO: SELECT DISTINCT jsonb_object_keys(reactants) FROM catapp
+                            
+                elif isinstance(value, six.string_types):
+                    print 'HEP!'
+                    if value.startswith("~"):
+                        search_string = '%' + value[1:] + '%'
+                        if not query == "~":
+                            query = query.filter(column.ilike(search_string))
+                    else:
+                        query = query.filter(column == value)
+
+                    #if distinct_filter:
+                    #     query = query.distinct(column)#.group_by(column)
+
+                else:
+                    if op in ['ge', '>=']:
+                        query = query.filter(column >= value)
+                    elif op in ['gt', '>']:
+                        query = query.filter(column > value)
+                    elif op in ['lt', '<']:
+                        query = query.filter(column < value)
+                    elif op in ['le', '<=']:
+                        query = query.filter(column <= value)
+                    elif op in ['ne', '!=']:
+                        query = query.filter(column != value)
+                    else:
+                        query = query.filter(column == value)
+                    
+
+                if distinct_filter:
+                    query = query.distinct(column)#.group_by(getattr(model, field))
+        print query
         return query
 
 
