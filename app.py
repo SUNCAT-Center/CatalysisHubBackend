@@ -45,6 +45,9 @@ def apps():
 # AtoML app
 #app.register_blueprint(atoml_blueprint)
 
+from apps.catKitDemo import catKitDemo
+app.register_blueprint(catKitDemo, url_prefix='/apps/catKitDemo')
+
 # Graphql view
 app.add_url_rule('/graphql',
         view_func=flask_graphql.GraphQLView.as_view(
