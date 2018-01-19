@@ -34,7 +34,7 @@ cors = CORS(app, resources={r"/graphql/*":
 @app.route('/')
 
 def index():
-        return "Welcome to the catapp database!"
+        return flask.redirect("/graphql", code=302)
 
 @app.route('/apps/')
 
