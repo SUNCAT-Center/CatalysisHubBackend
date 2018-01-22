@@ -83,7 +83,6 @@ Some Examples:
         }
       }
     }}
-1
 
 - Author-name from ase-db:
     {textKeys(key: "publication_authors", value: "~Bajdich") {
