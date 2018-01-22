@@ -83,7 +83,7 @@ Some Examples:
         }
       }
     }}
-
+1
 
 - Author-name from ase-db:
     {textKeys(key: "publication_authors", value: "~Bajdich") {
@@ -278,6 +278,9 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
 
     @classmethod
     def get_query(cls, model, info, **args):
+
+        print(args.items())
+        #print(args.keys())
         from sqlalchemy import or_
         query = super(FilteringConnectionField, cls).get_query(model, info)
         distinct_filter = False  # default value for distinct
@@ -298,7 +301,8 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                     op = value
             elif field == 'jsonkey':
                 jsonkey_input = value
-
+        if distinct and "~" in args.values())
+        
         for field, value in args.items():
             if field not in (cls.RELAY_ARGS + cls.SPECIAL_ARGS):
                 from sqlalchemy.sql.expression import func, cast
@@ -344,9 +348,11 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
 
                             search_string = '%' + value[1:] + '%'
                             
-                            if not query == "~":
+                            if not value == "~":
                                 query = query.filter(
                                     column.ilike(search_string))
+                            #else:
+                            #    query = query.group_by(column)
                             
                         else:
                             if field == 'reactants' or field == 'products':
@@ -397,6 +403,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
 
                 if distinct_filter:
                     query = query.distinct(column)#.group_by(getattr(model, field))
+        print(query)
         return query
 
 
@@ -434,11 +441,10 @@ def get_filter_fields(model):
             else:
                 filter_fields[column_name] = getattr(graphene, column_type)()
     # always add a distinct filter
-    filter_fields['distinct'] = graphene.Boolean()
+    filter_fields['distinct'] = graphene.String()
     filter_fields['op'] = graphene.String()
     filter_fields['search'] = graphene.String()
     filter_fields['jsonkey'] = graphene.String()
-
     return filter_fields
 
 
