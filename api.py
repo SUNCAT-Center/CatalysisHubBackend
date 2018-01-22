@@ -319,7 +319,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                                                              'gas', ''),
                                                 'star', '')
                     composition_str = model.chemical_composition + " " + \
-                                      model.surface_composition + " " +
+                                      model.surface_composition + " " + \
                                       model.facet
                     author_str = model.publication["authors"].astext
                     title_str = model.publication["title"].astext
