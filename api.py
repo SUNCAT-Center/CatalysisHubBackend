@@ -439,7 +439,7 @@ def get_filter_fields(model):
             else:
                 filter_fields[column_name] = getattr(graphene, column_type)()
     # always add a distinct filter
-    filter_fields['distinct'] = graphene.String()
+    filter_fields['distinct'] = graphene.Boolean()
     filter_fields['op'] = graphene.String()
     filter_fields['search'] = graphene.String()
     filter_fields['jsonkey'] = graphene.String()
