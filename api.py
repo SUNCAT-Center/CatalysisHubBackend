@@ -1,10 +1,3 @@
-try:
-    import io as StringIO
-except:
-    # Fallback solution for python2.7
-    import StringIO
-
-
 """
 API for GraphQL enhanced queries against catapp and ase-db database
 
@@ -122,6 +115,12 @@ Some Examples:
 }
 
 """
+try:
+    import io as StringIO
+except:
+    # Fallback solution for python2.7
+    import StringIO
+
 
 # global imports
 import re
@@ -181,6 +180,14 @@ class Catapp(CustomSQLAlchemyObjectType):
     class Meta:
         model = models.Catapp
         interfaces = (graphene.relay.Node, )
+
+    _systems = graphene.List('api.System')
+
+    def resolve__systems(self, info):
+        query = System.get_query(info).filter(
+            models.System.unique_id.in_(self.ase_ids.values())
+        )
+        return query.all()
 
 
 class System(CustomSQLAlchemyObjectType):
