@@ -88,38 +88,47 @@ class Catapp(Base):
 
     @hybrid_property
     def _publication_title(self):
+        "The title of corresponding publication"
         return self.publication['title']
     
     @hybrid_property
     def _publication_publisher(self):
+        "The title of corresponding publication"
         return self.publication['publisher']
     
     @hybrid_property
     def _publication_journal(self):
+        "The title of corresponding publication"
         return self.publication['journal']
     
     @hybrid_property
     def _publication_volume(self):
+        "The volume of corresponding publication"
         return self.publication['volume']
     
     @hybrid_property
     def _publication_number(self):
+        "The number of corresponding publication"
         return self.publication['number']
     
     @hybrid_property
     def _publication_authors(self):
+        "The authors of corresponding publication"
         return self.publication['authors']
     
     @hybrid_property
     def _publication_doi(self):
+        "The DOI of corresponding publication. Lookup using http://dx.doi.org/..."
         return self.publication['doi']
     
     @hybrid_property
     def _publication_year(self):
+        "The year of corresponding publication"
         return self.publication['year']
     
     @hybrid_property
     def _publication_pages(self):
+        "The pages of corresponding publication"
         return self.publication['pages']
 
     @hybrid_property
@@ -234,56 +243,69 @@ class System(Base):
 
     @hybrid_property
     def _positions(self):
+        "String representation of positions, use this instead of 'positions'"
         return json.dumps(
             ase.db.sqlite.deblob(self.positions).reshape(-1, 3).tolist()
         )
 
     @hybrid_property
     def _cell(self):
+        "String representation of cell, use this instead of 'cell'"
         return (ase.db.sqlite.deblob(self.cell).reshape(-1, 3).tolist())
 
     @hybrid_property
     def _pbc(self):
+        "String representation of periodic boundary conditions, use this instead of 'pbc'"
         return (self.pbc & np.array([1, 2, 4])).astype(bool).tolist()
 
     @hybrid_property
     def _initial_magmoms(self):
+        "String representation of initial magnetic moments, use this instead of 'initial_magmoms'"
         return ase.db.sqlite.deblob(self.initial_magmoms)
 
     @hybrid_property
     def _initial_charges(self):
+        "String representation of initial charges, use this instead of 'initial_charges'"
         return ase.db.sqlite.deblob(self.initial_charges)
 
     @hybrid_property
     def _masses(self):
+        "String representation of masses, use this instead of 'masses'"
         return ase.db.sqlite.deblob(self.masses)
 
     @hybrid_property
     def _tags(self):
+        "String representation of tags, use this instead of 'tags'"
         return ase.db.sqlite.deblob(self.tags, np.int32)
 
     @hybrid_property
     def _momenta(self):
+        "String representation of momenta, use this instead of 'momenta'"
         return ase.db.sqlite.deblob(self.moment, shape=(-1, 3))
 
     @hybrid_property
     def _forces(self):
+        "String representation of forces, use this instead of 'forces'"
         return ase.db.sqlite.deblob(self.forces, shape=(-1, 3))
 
     @hybrid_property
     def _stress(self):
+        "String representation of stress, use this instead of 'stress'"
         return ase.db.sqlite.deblob(self.stress)
 
     @hybrid_property
     def _dipole(self):
+        "String representation of dipole, use this instead of 'dipole'"
         return ase.db.sqlite.deblob(self.dipole)
 
     @hybrid_property
     def _magmoms(self):
+        "String representation of magnetic moments, use this instead of 'magmoms'"
         return (ase.db.sqlite.deblob(self.magmoms).tolist())
 
     @hybrid_property
     def _charges(self):
+        "String representation of charges, use this instead of 'charges'"
         return (ase.db.sqlite.deblob(self.charges).tolist())
 
     ###################################
@@ -334,6 +356,7 @@ class System(Base):
     ###################################
     @hybrid_property
     def _reaction(self):
+        "String presentation of chemical reaction"
         reaction = json.loads(self.key_value_pairs).get('reaction', '')
         reaction = reaction.replace('__', '->').replace('_', '+')
         return reaction

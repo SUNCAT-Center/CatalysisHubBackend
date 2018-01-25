@@ -176,6 +176,7 @@ class CustomSQLAlchemyObjectType(graphene_sqlalchemy.SQLAlchemyObjectType):
 
 
 class Catapp(CustomSQLAlchemyObjectType):
+    "Reaction energetics with links to corresponding systems structures."
 
     class Meta:
         model = models.Catapp
@@ -191,6 +192,7 @@ class Catapp(CustomSQLAlchemyObjectType):
 
 
 class System(CustomSQLAlchemyObjectType):
+    "Atomic structures."
 
     _input_file = graphene.String(format=graphene.String(description='"abinit" "castep-cell" "cfg" "cif" "dlp4" "eon" "espresso-in" "extxyz" "findsym" "gen" "gromos" "json" "jsv" "nwchem" "proteindatabank" "py" "turbomole" "v-sim" "vasp" "xsf" "xyz"'))
 
@@ -245,6 +247,7 @@ class System(CustomSQLAlchemyObjectType):
 
 
 class NumberKeyValue(CustomSQLAlchemyObjectType):
+    "Internal table for storing numeric tags."
 
     class Meta:
         model = models.NumberKeyValue
@@ -252,6 +255,7 @@ class NumberKeyValue(CustomSQLAlchemyObjectType):
 
 
 class TextKeyValue(CustomSQLAlchemyObjectType):
+    "Internal table for storing string tags."
 
     class Meta:
         model = models.TextKeyValue
