@@ -39,7 +39,7 @@ class JsonEncodedDict(sqla.TypeDecorator):
 
 if os.environ.get('DB_PASSWORD', ''):
     url = sqlalchemy.engine.url.URL('postgres',
-                                    username='catappuser',
+                                    username='catvisitor',
                                     password=os.environ['DB_PASSWORD'],
                                     host='catappdatabase.cjlis1fysyzx.us-west-1.rds.amazonaws.com',
                                     port=5432,
