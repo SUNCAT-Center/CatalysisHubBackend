@@ -139,7 +139,7 @@ class CountableConnection(graphene.relay.Connection):
     class Meta:
         abstract = True
 
-    total_count = graphene.Int()
+    total_count = graphene.Int(description="Total number of hits regardless of pagination.")
 
     @staticmethod
     def resolve_total_count(root, info):
@@ -181,7 +181,7 @@ class Catapp(CustomSQLAlchemyObjectType):
         model = models.Catapp
         interfaces = (graphene.relay.Node, )
 
-    _systems = graphene.List('api.System')
+    _systems = graphene.List('api.System', description="Structures belonging to reaction.")
 
     def resolve__systems(self, info):
         query = System.get_query(info).filter(
@@ -192,7 +192,7 @@ class Catapp(CustomSQLAlchemyObjectType):
 
 class System(CustomSQLAlchemyObjectType):
 
-    _input_file = graphene.String(format=graphene.String())
+    _input_file = graphene.String(format=graphene.String(description='"abinit" "castep-cell" "cfg" "cif" "dlp4" "eon" "espresso-in" "extxyz" "findsym" "gen" "gromos" "json" "jsv" "nwchem" "proteindatabank" "py" "turbomole" "v-sim" "vasp" "xsf" "xyz"'))
 
     class Meta:
         model = models.System
@@ -237,6 +237,7 @@ class System(CustomSQLAlchemyObjectType):
             mem_file = StringIO.StringIO()
             mem_file.name = 'Export from http://catappdatabase.herokuapp.com/graphql'
             ase.io.write(mem_file, self._toatoms(), format)
+
             return mem_file.getvalue()
         else:
             return 'Unsupported format. Should be one of %s'\
