@@ -19,15 +19,20 @@ except:
 app = flask.Flask(__name__)
 app.debug = True
 
-cors = CORS(app, resources={r"/graphql/*":
-    {"origins":
-        ["localhost:.*",
+cors = CORS(app, resources={
+    r"/graphql/*": {"origins":
+        [   "localhost:.*",
+            "localhost:3000",
             "catapp-browser.herokuapp.com",
-            "*"
-
-
-            ]
-        }
+            "*",
+        ]
+        },
+    r"/apps/*": {"origins":
+        [   "localhost:.*",
+            "catapp-browser.herokuapp.com",
+            "*",
+        ]
+        },
     }
     )
 
@@ -44,6 +49,10 @@ def apps():
 #print api.schema
 # AtoML app
 #app.register_blueprint(atoml_blueprint)
+
+# link up catKitDemo using blueprint
+from apps.catKitDemo import catKitDemo
+app.register_blueprint(catKitDemo, url_prefix='/apps/catKitDemo')
 
 # Graphql view
 app.add_url_rule('/graphql',
