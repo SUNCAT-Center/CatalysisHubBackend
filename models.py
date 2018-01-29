@@ -69,6 +69,7 @@ Base.query = db_session.query_property()
 
 class Catapp(Base):
     __tablename__ = 'catapp'
+    __table_args__ = ({'schema': 'public'})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     #rowid = sqlalchemy.sqlalchemy.Column(sqlalchemy.Integer)
     chemical_composition = sqlalchemy.Column(sqlalchemy.String, )
@@ -163,12 +164,14 @@ class Catapp(Base):
 
 class Information(Base):
     __tablename__ = 'information'
+    __table_args__ = ({'schema': 'public'})
     name = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.String, )
 
 
 class System(Base):
     __tablename__ = 'systems'
+    __table_args__ = ({'schema': 'public'})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     unique_id = sqlalchemy.Column(sqlalchemy.String, )
@@ -203,8 +206,8 @@ class System(Base):
     volume = sqlalchemy.Column(sqlalchemy.Float, )
     mass = sqlalchemy.Column(sqlalchemy.Float, )
     charge = sqlalchemy.Column(sqlalchemy.Float, )
+    
     keys = sqlalchemy.orm.relationship("Key", backref="systems", uselist=True)
-
     species = sqlalchemy.orm.relationship(
         "Species", backref="systems", uselist=True)
     text_keys = sqlalchemy.orm.relationship(
@@ -396,8 +399,9 @@ class System(Base):
 
 class Species(Base):
     __tablename__ = 'species'
+    __table_args__ = ({'schema': 'public'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'systems.id'), primary_key=True)
+        'public.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     Z = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
     n = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
@@ -405,16 +409,18 @@ class Species(Base):
 
 class Key(Base):
     __tablename__ = 'keys'
+    __table_args__ = ({'schema': 'public'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'systems.id'), primary_key=True)
+        'public.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
 
 
 class NumberKeyValue(Base):
     __tablename__ = 'number_key_values'
+    __table_args__ = ({'schema': 'public'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'systems.id'), primary_key=True)
+        'public.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.Float,)
@@ -422,8 +428,9 @@ class NumberKeyValue(Base):
 
 class TextKeyValue(Base):
     __tablename__ = 'text_key_values'
+    __table_args__ = ({'schema': 'public'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'systems.id'), primary_key=True)
+        'public.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.String,)
