@@ -330,9 +330,13 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                                                              product_str,
                                                              'gas', ''),
                                                 'star', '')
-                    composition_str = model.chemical_composition + " " + \
-                                      model.surface_composition + " " + \
-                                      model.facet
+                    composition_str = model.chemical_composition
+
+                    composition_el_str = model.chemical_composition
+                    for i in range(0,10): # replace all int by white space
+                        composition_el_str = func.replace(composition_el_str,
+                                                          str(i), ' ')
+                    composition_str += " " + composition_el_str + " " + model.facet
                     author_str = model.publication["authors"].astext
                     title_str = model.publication["title"].astext
                     year_str = model.publication["year"].astext
@@ -451,7 +455,7 @@ def get_filter_fields(model):
             else:
                 filter_fields[column_name] = getattr(graphene, column_type)()
     # always add a distinct filter
-    filter_fields['distinct'] = graphene.String()
+    filter_fields['distinct'] = graphene.Boolean()
     filter_fields['op'] = graphene.String()
     filter_fields['search'] = graphene.String()
     filter_fields['jsonkey'] = graphene.String()
