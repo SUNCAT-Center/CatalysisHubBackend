@@ -44,8 +44,10 @@ if os.environ.get('DB_PASSWORD', ''):
                                     host='catappdatabase.cjlis1fysyzx.us-west-1.rds.amazonaws.com',
                                     port=5432,
                                     database='catappdatabase')
+    PRODUCTION = True
 else:
     url = sqlalchemy.engine.url.URL('sqlite', database='./test_database.db')
+    PRODUCTION = False
 
 
 engine = sqlalchemy.create_engine(
@@ -69,7 +71,7 @@ Base.query = db_session.query_property()
 
 class Catapp(Base):
     __tablename__ = 'catapp'
-    __table_args__ = ({'schema': 'public'})
+    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     #rowid = sqlalchemy.sqlalchemy.Column(sqlalchemy.Integer)
     chemical_composition = sqlalchemy.Column(sqlalchemy.String, )
@@ -164,14 +166,14 @@ class Catapp(Base):
 
 class Information(Base):
     __tablename__ = 'information'
-    __table_args__ = ({'schema': 'public'})
+    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
     name = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.String, )
 
 
 class System(Base):
     __tablename__ = 'systems'
-    __table_args__ = ({'schema': 'public'})
+    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     unique_id = sqlalchemy.Column(sqlalchemy.String, )
@@ -399,9 +401,9 @@ class System(Base):
 
 class Species(Base):
     __tablename__ = 'species'
-    __table_args__ = ({'schema': 'public'})
+    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id'), primary_key=True)
+        'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     Z = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
     n = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
@@ -409,18 +411,18 @@ class Species(Base):
 
 class Key(Base):
     __tablename__ = 'keys'
-    __table_args__ = ({'schema': 'public'})
+    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id'), primary_key=True)
+        'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
 
 
 class NumberKeyValue(Base):
     __tablename__ = 'number_key_values'
-    __table_args__ = ({'schema': 'public'})
+    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id'), primary_key=True)
+        'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.Float,)
@@ -428,9 +430,9 @@ class NumberKeyValue(Base):
 
 class TextKeyValue(Base):
     __tablename__ = 'text_key_values'
-    __table_args__ = ({'schema': 'public'})
+    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id'), primary_key=True)
+        'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.String,)
