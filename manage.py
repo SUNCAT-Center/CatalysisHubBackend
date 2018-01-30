@@ -7,7 +7,6 @@ from app import app
 
 manager = Manager(app)
 
-
 @manager.command
 def list_routes():
     import urllib.request
