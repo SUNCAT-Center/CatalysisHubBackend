@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # global imports
+
 import numpy as np
 import json
 import flask
@@ -34,22 +35,23 @@ app = flask.Flask(__name__)
 app.debug = True
 app.json_encoder = NumpyEncoder
 
-cors = CORS(app, resources={
-    r"/graphql/*": {"origins":
-        [   "localhost:.*",
-            "localhost:3000",
-            "catapp-browser.herokuapp.com",
-            "*",
-        ]
-        },
-    r"/apps/*": {"origins":
-        [   "localhost:.*",
-            "catapp-browser.herokuapp.com",
-            "*",
-        ]
-        },
-    }
-    )
+CORS(app)
+#cors = CORS(app, resources={
+    #r"/graphql/*": {"origins":
+        #[   "localhost:.*",
+            #"localhost:3000",
+            #"catapp-browser.herokuapp.com",
+            #"*",
+        #]
+        #},
+    #r"/apps/*": {"origins":
+        #[   "localhost:.*",
+            #"catapp-browser.herokuapp.com",
+            #"*",
+        #]
+        #},
+    #}
+    #)
 
 @app.route('/')
 

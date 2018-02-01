@@ -28,6 +28,8 @@ import catkit.surface
 
 catKitDemo = flask.Blueprint('catKitDemo', __name__)
 
+VALID_OUT_FORMATS = ["abinit", "castep-cell", "cfg", "cif", "dlp4", "eon", "espresso-in", "extxyz", "findsym", "gen", "gromos", "json", "jsv", "nwchem", "proteindatabank", "py", "turbomole", "v-sim", "vasp", "xsf", "xyz"]
+
 
 @catKitDemo.route('/generate_bulk_cif/', methods=['GET', 'POST'])
 def generate_bulk_cif(request=None):
@@ -159,9 +161,9 @@ def get_adsorption_sites(request=None):
 
     gen = catkit.surface.SlabGenerator(
         bulk=bulk_atoms,
-        miller_index=[miller_x, miller_y, miller_z
-                      ],
+        miller_index=[miller_x, miller_y, miller_z],
         layers=layers,
+        vacuum=vacuum,
     )
 
     in_mem_files = []
@@ -192,8 +194,13 @@ def get_adsorption_sites(request=None):
             miller_index=[miller_x, miller_y, miller_z
                           ],
             layers=layers,
+            vacuum=vacuum,
         )
-        sites = gen.get_adsorption_sites(atoms)
+        atoms = gen.get_slab(primitive=True)
+        sites = gen.adsorption_sites(
+                atoms,
+                symmetry_reduced=True,
+                )
         sites_list.append(sites)
         print("SITES SITES SITES")
         pprint.pprint(sites)
@@ -282,19 +289,25 @@ def place_adsorbates(request=None):
     print(len(images))
 
     for i, atoms in enumerate(images):
-        print("---> {i}".format(**locals()))
+        print("---> i = {i}".format(**locals()))
         atoms0 = atoms
         gen = catkit.surface.SlabGenerator(
             bulk=bulk_atoms,
-            miller_index=[miller_x, miller_y, miller_z
-                          ],
+            miller_index=[miller_x, miller_y, miller_z],
             layers=layers,
+            vacuum=vacuum,
         )
-        sites = gen.get_adsorption_sites(atoms0)
-        for w in sites.items():
-            k = w[0]
-            v = w[1]
-            print("--------> {k}".format(**locals()))
+        atoms = gen.get_slab(primitive=True)
+        sites = gen.adsorption_sites(
+                atoms, symmetry_reduced=True,
+                )
+        print("SITESSISTSTES" + pprint.pformat(sites))
+        #for w in sites.items():
+        for k in sorted(sites):
+            v = sites[k]
+            #k = w[0]
+            #v = w[1]
+            print("--------> k = {k}".format(**locals()))
             #print("W {w}".format(**locals()))
             print("V {v}, K {k}".format(**locals()))
             print(len(v))
@@ -305,7 +318,7 @@ def place_adsorbates(request=None):
             print(".......  {lp}".format(**locals()))
             print("POSITIONS {positions}".format(**locals()))
             for j, site in enumerate(positions):
-                print("------------> {j}".format(**locals()))
+                print("------------> j = {j}".format(**locals()))
                 occupation = site_occupation.get(str(i), {}).get(str(k), {})[j]
                 print("SITE {j} LABEL {k} OCCUPATION {occupation}".format(**locals()))
                 if occupation != 'empty':
@@ -367,3 +380,64 @@ def generate_dft_input(request=None):
     response.headers[u"Content-Disposition"] = 'attachment; filename="{calcstr}.zip"'.format(**locals())
     print(response.headers)
     return response
+
+@catKitDemo.route('/convert_atoms/', methods=['GET', 'POST'])
+def convert_atoms(request=None):
+    import ase.io
+    import ase.io.formats
+    request = flask.request if request is None else request
+    filename = request.files['file'].filename
+    out_format = None
+    #out_format = request.files['outFormat']
+
+    if not out_format:
+        out_format = 'cif'
+    if out_format not in VALID_OUT_FORMATS:
+        return {
+            "error": "outFormat {outformat} is invalid. Should be on of {VALID_OUT_FORMATS}".format(**locals()),
+                }
+
+    with StringIO.BytesIO() as in_bfile:
+        pprint.pprint(dir(request.files['file']))
+        pprint.pprint(dir(request.files['file']))
+        request.files['file'].save(in_bfile)
+        with StringIO.StringIO() as in_file:
+            content = in_file.getvalue()
+            in_bfile.seek(0)
+            try:
+                in_file.write(in_bfile.getvalue().decode('UTF-8'))
+            except Exception as error:
+                in_file = in_bfile
+                #return flask.jsonify({
+                    #'error': 'Binary files not supported, yet.\n{error}'.format(**locals())
+                    #})
+            in_file.seek(0)
+            print(content)
+            filetype = ase.io.formats.filetype(filename, read=False)
+            try:
+                atoms = ase.io.read(
+                        filename=in_file,
+                        index=None,
+                        format=filetype,
+                        #io=ase.io.formats.get_ioformat(filetype),
+                        #parallel=False,
+                        )
+            except Exception as error:
+                return flask.jsonify({
+                    'error': 'Binary files not supported, yet.\nfiletype = {filetype}\n{error}'.format(**locals())
+                    })
+            print(atoms)
+            print(atoms.cell)
+            with StringIO.StringIO() as out_file:
+                out_file.name = 'CatApp Browser Export'
+                ase.io.write(out_file, atoms, out_format)
+                out_content = out_file.getvalue()
+
+    return flask.jsonify({
+        'image': str(out_content),
+        'input_filetype': filetype,
+        'output_filetype': out_format,
+        'filename': filename,
+        })
+
+
