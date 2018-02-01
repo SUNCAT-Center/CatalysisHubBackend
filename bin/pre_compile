@@ -1,0 +1,9 @@
+#!/usr/bin/env python
+
+import os
+import string
+
+with open('requirements.template', 'r') as infile:
+    with open('requirements.txt', 'w') as outfile:
+        outfile.write(string.Template(
+            infile.read()).safe_substitute(**os.environ))
