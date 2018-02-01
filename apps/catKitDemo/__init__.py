@@ -177,15 +177,6 @@ def get_adsorption_sites(request=None):
 
     sites_list = []
 
-# DEBUGGING
-    mem_files = []
-    for atoms in copy.deepcopy(images):
-        mem_files.append(StringIO.StringIO())
-        ase.io.write(mem_files[-1], atoms, format='cif')
-        mem_files[-1].seek(0)
-        pprint.pprint(mem_files[-1].getvalue())
-# DEBUGGING
-
     alt_labels = []
     cif_images = []
     for atoms in copy.deepcopy(images):
@@ -202,8 +193,6 @@ def get_adsorption_sites(request=None):
                 symmetry_reduced=True,
                 )
         sites_list.append(sites)
-        print("SITES SITES SITES")
-        pprint.pprint(sites)
         label_index = 0
         alt_labels.append({})
         for site_label in sorted(sites):
@@ -211,7 +200,6 @@ def get_adsorption_sites(request=None):
                 if len(site) > 0:
                     atoms += ase.atom.Atom('F', site + [0., 0., 1.5])
                     natoms = len(atoms) - 1
-                    pprint.pprint("MARKER ATOM {site_label_i} {natoms} {site}".format(**locals()))
                     alt_labels[-1][len(atoms)-1] = site_label + ' ' + str(site_label_i)
                     label_index += 1
 
@@ -285,11 +273,7 @@ def place_adsorbates(request=None):
     sites_list = []
     site_occupation = json.loads(request.args.get('siteOccupation', {}))
 
-    pprint.pprint("SITE OCCUPATION " + pprint.pformat(site_occupation))
-    print(len(images))
-
     for i, atoms in enumerate(images):
-        print("---> i = {i}".format(**locals()))
         atoms0 = atoms
         gen = catkit.surface.SlabGenerator(
             bulk=bulk_atoms,
@@ -301,26 +285,15 @@ def place_adsorbates(request=None):
         sites = gen.adsorption_sites(
                 atoms, symmetry_reduced=True,
                 )
-        print("SITESSISTSTES" + pprint.pformat(sites))
-        #for w in sites.items():
         for k in sorted(sites):
             v = sites[k]
-            #k = w[0]
-            #v = w[1]
-            print("--------> k = {k}".format(**locals()))
-            #print("W {w}".format(**locals()))
-            print("V {v}, K {k}".format(**locals()))
-            print(len(v))
             if len(v) != 3:
                 continue
             positions, points, _ = v
             lp = len(positions)
-            print(".......  {lp}".format(**locals()))
-            print("POSITIONS {positions}".format(**locals()))
+
             for j, site in enumerate(positions):
-                print("------------> j = {j}".format(**locals()))
                 occupation = site_occupation.get(str(i), {}).get(str(k), {})[j]
-                print("SITE {j} LABEL {k} OCCUPATION {occupation}".format(**locals()))
                 if occupation != 'empty':
                     atoms += ase.atoms.Atoms(occupation, [site + np.array([0, 0, 1.5])])
                 else:
@@ -378,7 +351,6 @@ def generate_dft_input(request=None):
             )
 
     response.headers[u"Content-Disposition"] = 'attachment; filename="{calcstr}.zip"'.format(**locals())
-    print(response.headers)
     return response
 
 @catKitDemo.route('/convert_atoms/', methods=['GET', 'POST'])
@@ -398,8 +370,6 @@ def convert_atoms(request=None):
                 }
 
     with StringIO.BytesIO() as in_bfile:
-        pprint.pprint(dir(request.files['file']))
-        pprint.pprint(dir(request.files['file']))
         request.files['file'].save(in_bfile)
         with StringIO.StringIO() as in_file:
             content = in_file.getvalue()
@@ -412,7 +382,6 @@ def convert_atoms(request=None):
                     #'error': 'Binary files not supported, yet.\n{error}'.format(**locals())
                     #})
             in_file.seek(0)
-            print(content)
             filetype = ase.io.formats.filetype(filename, read=False)
             try:
                 atoms = ase.io.read(
@@ -426,8 +395,6 @@ def convert_atoms(request=None):
                 return flask.jsonify({
                     'error': 'Binary files not supported, yet.\nfiletype = {filetype}\n{error}'.format(**locals())
                     })
-            print(atoms)
-            print(atoms.cell)
             with StringIO.StringIO() as out_file:
                 out_file.name = 'CatApp Browser Export'
                 ase.io.write(out_file, atoms, out_format)
