@@ -4,7 +4,7 @@ import sqlalchemy
 import sqlalchemy.types
 import sqlalchemy.ext.declarative
 from sqlalchemy import or_
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 import graphene.types.json
 try:
     import io as StringIO
@@ -37,10 +37,10 @@ class JsonEncodedDict(sqla.TypeDecorator):
 
 # set to local database path
 
-if os.environ.get('DB_PASSWORD', ''):
+if os.environ.get('DB_PASSWORD0', ''):
     url = sqlalchemy.engine.url.URL('postgres',
-                                    username='catvisitor',
-                                    password=os.environ['DB_PASSWORD'],
+                                    username='catappuser',
+                                    password=os.environ['DB_PASSWORD0'],
                                     host='catappdatabase.cjlis1fysyzx.us-west-1.rds.amazonaws.com',
                                     port=5432,
                                     database='catappdatabase')
@@ -54,6 +54,7 @@ engine = sqlalchemy.create_engine(
     url,
     convert_unicode=True)
 
+
 # work-around needed for testing
 # api locally w/o postgreSQL available:
 # simply JSON dictionaries as String
@@ -66,12 +67,43 @@ db_session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(
     bind=engine,
 ))
 
+
 Base = sqlalchemy.ext.declarative.declarative_base()
 Base.query = db_session.query_property()
 
+
+class Publications(Base):
+    __tablename__ = 'publications'
+    __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    pub_id = sqlalchemy.Column(sqlalchemy.String, unique=True)
+    title = sqlalchemy.Column(sqlalchemy.String, )
+    authors = sqlalchemy.Column(JSONB, )
+    journal = sqlalchemy.Column(sqlalchemy.String, )
+    number = sqlalchemy.Column(sqlalchemy.String, )
+    pages = sqlalchemy.Column(sqlalchemy.String, )
+    year = sqlalchemy.Column(sqlalchemy.Integer, )
+    publisher = sqlalchemy.Column(sqlalchemy.String, )
+    doi = sqlalchemy.Column(sqlalchemy.String, )
+    tags = sqlalchemy.Column(JSONB, )
+    pubtextsearch = sqlalchemy.Column(TSVECTOR, )
+    
+    #publication_structures = sqlalchemy.orm.relationship("PublicationStructures", backref="stage.publications", uselist=True)
+
+class PublicationStructures(Base):
+    __tablename__ = 'publication_structures'
+    __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
+    
+    ase_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
+        'stage.systems.unique_id' if PRODUCTION else 'main.publications.pub_id'), primary_key=True)
+    pub_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
+        'stage.publications.pub_id' if PRODUCTION else 'main.publications.pub_id'), primary_key=True)
+    #pkey = sqlalchemy.PrimaryKeyConstraint('ase_id', 'pub_id', primary_key=True)
+
+    
 class Catapp(Base):
     __tablename__ = 'catapp'
-    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     #rowid = sqlalchemy.sqlalchemy.Column(sqlalchemy.Integer)
     chemical_composition = sqlalchemy.Column(sqlalchemy.String, )
@@ -84,11 +116,14 @@ class Catapp(Base):
     activation_energy = sqlalchemy.Column(sqlalchemy.Float, )
     dft_code = sqlalchemy.Column(sqlalchemy.String, )
     dft_functional = sqlalchemy.Column(sqlalchemy.String, )
-    publication = sqlalchemy.Column(JSONB, )
-    doi = sqlalchemy.Column(sqlalchemy.String, )
-    year = sqlalchemy.Column(sqlalchemy.Integer, )
-    ase_ids = sqlalchemy.Column(JSONB, )
+    username = sqlalchemy.Column(sqlalchemy.String, )
+    pub_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
+        'stage.publications.pub_id' if PRODUCTION else 'main.publications.pub_id'))
+    pubtextsearch = sqlalchemy.Column(TSVECTOR, )
 
+    #catapp_structures = sqlalchemy.orm.relationship("CatappStructures", backref="catapp", uselist=True)
+
+    """
     @hybrid_property
     def _publication_title(self):
         return self.publication['title']
@@ -124,7 +159,8 @@ class Catapp(Base):
     @hybrid_property
     def _publication_pages(self):
         return self.publication['pages']
-
+    """
+    
     @hybrid_property
     def _reaction(self):
         reaction = ''
@@ -155,16 +191,28 @@ class Catapp(Base):
                 i += 1
         return reaction
 
+
+class CatappStructures(Base):
+    __tablename__ = 'catapp_structures'
+    __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
+
+    name = sqlalchemy.Column(sqlalchemy.String, )
+    ase_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
+        'stage.systems.unique_id' if PRODUCTION else 'main.publications.pub_id'), primary_key=True)
+    catapp_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
+        'stage.catapp.id' if PRODUCTION else 'main.catapp.id'), primary_key=True)
+    
+
 class Information(Base):
     __tablename__ = 'information'
-    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
     name = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.String, )
 
 
 class System(Base):
     __tablename__ = 'systems'
-    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     unique_id = sqlalchemy.Column(sqlalchemy.String, )
@@ -378,7 +426,7 @@ class System(Base):
 
 class Species(Base):
     __tablename__ = 'species'
-    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
         'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
@@ -388,7 +436,7 @@ class Species(Base):
 
 class Key(Base):
     __tablename__ = 'keys'
-    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
         'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
@@ -397,7 +445,7 @@ class Key(Base):
 
 class NumberKeyValue(Base):
     __tablename__ = 'number_key_values'
-    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
         'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
@@ -407,7 +455,7 @@ class NumberKeyValue(Base):
 
 class TextKeyValue(Base):
     __tablename__ = 'text_key_values'
-    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
         'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )

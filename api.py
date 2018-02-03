@@ -175,19 +175,25 @@ class CustomSQLAlchemyObjectType(graphene_sqlalchemy.SQLAlchemyObjectType):
             **options)
 
 
+class Publications(CustomSQLAlchemyObjectType):
+    class Meta:
+        model = models.Publications
+        interfaces = (graphene.relay.Node, )
+
+        
 class Catapp(CustomSQLAlchemyObjectType):
 
     class Meta:
         model = models.Catapp
         interfaces = (graphene.relay.Node, )
 
-    _systems = graphene.List('api.System')
+    #_systems = graphene.List('api.System')
 
-    def resolve__systems(self, info):
-        query = System.get_query(info).filter(
-            models.System.unique_id.in_(self.ase_ids.values())
-        )
-        return query.all()
+    #def resolve__systems(self, info):
+    #    query = System.get_query(info).filter(
+    #        models.System.unique_id.in_(self.ase_ids.values())
+    #    )
+    #    return query.all()
 
 
 class System(CustomSQLAlchemyObjectType):
