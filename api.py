@@ -175,18 +175,27 @@ class CustomSQLAlchemyObjectType(graphene_sqlalchemy.SQLAlchemyObjectType):
             **options)
 
 
+        
 class Publications(CustomSQLAlchemyObjectType):
+    
     class Meta:
         model = models.Publications
         interfaces = (graphene.relay.Node, )
 
+
+#class PublicationStructures(CustomSQLAlchemyObjectType):
+    
+#    class Meta:
+#        model = models.PublicationStructures
+#        interfaces = (graphene.relay.Node, )
+        
         
 class Catapp(CustomSQLAlchemyObjectType):
 
     class Meta:
         model = models.Catapp
         interfaces = (graphene.relay.Node, )
-
+        
     #_systems = graphene.List('api.System')
 
     #def resolve__systems(self, info):
@@ -194,6 +203,12 @@ class Catapp(CustomSQLAlchemyObjectType):
     #        models.System.unique_id.in_(self.ase_ids.values())
     #    )
     #    return query.all()
+
+class CatappStructures(CustomSQLAlchemyObjectType):
+
+    class Meta:
+        model = models.CatappStructures
+        interfaces = (graphene.relay.Node, )
 
 
 class System(CustomSQLAlchemyObjectType):
@@ -448,11 +463,13 @@ def get_filter_fields(model):
             column_type = column_type[2]
             if column_type == 'Integer':
                 filter_fields[column_name] = getattr(graphene, 'Int')()
+            elif column_type == 'TSVECTOR':
+                filter_fields[column_name] = getattr(graphene, 'String')()
             elif column_type == 'JSONB':
                 filter_fields[column_name] = getattr(graphene, 'String')()
-                if column_name == 'publication':
-                    for key in publication_keys:
-                        filter_fields['publication__' + key] = getattr(graphene, 'String')()
+                #if column_name == 'publication':
+                #    for key in publication_keys:
+                #        filter_fields['publication__' + key] = getattr(graphene, 'String')()
             else:
                 filter_fields[column_name] = getattr(graphene, column_type)()
     # always add a distinct filter
@@ -478,8 +495,11 @@ class Query(graphene.ObjectType):
         NumberKeyValue, **get_filter_fields(models.NumberKeyValue))
     catapp = FilteringConnectionField(
         Catapp, **get_filter_fields(models.Catapp))
-
-
+    catapp_structures = FilteringConnectionField(
+        CatappStructures, **get_filter_fields(models.CatappStructures))
+    publications = FilteringConnectionField(
+        Publications, **get_filter_fields(models.Publications))
 
 schema = graphene.Schema(
-    query=Query, types=[System, Species, TextKeyValue, NumberKeyValue, Key, Catapp],)
+    query=Query, types=[System, Species, TextKeyValue, NumberKeyValue, Key, Catapp, CatappStructures, Publications
+    ])

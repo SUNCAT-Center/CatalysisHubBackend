@@ -5,6 +5,7 @@ import sqlalchemy.types
 import sqlalchemy.ext.declarative
 from sqlalchemy import or_
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
+from sqlalchemy.ext.associationproxy import association_proxy
 import graphene.types.json
 try:
     import io as StringIO
@@ -58,6 +59,7 @@ engine = sqlalchemy.create_engine(
 # work-around needed for testing
 # api locally w/o postgreSQL available:
 # simply JSON dictionaries as String
+
 if engine.driver != 'psycopg2':
     JSONB = sqla.String
 
@@ -71,6 +73,33 @@ db_session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(
 Base = sqlalchemy.ext.declarative.declarative_base()
 Base.query = db_session.query_property()
 
+
+association_pubsys = sqlalchemy.Table('publication_structures',
+                                      Base.metadata,
+                                      sqlalchemy.Column('ase_id', sqlalchemy.String,
+                                                        sqlalchemy.ForeignKey('stage.systems.unique_id' if PRODUCTION else 'main.systems.pub_id'),
+                                                        primary_key=True),
+                                     sqlalchemy.Column('pub_id', sqlalchemy.String,
+                                                       sqlalchemy.ForeignKey('stage.publications.pub_id' if PRODUCTION else 'main.publications.pub_id'),
+                                                       primary_key=True)
+)
+
+
+
+"""
+class PublicationStructures(Base):
+    __tablename__ = 'publication_structures'
+    __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})    
+    ase_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
+        'stage.systems.unique_id' if PRODUCTION else 'main.publications.pub_id'), primary_key=True)
+    pub_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
+        'stage.publications.pub_id' if PRODUCTION else 'main.publications.pub_id'), primary_key=True)
+
+    publications = sqlalchemy.orm.relationship("Publications", backref="pub_sys")
+    systems = sqlalchemy.orm.relationship("System")
+                                          #backref="pub_sys")#,
+
+"""
 
 class Publications(Base):
     __tablename__ = 'publications'
@@ -86,20 +115,12 @@ class Publications(Base):
     publisher = sqlalchemy.Column(sqlalchemy.String, )
     doi = sqlalchemy.Column(sqlalchemy.String, )
     tags = sqlalchemy.Column(JSONB, )
-    pubtextsearch = sqlalchemy.Column(TSVECTOR, )
-    
-    #publication_structures = sqlalchemy.orm.relationship("PublicationStructures", backref="stage.publications", uselist=True)
+    pubtextsearch = sqlalchemy.Column(TSVECTOR, )   
+    catapp = sqlalchemy.orm.relationship("Catapp", backref="publications", uselist=True)
 
-class PublicationStructures(Base):
-    __tablename__ = 'publication_structures'
-    __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
+    systems = sqlalchemy.orm.relationship("System",
+                                          secondary=association_pubsys)
     
-    ase_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
-        'stage.systems.unique_id' if PRODUCTION else 'main.publications.pub_id'), primary_key=True)
-    pub_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
-        'stage.publications.pub_id' if PRODUCTION else 'main.publications.pub_id'), primary_key=True)
-    #pkey = sqlalchemy.PrimaryKeyConstraint('ase_id', 'pub_id', primary_key=True)
-
     
 class Catapp(Base):
     __tablename__ = 'catapp'
@@ -119,9 +140,9 @@ class Catapp(Base):
     username = sqlalchemy.Column(sqlalchemy.String, )
     pub_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
         'stage.publications.pub_id' if PRODUCTION else 'main.publications.pub_id'))
-    pubtextsearch = sqlalchemy.Column(TSVECTOR, )
+    textsearch = sqlalchemy.Column(TSVECTOR, )
 
-    #catapp_structures = sqlalchemy.orm.relationship("CatappStructures", backref="catapp", uselist=True)
+    catapp_structures = sqlalchemy.orm.relationship("CatappStructures", backref="catapp", uselist=True)
 
     """
     @hybrid_property
@@ -249,13 +270,20 @@ class System(Base):
     charge = sqlalchemy.Column(sqlalchemy.Float, )
     
     keys = sqlalchemy.orm.relationship("Key", backref="systems", uselist=True)
+    
     species = sqlalchemy.orm.relationship(
         "Species", backref="systems", uselist=True)
     text_keys = sqlalchemy.orm.relationship(
         "TextKeyValue", backref="systems", uselist=True)
     number_keys = sqlalchemy.orm.relationship(
         "NumberKeyValue", backref="systems", uselist=True)
+    catapp_structures= sqlalchemy.orm.relationship(
+        "CatappStructures", backref="systems", uselist=True)
 
+    publications = sqlalchemy.orm.relationship("Publications",
+                                               secondary=association_pubsys)
+
+    
     ###################################
     # GENERAL ATOMS FORMATS
     ###################################
@@ -428,9 +456,9 @@ class Species(Base):
     __tablename__ = 'species'
     __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
+        'stage.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
-    Z = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
+    z = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
     n = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
 
 
@@ -438,7 +466,7 @@ class Key(Base):
     __tablename__ = 'keys'
     __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
+        'stage.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
 
@@ -447,7 +475,7 @@ class NumberKeyValue(Base):
     __tablename__ = 'number_key_values'
     __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
+        'stage.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.Float,)
@@ -457,7 +485,10 @@ class TextKeyValue(Base):
     __tablename__ = 'text_key_values'
     __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
+        'stage.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.String,)
+
+
+
