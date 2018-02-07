@@ -21,6 +21,7 @@ import flask
 import ase.atoms
 import ase.io
 import ase.build
+import ase.io.formats
 
 
 import catkit
@@ -32,21 +33,32 @@ VALID_OUT_FORMATS = ["abinit", "castep-cell", "cfg", "cif", "dlp4", "eon", "espr
                      "gen", "gromos", "json", "jsv", "nwchem", "proteindatabank", "py", "turbomole", "v-sim", "vasp", "xsf", "xyz"]
 
 
+class MockRequest(object):
+
+    def __init__(self, args):
+        self.args = json.dumps(args)
+
+    def __repr__(self):
+        return '[MockRequest] ' + pprint.pformat(self.args)
+
+
 @catKitDemo.route('/generate_bulk_cif/', methods=['GET', 'POST'])
-def generate_bulk_cif(request=None):
+def generate_bulk_cif(request=None, return_atoms=False):
     request = flask.request if request is None else request
     if type(request.args) is str:
         request.args = json.loads(request.args)
 
-    cubic = json.loads(request.args.get('bulkParams', '{}')).get(
-        'cubic', 'true').lower() == 'true'
-    structure = json.loads(request.args.get(
-        'bulkParams', '{}')).get('structure', 'fcc')
-    lattice_constant = float(json.loads(request.args.get(
-        'bulkParams', '{}')).get('lattice_constant', 4.0))
+    if type(request.args.get('bulkParams', '{}')) is str:
+        bulk_params = json.loads(request.args.get('bulkParams', '{}'))
+    else:
+        bulk_params = request.args.get('bulkParams', {})
 
-    elements = json.loads(request.args.get('bulkParams', '{}')).get('elements')
-    pprint.pprint(json.loads(request.args.get('bulkParams', '{}')))
+    cubic = bulk_params.get(
+        'cubic', 'true').lower() == 'true'
+    structure = bulk_params.get('structure', 'fcc')
+    lattice_constant = float(bulk_params.get('lattice_constant', 4.0))
+
+    elements = bulk_params.get('elements')
 
     for i in range(1, 5):
         try:
@@ -61,6 +73,8 @@ def generate_bulk_cif(request=None):
 
     mem_file = StringIO.StringIO()
     ase.io.write(mem_file, atoms, 'cif')
+    if return_atoms:
+        return atoms
 
     return flask.jsonify({
         'cifdata': mem_file.getvalue(),
@@ -68,22 +82,22 @@ def generate_bulk_cif(request=None):
 
 
 @catKitDemo.route('/generate_slab_cif/', methods=['GET', 'POST'])
-def generate_slab_cif(request=None):
+def generate_slab_cif(request=None, return_atoms=False):
     request = flask.request if request is None else request
     if type(request.args) is str:
         request.args = json.loads(request.args)
 
-    miller_x = int(json.loads(request.args.get(
-        'slabParams', '{}')).get('miller_x', 1))
-    miller_y = int(json.loads(request.args.get(
-        'slabParams', '{}')).get('miller_y', 1))
-    miller_z = int(json.loads(request.args.get(
-        'slabParams', '{}')).get('miller_z', 1))
-    layers = int(json.loads(request.args.get(
-        'slabParams', '{}')).get('layers', 4))
-    axis = int(json.loads(request.args.get('slabParams', '{}')).get('axis', 2))
-    vacuum = float(json.loads(request.args.get(
-        'slabParams', '{}')).get('vacuum', 10.))
+    if type(request.args.get('slabParams', '{}')) is str:
+        slab_params = json.loads(request.args.get('slabParams', '{}'))
+    else:
+        slab_params = request.args.get('slabParams', {})
+
+    miller_x = int(slab_params.get('miller_x', 1))
+    miller_y = int(slab_params.get('miller_y', 1))
+    miller_z = int(slab_params.get('miller_z', 1))
+    layers = int(slab_params.get('layers', 4))
+    axis = int(slab_params.get('axis', 2))
+    vacuum = float(slab_params.get('vacuum', 10.))
     bulk_cif = str(request.args.get(
         'bulk_cif', (json.loads(generate_bulk_cif(request).data)['cifdata'])))
 
@@ -113,6 +127,9 @@ def generate_slab_cif(request=None):
         ase.io.write(mem_files[-1], images[-1], format='cif')
         mem_files[-1].seek(0)
 
+    if return_atoms:
+        return images
+
     return flask.jsonify({
         'images': [mem_file.getvalue() for mem_file in mem_files],
     })
@@ -123,8 +140,6 @@ def get_adsorption_sites(request=None):
     request = flask.request if request is None else request
     if type(request.args) is str:
         request.args = json.loads(request.args)
-
-    pprint.pprint(request.args)
 
     miller_x = int(json.loads(request.args.get(
         'slabParams', '{}')).get('miller_x', 1))
@@ -186,10 +201,13 @@ def get_adsorption_sites(request=None):
             vacuum=vacuum,
         )
         atoms = gen.get_slab(primitive=True)
-        sites = gen.adsorption_sites(
-            atoms,
-            symmetry_reduced=True,
-        )
+        try:
+            sites = gen.adsorption_sites(
+                atoms,
+                symmetry_reduced=True,
+            )
+        except:
+            sites = {}
         sites_list.append(sites)
         label_index = 0
         alt_labels.append({})
@@ -208,13 +226,6 @@ def get_adsorption_sites(request=None):
             ase.io.write(f, atoms, format='cif')
             cif_images.append(f.getvalue())
 
-    # serialize numpy arrays
-    # for i, sites in enumerate(sites_list):
-        # for j, site_name in enumerate(sites):
-            # for k, site in enumerate(sites_list[i][site_name]):
-            # if type(site) is np.ndarray:
-            #sites_list[i][site_name][k] = site.tolist()
-
     return flask.jsonify({
         'data': (sites_list),
         'cifImages': cif_images,
@@ -223,32 +234,42 @@ def get_adsorption_sites(request=None):
 
 
 @catKitDemo.route('/place_adsorbates', methods=['GET', 'POST'])
-def place_adsorbates(request=None):
+def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
     request = flask.request if request is None else request
     if type(request.args) is str:
         request.args = json.loads(request.args)
 
-    miller_x = int(json.loads(request.args.get(
-        'slabParams', '{}')).get('miller_x', 1))
-    miller_y = int(json.loads(request.args.get(
-        'slabParams', '{}')).get('miller_y', 1))
-    miller_z = int(json.loads(request.args.get(
-        'slabParams', '{}')).get('miller_z', 1))
-    layers = int(json.loads(request.args.get(
-        'slabParams', '{}')).get('layers', 4))
-    axis = int(json.loads(request.args.get('slabParams', '{}')).get('axis', 2))
-    vacuum = float(json.loads(request.args.get(
-        'slabParams', '{}')).get('vacuum', 10.))
-    bulk_cif = str(request.args.get(
-        'bulk_cif', (json.loads(generate_bulk_cif(request).data)['cifdata'])))
+    if type(request.args.get('siteOccupations', '{}')) is str:
+        site_occupation = json.loads(request.args.get('siteOccupations', '{}'))
+    else:
+        site_occupation = request.args.get('siteOccupations', {})
+
+    if type(request.args.get('slabParams', '{}')) is str:
+        slab_params = json.loads(request.args.get('slabParams', '{}'))
+    else:
+        slab_params = request.args.get('slabParams', {})
+
+    miller_x = int(slab_params.get('miller_x', 1))
+    miller_y = int(slab_params.get('miller_y', 1))
+    miller_z = int(slab_params.get('miller_z', 1))
+    layers = int(slab_params.get('layers', 4))
+    axis = int(slab_params.get('axis', 2))
+    vacuum = float(slab_params.get('vacuum', 10.))
+
     cif_images = json.loads(generate_slab_cif(request).data)['images']
 
-    # create bulk atoms
-    mem_file = StringIO.StringIO()
-    mem_file.write(bulk_cif)
-    mem_file.seek(0)
+    # bulk_cif = str(request.args.get(
+    #'bulk_cif', (json.loads(generate_bulk_cif(request).data)['cifdata'])))
 
-    bulk_atoms = ase.io.read(mem_file, format='cif')
+    # create bulk atoms
+    #mem_file = StringIO.StringIO()
+    # mem_file.write(bulk_cif)
+    # mem_file.seek(0)
+
+    #bulk_atoms = ase.io.read(mem_file, format='cif')
+
+    bulk_atoms = generate_bulk_cif(request, return_atoms=True)
+
     with StringIO.StringIO() as f:
         ase.io.write(f, bulk_atoms, format='py')
         _batoms = '='.join(f.getvalue().split('=')[1:])
@@ -270,7 +291,7 @@ def place_adsorbates(request=None):
         images.append(atoms)
 
     sites_list = []
-    site_occupation = json.loads(request.args.get('siteOccupation', {}))
+    #site_occupation = json.loads(request.args.get('siteOccupation', {}))
 
     for i, atoms in enumerate(images):
         atoms0 = atoms
@@ -292,12 +313,18 @@ def place_adsorbates(request=None):
             lp = len(positions)
 
             for j, site in enumerate(positions):
-                occupation = site_occupation.get(str(i), {}).get(str(k), {})[j]
+                occupation_list = site_occupation.get(
+                    str(i), {}).get(str(k), {})
+                if j < len(occupation_list):
+                    occupation = occupation_list[j]
+                else:
+                    occupation = 'empty'
+
                 if occupation != 'empty':
                     atoms += ase.atoms.Atoms(occupation,
                                              [site + np.array([0, 0, 1.5])])
-                else:
-                    atoms += ase.atoms.Atoms('F',
+                elif place_holder != 'empty':
+                    atoms += ase.atoms.Atoms(place_holder,
                                              [site + np.array([0, 0, 1.5])])
         images[i] = atoms
 
@@ -307,6 +334,9 @@ def place_adsorbates(request=None):
         mem_files.append(StringIO.StringIO())
         ase.io.write(mem_files[-1], atoms, format='cif')
         mem_files[-1].seek(0)
+
+    if return_atoms:
+        return images
 
     return flask.jsonify({
         'images': [mem_file.getvalue() for mem_file in mem_files],
@@ -321,39 +351,126 @@ def generate_dft_input(request=None):
     if type(request.args) is str:
         request.args = json.loads(request.args)
 
-    # Unpack request
-    ####################
-    calculations = json.loads(request.args.get('calculations', '[]'))
-    for calculation in calculations:
-        bulkParams = json.loads(calculation.get('bulk_params', '{}'))
-        slabParams = json.loads(calculation.get('slab_params', '{}'))
-        site_occupation = json.loads(calculation.get('siteOccupation', '{}'))
-        dft_input = json.loads(calculation.get('dftInput', '{}'))
+    pprint.pprint(request.args)
 
     # Generate Zip File
     ####################
     timestr = time.strftime(
         "%Y%m%d_%H%M%S", datetime.datetime.now().timetuple())
     calcstr = "calculations_{timestr}".format(**locals())
-    mem_file = StringIO.BytesIO()
-    zf = zipfile.ZipFile(mem_file, 'w')
+    zip_mem_file = StringIO.BytesIO()
+    zf = zipfile.ZipFile(zip_mem_file, 'w')
     zf.writestr(
         '{calcstr}/publication.txt'.format(**locals()),
         '{"volume": "",\n"publisher": "",\n"doi": "",\n"title": "",\n"journal": "",\n"authors": [],\n"year": "",\n"number": "",\n"pages": ""}\n')
+#
 
-    # Here be Dragons
+    # Unpack request
     ####################
+    calculations = json.loads(request.args.get('calculations', '[]'))
+    input_json = json.dumps(calculations, indent=4, sort_keys=True)
+    zf.writestr('{calcstr}/input.json'.format(**locals()),
+                input_json,
+                )
+    for i, calculation in enumerate(calculations):
+        bulk_params = (calculation.get('bulkParams', {}))
+        slab_params = (calculation.get('slabParams', {}))
+        site_occupation = (calculation.get('siteOccupations', {}))
+        dft_params = (calculation.get('dftParams', {}))
 
+        # Unpack a little further ...
+        miller_x = slab_params.get('miller_x', 'N')
+        miller_y = slab_params.get('miller_y', 'N')
+        miller_z = slab_params.get('miller_z', 'N')
+        facet = '{miller_x}{miller_y}{miller_z}'.format(**locals())
+
+        composition = ''.join(bulk_params.get('elements', []))
+        structure = bulk_params.get('structure', '')
+
+        # Fix filetype and extension
+        FORMAT2EXTENSION = {v: k for k,
+                            v in ase.io.formats.extension2format.items()}
+        CALC_FORMAT = FORMAT2EXTENSION.get(
+            dft_params['calculator'], 'espresso-in')
+        SUFFIX = ase.io.formats.extension2format.get(
+            CALC_FORMAT, 'espresso-in')
+
+        mock_request = MockRequest(calculation)
+        # Here be Dragons
+        ####################
+        print("Calculation {i}".format(**locals()))
+
+        # 0. Construct ASE DFT Calculator
+        #######################
+
+        # 3. Add adsorbates
+        #################################
+        images = place_adsorbates(
+            mock_request, return_atoms=True, place_holder='empty')
+        adsorbates_strings = []
+        for image_i, image in enumerate(images):
+            # Generate Adsorbates String
+            adsorbates = []
+            for site_label in site_occupation.get(str(image_i), {}).keys():
+                for site_i, site in enumerate(site_occupation[str(image_i)][site_label]):
+                    occ = site_occupation[str(image_i)][site_label][site_i]
+                    if occ != 'empty':
+                        adsorbates.append(
+                            '{occ}{site_label}'.format(**locals()))
+
+            adsorbates = '_'.join(adsorbates)
+            adsorbates_strings.append(adsorbates)
+            slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{adsorbates}/{composition}_{structure}/{facet}'.format(
+                **locals())
+
+            with StringIO.StringIO() as mem_file:
+                ase.io.write(mem_file, image, format=SUFFIX)
+                zf.writestr(
+                    '{slab_path}/{adsorbates}.{SUFFIX}'.format(**locals()),
+                    mem_file.getvalue(),
+                )
+
+        # 2. Create empty surface slab
+        #################################
+        slab_images = generate_slab_cif(mock_request, return_atoms=True)
+        for slab_image_i, slab_image in enumerate(slab_images):
+            adsorbates = adsorbates_strings[slab_image_i]
+            slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{adsorbates}/{composition}_{structure}/{facet}'.format(
+                **locals())
+
+            with StringIO.StringIO() as mem_file:
+                ase.io.write(mem_file, slab_image, format=SUFFIX)
+                zf.writestr(
+                    '{slab_path}/star.{SUFFIX}'.format(**locals()),
+                    mem_file.getvalue(),
+                )
+
+        # 1. Create Bulk Input
+        #######################
+        bulk_atoms = generate_bulk_cif(mock_request, return_atoms=True)
+        bulk_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{adsorbates[0]}/{composition}_{structure}'.format(
+            **locals())
+        with StringIO.StringIO() as mem_file:
+            ase.io.write(mem_file, bulk_atoms, format=SUFFIX)
+            zf.writestr(
+                '{bulk_path}/bulk.{SUFFIX}'.format(**locals()),
+                mem_file.getvalue(),
+            )
+
+        # 4. Add gas phase calculations
+        #################################
+
+        # TODO
+
+    #zf.compress_type = zipfile.ZIP_DEFLATED
     zf.close()
-    mem_file.seek(0)
-    response = flask.send_file(
-        mem_file,
+    zip_mem_file.seek(0)
+    return flask.send_file(
+        zip_mem_file,
         attachment_filename="{calcstr}.zip".format(**locals()),
+        as_attachment=True,
+        mimetype='application/x-zip-compressed',
     )
-
-    response.headers[
-        u"Content-Disposition"] = 'attachment; filename="{calcstr}.zip"'.format(**locals())
-    return response
 
 
 @catKitDemo.route('/convert_atoms/', methods=['GET', 'POST'])
