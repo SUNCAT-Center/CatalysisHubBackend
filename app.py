@@ -71,6 +71,10 @@ def apps():
 from apps.catKitDemo import catKitDemo
 app.register_blueprint(catKitDemo, url_prefix='/apps/catKitDemo')
 
+# link up bulkEnumerator using blueprint
+from apps.bulkEnumerator import bulk_enumerator
+app.register_blueprint(bulk_enumerator, url_prefix='/apps/bulkEnumerator')
+
 # Graphql view
 app.add_url_rule('/graphql',
         view_func=flask_graphql.GraphQLView.as_view(
