@@ -134,7 +134,6 @@ import six
 # local imports
 import models
 
-
 class CountableConnection(graphene.relay.Connection):
     class Meta:
         abstract = True
@@ -182,17 +181,8 @@ class Publications(CustomSQLAlchemyObjectType):
         interfaces = (graphene.relay.Node,)
 
     catapp = graphene.List('api.Catapp')
-    system = graphene.List('api.System')
-            
-class Catapp(CustomSQLAlchemyObjectType):
+    systems = graphene.List('api.Systems')
 
-    class Meta:
-        model = models.Catapp
-        interfaces = (graphene.relay.Node, )
-    
-    publications = graphene.List('api.Publications')
-    catapp_systems = graphene.List('api.CatappSystems')
-    
 
 class CatappSystems(CustomSQLAlchemyObjectType):
 
@@ -201,14 +191,14 @@ class CatappSystems(CustomSQLAlchemyObjectType):
         interfaces = (graphene.relay.Node, )
 
     #name = graphene.InputField()
-    system = graphene.List('api.System')
+    #systems = graphene.List('api.Systems')
     
-class System(CustomSQLAlchemyObjectType):
+class Systems(CustomSQLAlchemyObjectType):
 
     _input_file = graphene.String(format=graphene.String())
 
     class Meta:
-        model = models.System
+        model = models.Systems
         interfaces = (graphene.relay.Node, )
 
     @staticmethod
@@ -329,35 +319,9 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                     jsonkey = jsonkey_input
 
                 column = getattr(model, field, None)
-                """
-                if field == "search":
-                    reactant_str = cast(model.reactants, sqlalchemy.String)
-                    product_str = cast(model.products, sqlalchemy.String)
-                    reaction_str = func.replace(func.replace(reactant_str +
-                                                             product_str,
-                                                             'gas', ''),
-                                                'star', '')
-                    composition_str = model.chemical_composition
 
-                    composition_el_str = model.chemical_composition
-                    for i in range(0,10): # replace all int by white space
-                        composition_el_str = func.replace(composition_el_str,
-                                                          str(i), ' ')
-                    composition_str += " " + composition_el_str + " " + model.facet
-                    author_str = model.publication["authors"].astext
-                    title_str = model.publication["title"].astext
-                    year_str = model.publication["year"].astext
-                    search_str = title_str + " " + author_str + " " + \
-                                 reaction_str + " " + year_str + " " + \
-                                 composition_str
-                    ts_vector = func.to_tsvector(search_str)
 
-                    query = query.filter(ts_vector.match("'{}'".format(value)))
-                """
                 if str(column.type) == "TSVECTOR":
-                    #ts_vector = func.to_tsvector(value)
-                    #ts_query = func.to_tsquery(value)
-                    #print(ts_query)
                     query = query.filter(column.match("'{}'".format(value)))
                     
                 elif str(column.type) == "JSONB":
@@ -430,7 +394,6 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
 
                 if distinct_filter:
                     query = query.distinct(column)#.group_by(getattr(model, field))
-                    
         return query
 
 
@@ -464,9 +427,6 @@ def get_filter_fields(model):
                 filter_fields[column_name] = getattr(graphene, 'String')()
             elif column_type == 'JSONB':
                 filter_fields[column_name] = getattr(graphene, 'String')()
-                #if column_name == 'publication':
-                #    for key in publication_keys:
-                #        filter_fields['publication__' + key] = getattr(graphene, 'String')()
             else:
                 filter_fields[column_name] = getattr(graphene, column_type)()
     # always add a distinct filter
@@ -478,12 +438,62 @@ def get_filter_fields(model):
     return filter_fields
 
 
+
+class Catapp(CustomSQLAlchemyObjectType):
+    class Meta:
+        model = models.Catapp
+        interfaces = (graphene.relay.Node, )
+        
+    catapp_systems =  FilteringConnectionField(
+        CatappSystems, **get_filter_fields(models.CatappSystems))
+
+    def resolve_catapp_systems(self, info, name):
+        #import pprint
+        #pprint.pprint(info, name)
+        print(name)
+        return CatappSystems.get_query(info).filter(models.CatappSystems.catapp_id == )filter(models.CatappSystems.name == name).all()
+        
+
+
+    #graphene.List('api.CatappSystems')
+
+    #catapp_systems = graphene_sqlalchemy.SQLAlchemyConnectionField(CatappSystems)    
+    #cat_sys = graphene.relay.Node.Field(catapp_systems)
+    
+   # catapp_systems = graphene.Field(lambda: CatappSystems, name=graphene.String())
+
+    #def resolve_catapp_syste,s(self, args, context, info):
+     #   query = Catapp.get_query(context)
+      #  name = args.get('name')
+       # return query.filter(EmployeeModel.name == name).first()
+
+    #graphene_sqlalchemy.SQLAlchemyConnectionField
+    #catapp_systems = graphene.List('api.CatappSystems') #FilteringConnectionField(CatappSystems, **get_filter_fields(models.CatappSystems))
+
+    #def resolve_catapp_systems(self, info, name):
+        #if name is None:
+        #    catapp_systems = graphene.List('api.CatappSystems')
+        #    return catapp_systems
+    #    print(name)
+    #    name = graphene.String()
+    #    query = CatappSystems.get_query(info)
+    #    query.filter(CatappSystems.model.name == name)
+          
+          #query = CatappSystems.get_query(info)
+    #    return query.all()
+    
+
+    
+    #catapp_systems = FilteringConnectionField(
+    #    CatappSystems, **get_filter_fields(models.CatappSystems))
+    #graphene.List('api.CatappSystems')
+
 class Query(graphene.ObjectType):
     node = graphene.relay.Node.Field()
     information = FilteringConnectionField(
         Information, **get_filter_fields(models.Information))
     systems = FilteringConnectionField(
-        System, **get_filter_fields(models.System))
+        Systems, **get_filter_fields(models.Systems))
     species = FilteringConnectionField(
         Species, **get_filter_fields(models.Species))
     key = FilteringConnectionField(Key, **get_filter_fields(models.Key))
@@ -497,7 +507,9 @@ class Query(graphene.ObjectType):
         CatappSystems, **get_filter_fields(models.CatappSystems))
     publications = FilteringConnectionField(
         Publications, **get_filter_fields(models.Publications))
-    
+
+
+#print(models.db_session.query('api.Catapp').options(sqlalchemy.orm.subqueryload(Catapp.catapp_systems)))
 schema = graphene.Schema(
-    query=Query, types=[System, Species, TextKeyValue, NumberKeyValue, Key, Catapp, CatappSystems, Publications
+    query=Query, types=[Systems, Species, TextKeyValue, NumberKeyValue, Key, Catapp, CatappSystems, Publications
     ])

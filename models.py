@@ -116,11 +116,23 @@ class Publications(Base):
     doi = sqlalchemy.Column(sqlalchemy.String, )
     tags = sqlalchemy.Column(JSONB, )
     pubtextsearch = sqlalchemy.Column(TSVECTOR, )   
-    catapp = sqlalchemy.orm.relationship("Catapp", backref="publications", uselist=True)
+    catapp = sqlalchemy.orm.relationship("Catapp", backref="publications")#, uselist=True)
 
-    systems = sqlalchemy.orm.relationship("System",
+    systems = sqlalchemy.orm.relationship("Systems",
                                           secondary=association_pubsys, uselist=True)
-    
+
+class CatappSystems(Base):
+    __tablename__ = 'catapp_structures'
+    __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
+
+    name = sqlalchemy.Column(sqlalchemy.String, )
+    ase_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
+        'stage.systems.unique_id' if PRODUCTION else 'main.publications.pub_id'), primary_key=True)
+    catapp_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
+        'stage.catapp.id' if PRODUCTION else 'main.catapp.id'), primary_key=True)
+
+    #catapp = sqlalchemy.orm.relationship("Catapp", backref='systems', uselist=True)
+    #system = sqlalchemy.orm.relationship("System", backref='catapps', uselist=True)
     
 class Catapp(Base):
     __tablename__ = 'catapp'
@@ -142,7 +154,13 @@ class Catapp(Base):
         'stage.publications.pub_id' if PRODUCTION else 'main.publications.pub_id'))
     textsearch = sqlalchemy.Column(TSVECTOR, )
 
-    catapp_systems = sqlalchemy.orm.relationship("CatappSystems", backref="catapp", uselist=True)
+    #systems_name = sqlalchemy.Column(sqlalchemy.String(), sqlalchemy.ForeignKey('CatappSystems.name'))
+
+    catapp_systems = sqlalchemy.orm.relationship("CatappSystems",
+                                                 #primaryjoin=(systems_name == sqlalchemy.orm.foreign(CatappSystems.name)),
+                                                 #uselist=False,
+                                                 backref="catapp")
+    #, uselist=True)
     #systems = sqlalchemy.orm.relationship("System",
     #                                      secondary="CatappSystems",
     #                                      backref='catapp',
@@ -217,18 +235,7 @@ class Catapp(Base):
         return reaction
 
 
-class CatappSystems(Base):
-    __tablename__ = 'catapp_structures'
-    __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
 
-    name = sqlalchemy.Column(sqlalchemy.String, )
-    ase_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
-        'stage.systems.unique_id' if PRODUCTION else 'main.publications.pub_id'), primary_key=True)
-    catapp_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
-        'stage.catapp.id' if PRODUCTION else 'main.catapp.id'), primary_key=True)
-
-    #catapp = sqlalchemy.orm.relationship("Catapp", backref='systems', uselist=True)
-    #system = sqlalchemy.orm.relationship("System", backref='catapps', uselist=True)
 
     
 class Information(Base):
@@ -238,7 +245,7 @@ class Information(Base):
     value = sqlalchemy.Column(sqlalchemy.String, )
 
 
-class System(Base):
+class Systems(Base):
     __tablename__ = 'systems'
     __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
@@ -287,10 +294,11 @@ class System(Base):
     catapp_structures= sqlalchemy.orm.relationship(
         "CatappSystems", backref="systems", uselist=True)
 
-    catapp = sqlalchemy.orm.relationship("CatappSystems", backref='system', uselist=True)
+    #catapp = sqlalchemy.orm.relationship("CatappSystems", backref='systems', uselist=True)
     
     publications = sqlalchemy.orm.relationship("Publications",
-                                               secondary=association_pubsys, uselist=True)
+                                               secondary=association_pubsys,
+                                               uselist=True)
 
     
     ###################################
