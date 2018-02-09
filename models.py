@@ -119,7 +119,7 @@ class Publications(Base):
     catapp = sqlalchemy.orm.relationship("Catapp", backref="publications", uselist=True)
 
     systems = sqlalchemy.orm.relationship("System",
-                                          secondary=association_pubsys)
+                                          secondary=association_pubsys, uselist=True)
     
     
 class Catapp(Base):
@@ -142,7 +142,11 @@ class Catapp(Base):
         'stage.publications.pub_id' if PRODUCTION else 'main.publications.pub_id'))
     textsearch = sqlalchemy.Column(TSVECTOR, )
 
-    catapp_structures = sqlalchemy.orm.relationship("CatappStructures", backref="catapp", uselist=True)
+    catapp_systems = sqlalchemy.orm.relationship("CatappSystems", backref="catapp", uselist=True)
+    #systems = sqlalchemy.orm.relationship("System",
+    #                                      secondary="CatappSystems",
+    #                                      backref='catapp',
+    #                                      uselist=True)
 
     """
     @hybrid_property
@@ -213,7 +217,7 @@ class Catapp(Base):
         return reaction
 
 
-class CatappStructures(Base):
+class CatappSystems(Base):
     __tablename__ = 'catapp_structures'
     __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
 
@@ -222,8 +226,11 @@ class CatappStructures(Base):
         'stage.systems.unique_id' if PRODUCTION else 'main.publications.pub_id'), primary_key=True)
     catapp_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
         'stage.catapp.id' if PRODUCTION else 'main.catapp.id'), primary_key=True)
-    
 
+    #catapp = sqlalchemy.orm.relationship("Catapp", backref='systems', uselist=True)
+    #system = sqlalchemy.orm.relationship("System", backref='catapps', uselist=True)
+
+    
 class Information(Base):
     __tablename__ = 'information'
     __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})
@@ -278,10 +285,12 @@ class System(Base):
     number_keys = sqlalchemy.orm.relationship(
         "NumberKeyValue", backref="systems", uselist=True)
     catapp_structures= sqlalchemy.orm.relationship(
-        "CatappStructures", backref="systems", uselist=True)
+        "CatappSystems", backref="systems", uselist=True)
 
+    catapp = sqlalchemy.orm.relationship("CatappSystems", backref='system', uselist=True)
+    
     publications = sqlalchemy.orm.relationship("Publications",
-                                               secondary=association_pubsys)
+                                               secondary=association_pubsys, uselist=True)
 
     
     ###################################
