@@ -154,55 +154,11 @@ class Catapp(Base):
         'stage.publications.pub_id' if PRODUCTION else 'main.publications.pub_id'))
     textsearch = sqlalchemy.Column(TSVECTOR, )
 
-    #systems_name = sqlalchemy.Column(sqlalchemy.String(), sqlalchemy.ForeignKey('CatappSystems.name'))
 
     catapp_systems = sqlalchemy.orm.relationship("CatappSystems",
-                                                 #primaryjoin=(systems_name == sqlalchemy.orm.foreign(CatappSystems.name)),
                                                  #uselist=False,
                                                  backref="catapp")
-    #, uselist=True)
-    #systems = sqlalchemy.orm.relationship("System",
-    #                                      secondary="CatappSystems",
-    #                                      backref='catapp',
-    #                                      uselist=True)
 
-    """
-    @hybrid_property
-    def _publication_title(self):
-        return self.publication['title']
-    
-    @hybrid_property
-    def _publication_publisher(self):
-        return self.publication['publisher']
-    
-    @hybrid_property
-    def _publication_journal(self):
-        return self.publication['journal']
-    
-    @hybrid_property
-    def _publication_volume(self):
-        return self.publication['volume']
-    
-    @hybrid_property
-    def _publication_number(self):
-        return self.publication['number']
-    
-    @hybrid_property
-    def _publication_authors(self):
-        return self.publication['authors']
-    
-    @hybrid_property
-    def _publication_doi(self):
-        return self.publication['doi']
-    
-    @hybrid_property
-    def _publication_year(self):
-        return self.publication['year']
-    
-    @hybrid_property
-    def _publication_pages(self):
-        return self.publication['pages']
-    """
     
     @hybrid_property
     def _reaction(self):
@@ -233,9 +189,6 @@ class Catapp(Base):
                 reaction += str(prefactor) + key
                 i += 1
         return reaction
-
-
-
 
     
 class Information(Base):
@@ -384,48 +337,6 @@ class Systems(Base):
     def _charges(self):
         return (ase.db.sqlite.deblob(self.charges).tolist())
 
-    ###################################
-    # PUBLICATION METADATA
-    ###################################
-    @hybrid_property
-    def _publication_doi(self):
-        return json.loads(self.key_value_pairs).get('publication_doi', '')
-
-    @hybrid_property
-    def _publication_year(self):
-        return json.loads(self.key_value_pairs).get('publication_year', '')
-
-    @hybrid_property
-    def _publication_authors(self):
-        return json.loads(self.key_value_pairs).get('publication_authors', '')
-
-    @hybrid_property
-    def _publication_title(self):
-        return json.loads(self.key_value_pairs).get('publication_title', '')
-
-    @hybrid_property
-    def _publication_journal(self):
-        return json.loads(self.key_value_pairs).get('publication_journal', '')
-
-    @hybrid_property
-    def _publication_pages(self):
-        return json.loads(self.key_value_pairs).get('publication_pages', '')
-
-    @hybrid_property
-    def _publication_year(self):
-        return json.loads(self.key_value_pairs).get('publication_year', '')
-
-    @hybrid_property
-    def _publication_volume(self):
-        return json.loads(self.key_value_pairs).get('publication_volume', '')
-
-    @hybrid_property
-    def _publication_number(self):
-        return json.loads(self.key_value_pairs).get('publication_number', '')
-
-    @hybrid_property
-    def _publication_url(self):
-        return json.loads(self.key_value_pairs).get('publication_url', '')
 
     ###################################
     # CATAPP-DB STANDARD FIELDS

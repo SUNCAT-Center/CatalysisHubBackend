@@ -30,18 +30,20 @@ Some Examples:
       }
     }}
 
-- Author-name from catapp:
-    {catapp(publication_Authors: "~Bajdich") {
+- Author-name from publications:
+    {publications(authors: "~Bajdich") {
       edges {
         node {
-          chemicalComposition
-          Reaction
-          reactionEnergy
+          catapp {
+            chemicalComposition
+            Reaction
+            reactionEnergy
+           }	
+         }
         }
-      }
-    }}
+      }}
 
-- Full text search in catapp (title, authors, year, reactants and products ):
+- Full text search in catapp (title, authors, year, reactants and products): ### Doesn't work!
     {catapp(search: "oxygen evolution bajdich 2017 OOH") {
       edges {
         node {
@@ -53,6 +55,34 @@ Some Examples:
       }
     }}
 
+- Full text search in publications (title, authors, year): 
+    {catapp(pubtextsearch: "oxygen evolution bajdich 2017") {
+      edges {
+        node {
+          PublicationTitle
+          PublicationAuthors
+          year
+          catapp {
+           Reaction
+         }
+        }
+      }
+    }}
+
+- Full text search in catapp (chemical composition, facet, reactants, products): 
+    {catapp(yextsearch: "OOH Li") {
+      edges {
+        node {
+          Reaction
+          publications{
+            title
+            authors
+         }
+        }
+      }
+    }}
+
+
 - Distinct reactants and products from catapp (works with and without "~"):
     {catapp(reactants: "~OH", products: "~", distinct: true) {
       edges {
@@ -61,6 +91,20 @@ Some Examples:
           reactionEnergy
         }
       }
+    }}
+
+
+- ASE structures belonging to reactions:
+   {catapp(reactants: "~OH" {
+      edges {
+        node {
+          catappSystems {
+            systems {
+              Cifdata
+            }
+          }
+        }
+      } 
     }}
 
 
@@ -77,7 +121,7 @@ Some Examples:
       }
     }}
 
-- Author-name from ase-db:
+- Author-name from ase-db: # Doesnt work
     {textKeys(key: "publication_authors", value: "~Bajdich") {
       edges {
         node {
@@ -89,30 +133,29 @@ Some Examples:
       }
     }}
 
-- Get all distinct DOIs
-   {textKeys(key: "publication_doi", value: "~", distinct: true) {
+- Get all distinct DOIs 
+   {publications {
       edges {
         node {
-          key
-          value
+          doi
         }
       }
     }}
 
-
 - Get all entries published since (and including) 2015
     allowed comparisons
-{
-  numberKeys(key: "publication_year", value: 2015, op: "ge") {
-    edges {
-      node {
+
+   {publications(year: 2015, op: "ge", first:1) {
+     edges {
+       node {
+        id
+        year
         systems {
-          keyValuePairs
+           keyValuePairs
         }
       }
     }
-  }
-}
+  }}
 
 """
 try:
@@ -192,6 +235,15 @@ class CatappSystems(CustomSQLAlchemyObjectType):
 
     #name = graphene.InputField()
     #systems = graphene.List('api.Systems')
+    
+class Catapp(CustomSQLAlchemyObjectType):
+    
+    class Meta:
+        model = models.Catapp
+        interfaces = (graphene.relay.Node, )
+        
+    catapp_systems = graphene.List(CatappSystems)
+    
     
 class Systems(CustomSQLAlchemyObjectType):
 
@@ -437,57 +489,6 @@ def get_filter_fields(model):
     
     return filter_fields
 
-
-
-class Catapp(CustomSQLAlchemyObjectType):
-    class Meta:
-        model = models.Catapp
-        interfaces = (graphene.relay.Node, )
-        
-    catapp_systems =  FilteringConnectionField(
-        CatappSystems, **get_filter_fields(models.CatappSystems))
-
-    def resolve_catapp_systems(self, info, name):
-        #import pprint
-        #pprint.pprint(info, name)
-        print(name)
-        return CatappSystems.get_query(info).filter(models.CatappSystems.catapp_id == )filter(models.CatappSystems.name == name).all()
-        
-
-
-    #graphene.List('api.CatappSystems')
-
-    #catapp_systems = graphene_sqlalchemy.SQLAlchemyConnectionField(CatappSystems)    
-    #cat_sys = graphene.relay.Node.Field(catapp_systems)
-    
-   # catapp_systems = graphene.Field(lambda: CatappSystems, name=graphene.String())
-
-    #def resolve_catapp_syste,s(self, args, context, info):
-     #   query = Catapp.get_query(context)
-      #  name = args.get('name')
-       # return query.filter(EmployeeModel.name == name).first()
-
-    #graphene_sqlalchemy.SQLAlchemyConnectionField
-    #catapp_systems = graphene.List('api.CatappSystems') #FilteringConnectionField(CatappSystems, **get_filter_fields(models.CatappSystems))
-
-    #def resolve_catapp_systems(self, info, name):
-        #if name is None:
-        #    catapp_systems = graphene.List('api.CatappSystems')
-        #    return catapp_systems
-    #    print(name)
-    #    name = graphene.String()
-    #    query = CatappSystems.get_query(info)
-    #    query.filter(CatappSystems.model.name == name)
-          
-          #query = CatappSystems.get_query(info)
-    #    return query.all()
-    
-
-    
-    #catapp_systems = FilteringConnectionField(
-    #    CatappSystems, **get_filter_fields(models.CatappSystems))
-    #graphene.List('api.CatappSystems')
-
 class Query(graphene.ObjectType):
     node = graphene.relay.Node.Field()
     information = FilteringConnectionField(
@@ -509,7 +510,6 @@ class Query(graphene.ObjectType):
         Publications, **get_filter_fields(models.Publications))
 
 
-#print(models.db_session.query('api.Catapp').options(sqlalchemy.orm.subqueryload(Catapp.catapp_systems)))
 schema = graphene.Schema(
     query=Query, types=[Systems, Species, TextKeyValue, NumberKeyValue, Key, Catapp, CatappSystems, Publications
     ])
