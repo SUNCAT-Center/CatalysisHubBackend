@@ -38,6 +38,7 @@ class JsonEncodedDict(sqla.TypeDecorator):
 
 # set to local database path
 
+
 if os.environ.get('DB_PASSWORD0', ''):
     url = sqlalchemy.engine.url.URL('postgres',
                                     username='catappuser',
