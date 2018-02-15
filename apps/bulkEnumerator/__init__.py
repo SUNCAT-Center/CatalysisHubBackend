@@ -224,5 +224,5 @@ def get_wyckoff_from_structure(request=None):
         'wyckoff': wyckoff,
         'species': species,
         'synonyms': synonyms,
-        'species_permuations': species_permutations,
+        'species_permutations': species_permutations,
     })

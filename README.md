@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/mhoffman/CatAppBackend.svg?branch=master)](https://travis-ci.org/mhoffman/CatAppBackend)
+[![Build Status](https://travis-ci.org/mhoffman/CatAppBackend.svg?branch=feature_docs)](https://travis-ci.org/mhoffman/CatAppBackend)
 
 ## Flask GraphQL ASE DB Demo
 
