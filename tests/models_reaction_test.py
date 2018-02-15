@@ -6,112 +6,94 @@ def app_root_route():
     #with app.app.run() as server:
         #requests.get('{ROOT_URL}/')
 
-
-
-def catapp_has_activation_energy_test():
+def reaction_has_activation_energy_test():
     import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'activation_energy'):
-        raise TypeError('catapp has no attribute activation_energy')
+    reaction = models.Reaction()
+    if not hasattr(reaction, 'activation_energy'):
+        raise TypeError('reaction has no attribute activation_energy')
 
-def catapp_has_ase_ids_test():
+    
+def reaction_has_pub_id_test():
     import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'ase_ids'):
-        raise TypeError('catapp has no attribute ase_ids')
+    reaction = models.Reaction()
+    if not hasattr(reaction, 'pub_id'):
+        raise TypeError('reaction has no attribute pub_id')
 
-def catapp_has_chemical_composition_test():
+    
+def reaction_has_chemical_composition_test():
     import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'chemical_composition'):
-        raise TypeError('catapp has no attribute chemical_composition')
+    reaction = models.Reaction()
+    if not hasattr(reaction, 'chemical_composition'):
+        raise TypeError('reaction has no attribute chemical_composition')
 
-def catapp_has_chemical_composition_test():
+    
+def reaction_has_dft_functional_test():
     import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'chemical_composition'):
-        raise TypeError('catapp has no attribute chemical_composition')
+    reaction = models.Reaction()
+    if not hasattr(reaction, 'dft_functional'):
+        raise TypeError('reaction has no attribute dft_functional')
 
  
-def catapp_has_dft_functional_test():
+def reaction_has_facet_test():
     import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'dft_functional'):
-        raise TypeError('catapp has no attribute dft_functional')
+    reaction = models.Reaction()
+    if not hasattr(reaction, 'facet'):
+        raise TypeError('reaction has no attribute facet')
 
  
-def catapp_has_doi_test():
+def reaction_has_id_test():
     import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'doi'):
-        raise TypeError('catapp has no attribute doi')
+    reaction = models.Reaction()
+    if not hasattr(reaction, 'id'):
+        raise TypeError('reaction has no attribute id')
 
  
-def catapp_has_facet_test():
+def reaction_has_metadata_test():
     import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'facet'):
-        raise TypeError('catapp has no attribute facet')
+    reaction = models.Reaction()
+    if not hasattr(reaction, 'metadata'):
+        raise TypeError('reaction has no attribute metadata')
 
  
-def catapp_has_id_test():
+def reaction_has_products_test():
     import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'id'):
-        raise TypeError('catapp has no attribute id')
+    reaction = models.Reaction()
+    if not hasattr(reaction, 'products'):
+        raise TypeError('reaction has no attribute products')
+
+  
+def reaction_has_reactants_test():
+    import models
+    reaction = models.Reaction()
+    if not hasattr(reaction, 'reactants'):
+        raise TypeError('reaction has no attribute reactants')
 
  
-def catapp_has_metadata_test():
+def reaction_has_reaction_energy_test():
     import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'metadata'):
-        raise TypeError('catapp has no attribute metadata')
+    reaction = models.Reaction()
+    if not hasattr(reaction, 'reaction_energy'):
+        raise TypeError('reaction has no attribute reaction_energy')
 
  
-def catapp_has_products_test():
+def reaction_has_sites_test():
     import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'products'):
-        raise TypeError('catapp has no attribute products')
+    reaction = models.Reaction()
+    if not hasattr(reaction, 'sites'):
+        raise TypeError('reaction has no attribute sites')
 
  
-def catapp_has_publication_test():
+def reaction_has_surface_composition_test():
     import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'publication'):
-        raise TypeError('catapp has no attribute publication')
+    reaction = models.Reaction()
+    if not hasattr(reaction, 'surface_composition'):
+        raise TypeError('reaction has no attribute surface_composition')
+
+    
+def reaction_has_username_test():
+    import models
+    reaction = models.Reaction()
+    if not hasattr(reaction, 'username'):
+        raise TypeError('reaction has no attribute username')
 
  
-def catapp_has_reactants_test():
-    import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'reactants'):
-        raise TypeError('catapp has no attribute reactants')
-
- 
-def catapp_has_reaction_energy_test():
-    import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'reaction_energy'):
-        raise TypeError('catapp has no attribute reaction_energy')
-
- 
-def catapp_has_sites_test():
-    import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'sites'):
-        raise TypeError('catapp has no attribute sites')
-
- 
-def catapp_has_surface_composition_test():
-    import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'surface_composition'):
-        raise TypeError('catapp has no attribute surface_composition')
-
- 
-def catapp_has_year_test():
-    import models
-    catapp = models.Catapp()
-    if not hasattr(catapp, 'year'):
-        raise TypeError('catapp has no attribute year')
