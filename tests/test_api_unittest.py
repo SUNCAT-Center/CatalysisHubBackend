@@ -33,7 +33,7 @@ def init_db(app):
     db.commit()
 
 
-class CatappBackendTestCase(unittest.TestCase):
+class ReactionBackendTestCase(unittest.TestCase):
     def setUp(self):
         TEST_DB_FILENAME = './test_database.db'
         self.db_fd = open(TEST_DB_FILENAME, 'w',)
@@ -96,10 +96,10 @@ class CatappBackendTestCase(unittest.TestCase):
         query = '{numberKeys(last: 10, key:"publication_year") { edges { node { value } } }}'
         rv_data = self.get_data(query)
 
-        # TEST if we can filter catapp reactions by yearko
-        query = '{catapp(last: 10, year: 2017) { edges { node { year publication doi dftCode dftFunctional } } }}'
+        # TEST if we can filter reactions reactions by yearko
+        query = '{reactions(last: 10, year: 2017) { edges { node { year publication doi dftCode dftFunctional } } }}'
         rv_data = self.get_data(query)
-        results = rv_data['data']['catapp']['edges']
+        results = rv_data['data']['reactions']['edges']
         assert 'node' in results[0]
         assert 'dftCode' in results[0]['node']
         assert results[0]['node']['dftCode'] == 'VASP_5.4.1'
@@ -123,35 +123,35 @@ class CatappBackendTestCase(unittest.TestCase):
         print(results[0])
         assert len(results) == 242
 
-        # TEST if we can query parts of catapp DB for autocompletion
-        query = '{catapp(products: "~", reactants: "~NO", distinct: true) { edges { node { reactants products } } }}'
+        # TEST if we can query parts of reactions DB for autocompletion
+        query = '{reactions(products: "~", reactants: "~NO", distinct: true) { edges { node { reactants products } } }}'
         rv_data = self.get_data(query, )
 
-        assert len(rv_data['data']['catapp']['edges']) == 18
-        assert 'reactants' in rv_data['data']['catapp']['edges'][0]['node']
-        assert 'products' in rv_data['data']['catapp']['edges'][0]['node']
+        assert len(rv_data['data']['reactions']['edges']) == 18
+        assert 'reactants' in rv_data['data']['reactions']['edges'][0]['node']
+        assert 'products' in rv_data['data']['reactions']['edges'][0]['node']
 
         # TEST if distinct switch makes the expected difference
-        query = '{catapp(last: 10, reactants: "~COH", products: "~", distinct: true) { edges { node { reactants } } }}'
+        query = '{reactions(last: 10, reactants: "~COH", products: "~", distinct: true) { edges { node { reactants } } }}'
         rv_data = self.get_data(query, )
-        pprint.pprint(rv_data['data']['catapp']['edges'])
-        print(len(rv_data['data']['catapp']['edges']))
-        assert len(rv_data['data']['catapp']['edges']) == 4
+        pprint.pprint(rv_data['data']['reactions']['edges'])
+        print(len(rv_data['data']['reactions']['edges']))
+        assert len(rv_data['data']['reactions']['edges']) == 4
 
-        query = '{catapp(last: 10, reactants: "~COH", products: "~") { edges { node { reactants } } }}'
+        query = '{reactions(last: 10, reactants: "~COH", products: "~") { edges { node { reactants } } }}'
         rv_data = self.get_data(query, verbose=True)
-        assert len(rv_data['data']['catapp']['edges']) == 4
+        assert len(rv_data['data']['reactions']['edges']) == 4
 
 
-        query = '{catapp (first: 0) { totalCount }}'
+        query = '{reactions (first: 0) { totalCount }}'
         rv_data = self.get_data(query, verbose=True)
-        assert rv_data['data']['catapp']['totalCount'] == 210, "Sample db has 210 entries"
+        assert rv_data['data']['reactions']['totalCount'] == 210, "Sample db has 210 entries"
 
         return
         # CONTINUE HERE BY PUSHING THE RETURN STATEMENT DOWN
         # AND SUCCESSIVELY ADD assertions
 
-        query = """{catapp ( last: 5, surfaceComposition: "~", facet: "~", reactants: "~", products: "~" ) {
+        query = """{reactions ( last: 5, surfaceComposition: "~", facet: "~", reactants: "~", products: "~" ) {
                    edges {
                      node {
                        id DFTCode
@@ -200,17 +200,17 @@ class CatappBackendTestCase(unittest.TestCase):
                 """
         rv_data = self.get_data(query, verbose=True)
 
-        query = ' {catapp(reactants: "~", distinct: true) { edges { node { reactants } } }} '
+        query = ' {reactions(reactants: "~", distinct: true) { edges { node { reactants } } }} '
         rv_data = self.get_data(query, verbose=True)
 
 
-        query = ' {catapp(products: "~", distinct: true) { edges { node { products } } }} '
+        query = ' {reactions(products: "~", distinct: true) { edges { node { products } } }} '
         rv_data = self.get_data(query, verbose=True)
 
-        query = ' {catapp(surfaceComposition: "~", distinct: true) { edges { node { surfaceComposition } } }} '
+        query = ' {reactions(surfaceComposition: "~", distinct: true) { edges { node { surfaceComposition } } }} '
         rv_data = self.get_data(query, verbose=True)
 
-        query = ' {catapp(facet: "~", distinct: true) { edges { node { facet } } }} '
+        query = ' {reactions(facet: "~", distinct: true) { edges { node { facet } } }} '
         rv_data = self.get_data(query, verbose=True)
 
         query = """{systems(uniqueId: "${uuid}") {
@@ -243,14 +243,14 @@ class CatappBackendTestCase(unittest.TestCase):
         query = '{systems(last: 10) { edges { node { Formula } } }}'
         rv_data = self.get_data(query, verbose=True)
 
-        query = ' {catapp { edges { node { id } } }} '
+        query = ' {reactions { edges { node { id } } }} '
         rv_data = self.get_data(query, verbose=True)
 
 
         query = '{systems(last: 10) { edges { node { id } } }}'
         rv_data = self.get_data(query, verbose=True)
 
-        query = ' {catapp { edges { node { doi } } }} '
+        query = ' {reactions { edges { node { doi } } }} '
         rv_data = self.get_data(query, verbose=True)
 
 
@@ -259,7 +259,7 @@ class CatappBackendTestCase(unittest.TestCase):
 
     #def test_root_website(self):
         #rv = self.app.get('/')
-        #assert b'Welcome to the catapp database!' in rv.data
+        #assert b'Welcome to the catalysis hub database!' in rv.data
 
 if __name__ == '__main__':
     unittest.main()
