@@ -204,6 +204,8 @@ def get_wyckoff_from_structure(request=None):
     spacegroup = bulk.get_spacegroup()
     wyckoff = bulk.get_wyckoff()
     species = bulk.get_species()
+    synonyms = bulk.get_synonyms()
+    species_permutations = bulk.get_species_permutations()
 
     poscar = bulk.get_std_poscar().decode('utf-8')
     cif = str(apps.utils.ase_convert(poscar, informat='vasp', outformat='cif'))
@@ -221,4 +223,6 @@ def get_wyckoff_from_structure(request=None):
         'spacegroup': spacegroup,
         'wyckoff': wyckoff,
         'species': species,
+        'synonyms': synonyms,
+        'species_permuations': species_permutations,
     })
