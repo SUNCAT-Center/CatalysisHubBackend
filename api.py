@@ -217,40 +217,40 @@ class CustomSQLAlchemyObjectType(graphene_sqlalchemy.SQLAlchemyObjectType):
             **options)
 
         
-class Publications(CustomSQLAlchemyObjectType):
+class Publication(CustomSQLAlchemyObjectType):
     
     class Meta:
-        model = models.Publications
+        model = models.Publication
         interfaces = (graphene.relay.Node,)
 
-    catapp = graphene.List('api.Catapp')
-    systems = graphene.List('api.Systems')
+    catapp = graphene.List('api.Reaction')
+    systems = graphene.List('api.System')
 
 
-class CatappSystems(CustomSQLAlchemyObjectType):
+class ReactionSystem(CustomSQLAlchemyObjectType):
 
     class Meta:
-        model = models.CatappSystems
+        model = models.ReactionSystem
         interfaces = (graphene.relay.Node, )
 
     #name = graphene.InputField()
     #systems = graphene.List('api.Systems')
     
-class Catapp(CustomSQLAlchemyObjectType):
+class Reaction(CustomSQLAlchemyObjectType):
     
     class Meta:
-        model = models.Catapp
+        model = models.Reaction
         interfaces = (graphene.relay.Node, )
         
-    catapp_systems = graphene.List(CatappSystems)
+    reaction_systems = graphene.List(ReactionSystem)
     
     
-class Systems(CustomSQLAlchemyObjectType):
+class System(CustomSQLAlchemyObjectType):
 
     _input_file = graphene.String(format=graphene.String())
 
     class Meta:
-        model = models.Systems
+        model = models.System
         interfaces = (graphene.relay.Node, )
 
     @staticmethod
@@ -494,7 +494,7 @@ class Query(graphene.ObjectType):
     information = FilteringConnectionField(
         Information, **get_filter_fields(models.Information))
     systems = FilteringConnectionField(
-        Systems, **get_filter_fields(models.Systems))
+        System, **get_filter_fields(models.System))
     species = FilteringConnectionField(
         Species, **get_filter_fields(models.Species))
     key = FilteringConnectionField(Key, **get_filter_fields(models.Key))
@@ -502,14 +502,14 @@ class Query(graphene.ObjectType):
         TextKeyValue, **get_filter_fields(models.TextKeyValue))
     number_keys = FilteringConnectionField(
         NumberKeyValue, **get_filter_fields(models.NumberKeyValue))
-    catapp = FilteringConnectionField(
-        Catapp, **get_filter_fields(models.Catapp))
-    catapp_systems = FilteringConnectionField(
-        CatappSystems, **get_filter_fields(models.CatappSystems))
+    reactions = FilteringConnectionField(
+        Reaction, **get_filter_fields(models.Reaction))
+    reaction_systems = FilteringConnectionField(
+        ReactionSystem, **get_filter_fields(models.ReactionSystem))
     publications = FilteringConnectionField(
-        Publications, **get_filter_fields(models.Publications))
+        Publication, **get_filter_fields(models.Publication))
 
 
 schema = graphene.Schema(
-    query=Query, types=[Systems, Species, TextKeyValue, NumberKeyValue, Key, Catapp, CatappSystems, Publications
+    query=Query, types=[System, Species, TextKeyValue, NumberKeyValue, Key, Reaction, ReactionSystem, Publication
     ])

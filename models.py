@@ -75,35 +75,23 @@ Base = sqlalchemy.ext.declarative.declarative_base()
 Base.query = db_session.query_property()
 
 
-association_pubsys = sqlalchemy.Table('publication_structures',
-                                      Base.metadata,
-                                      sqlalchemy.Column('ase_id', sqlalchemy.String,
-                                                        sqlalchemy.ForeignKey('stage.systems.unique_id'), # if PRODUCTION# else 'main.systems.pub_id'),
-                                                        primary_key=True),
-                                     sqlalchemy.Column('pub_id', sqlalchemy.String,
-                                                       sqlalchemy.ForeignKey('stage.publications.pub_id'),# if PRODUCTION else 'main.publications.pub_id'),
-                                                       primary_key=True)
-)
+association_pubsys = \
+    sqlalchemy.Table('publication_system',
+                     Base.metadata,
+                     sqlalchemy.Column('ase_id', sqlalchemy.String,
+                                       sqlalchemy.ForeignKey('stage.systems.unique_id'),
+                                       # if PRODUCTION# else 'main.systems.pub_id'),
+                                       primary_key=True),
+                     sqlalchemy.Column('pub_id', sqlalchemy.String,
+                                       sqlalchemy.ForeignKey('stage.publication.pub_id'),
+                                       # if PRODUCTION else 'main.publication.pub_id'),
+                                       primary_key=True)
+    )
 
 
 
-"""
-class PublicationStructures(Base):
-    __tablename__ = 'publication_structures'
-    __table_args__ = ({'schema': 'stage' if PRODUCTION else 'main'})    
-    ase_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
-        'stage.systems.unique_id' if PRODUCTION else 'main.publications.pub_id'), primary_key=True)
-    pub_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
-        'stage.publications.pub_id' if PRODUCTION else 'main.publications.pub_id'), primary_key=True)
-
-    publications = sqlalchemy.orm.relationship("Publications", backref="pub_sys")
-    systems = sqlalchemy.orm.relationship("System")
-                                          #backref="pub_sys")#,
-
-"""
-
-class Publications(Base):
-    __tablename__ = 'publications'
+class Publication(Base):
+    __tablename__ = 'publication'
     __table_args__ = ({'schema': 'stage'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     pub_id = sqlalchemy.Column(sqlalchemy.String, unique=True)
@@ -117,28 +105,26 @@ class Publications(Base):
     doi = sqlalchemy.Column(sqlalchemy.String, )
     tags = sqlalchemy.Column(JSONB, )
     pubtextsearch = sqlalchemy.Column(TSVECTOR, )   
-    catapp = sqlalchemy.orm.relationship("Catapp", backref="publications")#, uselist=True)
+    reaction = sqlalchemy.orm.relationship("Reaction", backref="publication")#, uselist=True)
 
-    systems = sqlalchemy.orm.relationship("Systems",
+    systems = sqlalchemy.orm.relationship("System",
                                           secondary=association_pubsys, uselist=True)
+    
 
-class CatappSystems(Base):
-    __tablename__ = 'catapp_structures'
+class ReactionSystem(Base):
+    __tablename__ = 'reaction_system'
     __table_args__ = ({'schema': 'stage'})# if PRODUCTION else 'main'})
 
     name = sqlalchemy.Column(sqlalchemy.String, )
     ase_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
-        'stage.systems.unique_id'), # if PRODUCTION else 'main.publications.pub_id'),
+        'stage.systems.unique_id'), # if PRODUCTION else 'main.publication.pub_id'),
                                primary_key=True)
-    catapp_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
-        'stage.catapp.id'), # if PRODUCTION else 'main.catapp.id'),
+    reaction_id = sqlalchemy.Column(sqlalchemy.Integer,  sqlalchemy.ForeignKey(
+        'stage.reaction.id'), # if PRODUCTION else 'main.reaction.id'),
                                   primary_key=True)
-
-    #catapp = sqlalchemy.orm.relationship("Catapp", backref='systems', uselist=True)
-    #system = sqlalchemy.orm.relationship("System", backref='catapps', uselist=True)
     
-class Catapp(Base):
-    __tablename__ = 'catapp'
+class Reaction(Base):
+    __tablename__ = 'reaction'
     __table_args__ = ({'schema': 'stage'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     #rowid = sqlalchemy.sqlalchemy.Column(sqlalchemy.Integer)
@@ -154,22 +140,21 @@ class Catapp(Base):
     dft_functional = sqlalchemy.Column(sqlalchemy.String, )
     username = sqlalchemy.Column(sqlalchemy.String, )
     pub_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
-        'stage.publications.pub_id'))# if PRODUCTION else 'main.publications.pub_id'))
+        'stage.publication.pub_id'))# if PRODUCTION else 'main.publication.pub_id'))
     textsearch = sqlalchemy.Column(TSVECTOR, )
 
 
-    catapp_systems = sqlalchemy.orm.relationship("CatappSystems",
-                                                 #uselist=False,
-                                                 backref="catapp")
-
-    
+    reaction_systems = sqlalchemy.orm.relationship("ReactionSystem",
+                                                   #uselist=False,
+                                                   backref="reactions")
+   
     @hybrid_property
-    def _reaction(self):
-        reaction = ''
+    def _equation(self):
+        equation = ''
         arrow = 0
         for column in (self.reactants, self.products):
             if arrow == 1:
-                reaction += ' -> '
+                equation += ' -> '
             arrow += 1
             i = 0
             for key in sorted(column, key=len, reverse=True):
@@ -182,16 +167,16 @@ class Catapp(Base):
                     key = key.replace('star', '*')
                 if not i == 0:
                     if prefactor > 0:
-                        reaction += ' + '
+                        equation += ' + '
                     else:
-                        reaction += ' - '
+                        equation += ' - '
                         prefactor *= -1
                 if prefactor == 1:
                     prefactor = ''
 
-                reaction += str(prefactor) + key
+                equation += str(prefactor) + key
                 i += 1
-        return reaction
+        return equation
 
     
 class Information(Base):
@@ -201,7 +186,7 @@ class Information(Base):
     value = sqlalchemy.Column(sqlalchemy.String, )
 
 
-class Systems(Base):
+class System(Base):
     __tablename__ = 'systems'
     __table_args__ = ({'schema': 'stage'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
@@ -247,12 +232,12 @@ class Systems(Base):
         "TextKeyValue", backref="systems", uselist=True)
     number_keys = sqlalchemy.orm.relationship(
         "NumberKeyValue", backref="systems", uselist=True)
-    catapp_structures= sqlalchemy.orm.relationship(
-        "CatappSystems", backref="systems", uselist=True)
+    reaction_systems= sqlalchemy.orm.relationship(
+        "ReactionSystem", backref="systems", uselist=True)
 
-    #catapp = sqlalchemy.orm.relationship("CatappSystems", backref='systems', uselist=True)
+    #reaction = sqlalchemy.orm.relationship("ReactionSystems", backref='systems', uselist=True)
     
-    publications = sqlalchemy.orm.relationship("Publications",
+    publication = sqlalchemy.orm.relationship("Publication",
                                                secondary=association_pubsys,
                                                uselist=True)
 
@@ -342,7 +327,7 @@ class Systems(Base):
 
 
     ###################################
-    # CATAPP-DB STANDARD FIELDS
+    # REACTION-DB STANDARD FIELDS
     ###################################
     @hybrid_property
     def _reaction(self):
