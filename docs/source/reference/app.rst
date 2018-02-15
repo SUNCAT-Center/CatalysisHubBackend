@@ -15,7 +15,7 @@ App
     :show-inheritance:
 
 
-.. automodule:: models
-    :members:
-    :undoc-members:
-    :show-inheritance:
+#.. automodule:: models
+    #:members:
+    #:undoc-members:
+    #:show-inheritance:
