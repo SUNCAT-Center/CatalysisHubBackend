@@ -92,14 +92,18 @@ def generate_slab_cif(request=None, return_atoms=False):
     else:
         slab_params = request.args.get('slabParams', {})
 
-    miller_x = int(slab_params.get('miller_x', 1))
-    miller_y = int(slab_params.get('miller_y', 1))
-    miller_z = int(slab_params.get('miller_z', 1))
+    miller_x = int(slab_params.get('millerX', 1))
+    miller_y = int(slab_params.get('millerY', 1))
+    miller_z = int(slab_params.get('millerZ', 1))
     layers = int(slab_params.get('layers', 4))
     axis = int(slab_params.get('axis', 2))
     vacuum = float(slab_params.get('vacuum', 10.))
+    termination = int(slab_params.get('termination', 0))
+    all_terminations = slab_params.get('termination', 'false') == 'true'
+
     bulk_cif = str(request.args.get(
         'bulk_cif', (json.loads(generate_bulk_cif(request).data)['cifdata'])))
+
 
     mem_file = StringIO.StringIO()
     mem_file.write(bulk_cif)
@@ -120,7 +124,13 @@ def generate_slab_cif(request=None, return_atoms=False):
     mem_files = []
     n_terminations = len(terminations)
 
+
+
     for (iterm, term) in enumerate(terminations):
+        if  not all_terminations and 0 <= termination < n_terminations:
+            if iterm != termination:
+                continue
+            terminations = [terminations[termination]]
         images.append(Gen.get_slab(iterm=iterm))
         images[-1].center(axis=axis, vacuum=vacuum)
         mem_files.append(StringIO.StringIO())
@@ -132,6 +142,7 @@ def generate_slab_cif(request=None, return_atoms=False):
 
     return flask.jsonify({
         'images': [mem_file.getvalue() for mem_file in mem_files],
+        'n_terminations': n_terminations,
     })
 
 
@@ -142,11 +153,11 @@ def get_adsorption_sites(request=None):
         request.args = json.loads(request.args)
 
     miller_x = int(json.loads(request.args.get(
-        'slabParams', '{}')).get('miller_x', 1))
+        'slabParams', '{}')).get('millerX', 1))
     miller_y = int(json.loads(request.args.get(
-        'slabParams', '{}')).get('miller_y', 1))
+        'slabParams', '{}')).get('millerY', 1))
     miller_z = int(json.loads(request.args.get(
-        'slabParams', '{}')).get('miller_z', 1))
+        'slabParams', '{}')).get('millerZ', 1))
     layers = int(json.loads(request.args.get(
         'slabParams', '{}')).get('layers', 4))
     axis = int(json.loads(request.args.get('slabParams', '{}')).get('axis', 2))
@@ -161,6 +172,10 @@ def get_adsorption_sites(request=None):
 
     site_type = str(json.loads(request.args.get(
         'adsorbateParams', '{}')).get('siteType', 'all'))
+
+
+    #print("GET ADSORPTION SITES")
+    #print(miller_x, miller_y, miller_z)
 
     # create bulk atoms
     mem_file = StringIO.StringIO()
@@ -192,7 +207,9 @@ def get_adsorption_sites(request=None):
 
     alt_labels = []
     cif_images = []
-    for atoms in copy.deepcopy(images):
+    #print(images)
+    error_message = ''
+    for atoms_i, atoms in enumerate(copy.deepcopy(images)):
         gen = catkit.surface.SlabGenerator(
             bulk=bulk_atoms,
             miller_index=[miller_x, miller_y, miller_z
@@ -202,34 +219,42 @@ def get_adsorption_sites(request=None):
         )
         atoms = gen.get_slab(primitive=True)
         try:
+            #print("TRY ATOMS {atoms_i}".format(**locals()))
             sites = gen.adsorption_sites(
                 atoms,
                 symmetry_reduced=True,
             )
-        except:
-            sites = {}
-        sites_list.append(sites)
-        label_index = 0
-        alt_labels.append({})
-        for site_label in sorted(sites):
-            if site_type != 'all' and site_label != site_type:
-                continue
-            for site_label_i, site in enumerate(sites[site_label][0]):
-                if len(site) > 0:
-                    atoms += ase.atom.Atom(place_holder, site + [0., 0., 1.5])
-                    natoms = len(atoms) - 1
-                    alt_labels[-1][len(atoms) - 1] = site_label + \
-                        ' ' + str(site_label_i)
-                    label_index += 1
+            pprint.pprint(sites)
+        except ValueError as e:
+            error_message = str(e)
 
-        with StringIO.StringIO() as f:
-            ase.io.write(f, atoms, format='cif')
-            cif_images.append(f.getvalue())
+        try:
+            sites_list.append(sites)
+
+            label_index = 0
+            alt_labels.append({})
+            for site_label in sorted(sites):
+                if site_type != 'all' and site_label != site_type:
+                    continue
+                for site_label_i, site in enumerate(sites[site_label][0]):
+                    if len(site) > 0:
+                        atoms += ase.atom.Atom(place_holder, site + [0., 0., 1.5])
+                        natoms = len(atoms) - 1
+                        alt_labels[-1][len(atoms) - 1] = site_label + \
+                            ' ' + str(site_label_i)
+                        label_index += 1
+
+            with StringIO.StringIO() as f:
+                ase.io.write(f, atoms, format='cif')
+                cif_images.append(f.getvalue())
+        except:
+            pass
 
     return flask.jsonify({
         'data': (sites_list),
         'cifImages': cif_images,
         'altLabels': alt_labels,
+        'error': error_message
     })
 
 
@@ -249,9 +274,9 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
     else:
         slab_params = request.args.get('slabParams', {})
 
-    miller_x = int(slab_params.get('miller_x', 1))
-    miller_y = int(slab_params.get('miller_y', 1))
-    miller_z = int(slab_params.get('miller_z', 1))
+    miller_x = int(slab_params.get('millerX', 1))
+    miller_y = int(slab_params.get('millerY', 1))
+    miller_z = int(slab_params.get('millerZ', 1))
     layers = int(slab_params.get('layers', 4))
     axis = int(slab_params.get('axis', 2))
     vacuum = float(slab_params.get('vacuum', 10.))
@@ -379,9 +404,9 @@ def generate_dft_input(request=None):
         dft_params = (calculation.get('dftParams', {}))
 
         # Unpack a little further ...
-        miller_x = slab_params.get('miller_x', 'N')
-        miller_y = slab_params.get('miller_y', 'N')
-        miller_z = slab_params.get('miller_z', 'N')
+        miller_x = slab_params.get('millerX', 'N')
+        miller_y = slab_params.get('millerY', 'N')
+        miller_z = slab_params.get('millerZ', 'N')
         facet = '{miller_x}{miller_y}{miller_z}'.format(**locals())
 
         composition = ''.join(bulk_params.get('elements', []))
