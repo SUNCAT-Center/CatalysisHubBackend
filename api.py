@@ -3,12 +3,14 @@ API for GraphQL enhanced queries against catapp and ase-db database
 
 Some Examples:
 
-- Get total number of rows in table (in this case reactions):
+- Get total number of rows in table (in this case reactions)::
+
     {reactions (first: 0) {
       totalCount
     }}
 
-- Filter by reactants and products from reactions:
+- Filter by reactants and products from reactions::
+
     {reactions(reactants: "OH", products: "H2O") {
       edges {
         node {
@@ -19,7 +21,8 @@ Some Examples:
       }
     }}
 
-- Filter by several reactants or products from reactions:
+- Filter by several reactants or products from reactions::
+
     {reactions(reactants: "COstar+NOstar") {
       edges {
         node {
@@ -30,7 +33,8 @@ Some Examples:
       }
     }}
 
-- Author-name from publications:
+- Author-name from publications::
+
     {publications(authors: "~Bajdich") {
       edges {
         node {
@@ -43,7 +47,8 @@ Some Examples:
         }
       }}
 
-- Full text search in reactions (title, authors, year, reactants and products): ### Doesn't work!
+- Full text search in reactions (title, authors, year, reactants and products): ### Doesn't work! ::
+
     {reactions(search: "oxygen evolution bajdich 2017 OOH") {
       edges {
         node {
@@ -55,7 +60,8 @@ Some Examples:
       }
     }}
 
-- Full text search in publications (title, authors, year): 
+- Full text search in publications (title, authors, year)::
+
     {reactions(pubtextsearch: "oxygen evolution bajdich 2017") {
       edges {
         node {
@@ -69,7 +75,8 @@ Some Examples:
       }
     }}
 
-- Full text search in reactions (chemical composition, facet, reactants, products): 
+- Full text search in reactions (chemical composition, facet, reactants, products)::
+
     {reactions(yextsearch: "OOH Li") {
       edges {
         node {
@@ -83,7 +90,8 @@ Some Examples:
     }}
 
 
-- Distinct reactants and products from reactions (works with and without "~"):
+- Distinct reactants and products from reactions (works with and without "~")::
+
     {reactions(reactants: "~OH", products: "~", distinct: true) {
       edges {
         node {
@@ -94,7 +102,8 @@ Some Examples:
     }}
 
 
-- ASE structures belonging to reactions:
+- ASE structures belonging to reactions::
+
    {reactions(reactants: "~OH" {
       edges {
         node {
@@ -109,19 +118,21 @@ Some Examples:
 
 
 - Distinct ase ids for a particular adsorbate jsonkey (only works if full key
-  is given + 'gas'/'star'):
-(aseIds: "~", jsonkey: "OOHstar", distinct: true,
-            chemicalComposition: "~Co24") {
-      edges {
-        node {
-  	  chemicalComposition
-          Reaction
-          aseIds
-        }
-      }
-    }}
+  is given + 'gas'/'star')::
 
-- Author-name from ase-db: # Doesnt work
+    (aseIds: "~", jsonkey: "OOHstar", distinct: true,
+                chemicalComposition: "~Co24") {
+          edges {
+            node {
+              chemicalComposition
+              Reaction
+              aseIds
+            }
+          }
+        }}
+
+- Author-name from ase-db: # Doesnt work::
+
     {textKeys(key: "publication_authors", value: "~Bajdich") {
       edges {
         node {
@@ -133,7 +144,8 @@ Some Examples:
       }
     }}
 
-- Get all distinct DOIs 
+- Get all distinct DOIs::
+
    {publications {
       edges {
         node {
@@ -142,20 +154,21 @@ Some Examples:
       }
     }}
 
-- Get all entries published since (and including) 2015
-    allowed comparisons
+- Get all entries published since (and including) 2015::
 
-   {publications(year: 2015, op: "ge", first:1) {
-     edges {
-       node {
-        id
-        year
-        systems {
-           keyValuePairs
-        }
-      }
-    }
-  }}
+    # allowed comparisons
+
+    {publications(year: 2015, op: "ge", first:1) {
+      edges {
+        node {
+         id
+         year
+         systems {
+            keyValuePairs
+         }
+       }
+     }
+   }}
 
 """
 try:
@@ -257,7 +270,7 @@ class System(CustomSQLAlchemyObjectType):
     def resolve__input_file(self, info, format="py"):
         """Return the structure as input for one of several
         DFT codes as supported by ASE. Default format is "py".
-        Run
+        Run::
 
             {systems(last: 1) {
               totalCount
@@ -268,16 +281,16 @@ class System(CustomSQLAlchemyObjectType):
               }
             }}
 
-        to show available formats. Try one of the available formats like,
+        to show available formats. Try one of the available formats like,::
 
-        {systems(last: 10) {
-          totalCount
-          edges {
-            node {
-              InputFile(format:"espresso-in")
-            }
-          }
-        }}
+            {systems(last: 10) {
+              totalCount
+              edges {
+                node {
+                  InputFile(format:"espresso-in")
+                }
+              }
+            }}
 
         to generate QE input.
 
