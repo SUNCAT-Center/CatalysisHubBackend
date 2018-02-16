@@ -48,7 +48,13 @@ if os.environ.get('DB_PASSWORD0', ''):
                                     database='catappdatabase')
     PRODUCTION = True
 else:
-    url = sqlalchemy.engine.url.URL('sqlite', database='./test_database.db')
+    url = sqlalchemy.engine.url.URL('postgres',
+                                    username='postgres',
+                                    host='localhost',
+                                    #port=5432,
+                                    database='travis_ci_test')
+    
+    #url = sqlalchemy.engine.url.URL('sqlite', database='./test_database.db')
     PRODUCTION = False
 
 
