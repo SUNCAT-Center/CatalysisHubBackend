@@ -4,7 +4,8 @@ import sqlalchemy
 import sqlalchemy.types
 import sqlalchemy.ext.declarative
 from sqlalchemy import or_
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
+from sqlalchemy.ext.associationproxy import association_proxy
 import graphene.types.json
 try:
     import io as StringIO
@@ -37,16 +38,23 @@ class JsonEncodedDict(sqla.TypeDecorator):
 
 # set to local database path
 
-if os.environ.get('DB_PASSWORD', ''):
+
+if os.environ.get('DB_PASSWORD1', ''):
     url = sqlalchemy.engine.url.URL('postgres',
-                                    username='catvisitor',
-                                    password=os.environ['DB_PASSWORD'],
+                                    username='catappuser',
+                                    password=os.environ['DB_PASSWORD0'],
                                     host='catappdatabase.cjlis1fysyzx.us-west-1.rds.amazonaws.com',
                                     port=5432,
                                     database='catappdatabase')
     PRODUCTION = True
 else:
-    url = sqlalchemy.engine.url.URL('sqlite', database='./test_database.db')
+    url = sqlalchemy.engine.url.URL('postgres',
+                                    username='postgres',
+                                    host='localhost',
+                                    #port=5432,
+                                    database='travis_ci_test')
+    
+    #url = sqlalchemy.engine.url.URL('sqlite', database='./test_database.db')
     PRODUCTION = False
 
 
@@ -54,9 +62,11 @@ engine = sqlalchemy.create_engine(
     url,
     convert_unicode=True)
 
+
 # work-around needed for testing
 # api locally w/o postgreSQL available:
 # simply JSON dictionaries as String
+
 if engine.driver != 'psycopg2':
     JSONB = sqla.String
 
@@ -66,12 +76,61 @@ db_session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(
     bind=engine,
 ))
 
+
 Base = sqlalchemy.ext.declarative.declarative_base()
 Base.query = db_session.query_property()
 
-class Catapp(Base):
-    __tablename__ = 'catapp'
-    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
+
+association_pubsys = \
+    sqlalchemy.Table('publication_system',
+                     Base.metadata,
+                     sqlalchemy.Column('ase_id', sqlalchemy.String,
+                                       sqlalchemy.ForeignKey('stage.systems.unique_id'),
+                                       # if PRODUCTION# else 'main.systems.pub_id'),
+                                       primary_key=True),
+                     sqlalchemy.Column('pub_id', sqlalchemy.String,
+                                       sqlalchemy.ForeignKey('stage.publication.pub_id'),
+                                       # if PRODUCTION else 'main.publication.pub_id'),
+                                       primary_key=True)
+    )
+
+
+
+class Publication(Base):
+    __tablename__ = 'publication'
+    __table_args__ = ({'schema': 'stage'})# if PRODUCTION else 'main'})
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    pub_id = sqlalchemy.Column(sqlalchemy.String, unique=True)
+    title = sqlalchemy.Column(sqlalchemy.String, )
+    authors = sqlalchemy.Column(JSONB, )
+    journal = sqlalchemy.Column(sqlalchemy.String, )
+    number = sqlalchemy.Column(sqlalchemy.String, )
+    pages = sqlalchemy.Column(sqlalchemy.String, )
+    year = sqlalchemy.Column(sqlalchemy.Integer, )
+    publisher = sqlalchemy.Column(sqlalchemy.String, )
+    doi = sqlalchemy.Column(sqlalchemy.String, )
+    tags = sqlalchemy.Column(JSONB, )
+    pubtextsearch = sqlalchemy.Column(TSVECTOR, ) 
+    reactions = sqlalchemy.orm.relationship("Reaction", backref="publication")#, uselist=True)
+    systems = sqlalchemy.orm.relationship("System",
+                                          secondary=association_pubsys, uselist=True)
+    
+
+class ReactionSystem(Base):
+    __tablename__ = 'reaction_system'
+    __table_args__ = ({'schema': 'stage'})# if PRODUCTION else 'main'})
+
+    name = sqlalchemy.Column(sqlalchemy.String, )
+    ase_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
+        'stage.systems.unique_id'), # if PRODUCTION else 'main.publication.pub_id'),
+                               primary_key=True)
+    reaction_id = sqlalchemy.Column(sqlalchemy.Integer,  sqlalchemy.ForeignKey(
+        'stage.reaction.id'), # if PRODUCTION else 'main.reaction.id'),
+                                  primary_key=True)
+    
+class Reaction(Base):
+    __tablename__ = 'reaction'
+    __table_args__ = ({'schema': 'stage'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     #rowid = sqlalchemy.sqlalchemy.Column(sqlalchemy.Integer)
     chemical_composition = sqlalchemy.Column(sqlalchemy.String, )
@@ -84,63 +143,23 @@ class Catapp(Base):
     activation_energy = sqlalchemy.Column(sqlalchemy.Float, )
     dft_code = sqlalchemy.Column(sqlalchemy.String, )
     dft_functional = sqlalchemy.Column(sqlalchemy.String, )
-    publication = sqlalchemy.Column(JSONB, )
-    doi = sqlalchemy.Column(sqlalchemy.String, )
-    year = sqlalchemy.Column(sqlalchemy.Integer, )
-    ase_ids = sqlalchemy.Column(JSONB, )
+    username = sqlalchemy.Column(sqlalchemy.String, )
+    pub_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
+        'stage.publication.pub_id'))# if PRODUCTION else 'main.publication.pub_id'))
+    textsearch = sqlalchemy.Column(TSVECTOR, )
 
-    @hybrid_property
-    def _publication_title(self):
-        "The title of corresponding publication"
-        return self.publication['title']
-    
-    @hybrid_property
-    def _publication_publisher(self):
-        "The title of corresponding publication"
-        return self.publication['publisher']
-    
-    @hybrid_property
-    def _publication_journal(self):
-        "The title of corresponding publication"
-        return self.publication['journal']
-    
-    @hybrid_property
-    def _publication_volume(self):
-        "The volume of corresponding publication"
-        return self.publication['volume']
-    
-    @hybrid_property
-    def _publication_number(self):
-        "The number of corresponding publication"
-        return self.publication['number']
-    
-    @hybrid_property
-    def _publication_authors(self):
-        "The authors of corresponding publication"
-        return self.publication['authors']
-    
-    @hybrid_property
-    def _publication_doi(self):
-        "The DOI of corresponding publication. Lookup using http://dx.doi.org/..."
-        return self.publication['doi']
-    
-    @hybrid_property
-    def _publication_year(self):
-        "The year of corresponding publication"
-        return self.publication['year']
-    
-    @hybrid_property
-    def _publication_pages(self):
-        "The pages of corresponding publication"
-        return self.publication['pages']
 
+    reaction_systems = sqlalchemy.orm.relationship("ReactionSystem",
+                                                   #uselist=False,
+                                                   backref="reactions")
+   
     @hybrid_property
-    def _reaction(self):
-        reaction = ''
+    def _equation(self):
+        equation = ''
         arrow = 0
         for column in (self.reactants, self.products):
             if arrow == 1:
-                reaction += ' -> '
+                equation += ' -> '
             arrow += 1
             i = 0
             for key in sorted(column, key=len, reverse=True):
@@ -153,27 +172,28 @@ class Catapp(Base):
                     key = key.replace('star', '*')
                 if not i == 0:
                     if prefactor > 0:
-                        reaction += ' + '
+                        equation += ' + '
                     else:
-                        reaction += ' - '
+                        equation += ' - '
                         prefactor *= -1
                 if prefactor == 1:
                     prefactor = ''
 
-                reaction += str(prefactor) + key
+                equation += str(prefactor) + key
                 i += 1
-        return reaction
+        return equation
 
+    
 class Information(Base):
     __tablename__ = 'information'
-    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'stage'})# if PRODUCTION else 'main'})
     name = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.String, )
 
 
 class System(Base):
     __tablename__ = 'systems'
-    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'stage'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     unique_id = sqlalchemy.Column(sqlalchemy.String, )
@@ -210,13 +230,23 @@ class System(Base):
     charge = sqlalchemy.Column(sqlalchemy.Float, )
     
     keys = sqlalchemy.orm.relationship("Key", backref="systems", uselist=True)
+    
     species = sqlalchemy.orm.relationship(
         "Species", backref="systems", uselist=True)
     text_keys = sqlalchemy.orm.relationship(
         "TextKeyValue", backref="systems", uselist=True)
     number_keys = sqlalchemy.orm.relationship(
         "NumberKeyValue", backref="systems", uselist=True)
+    reaction_systems= sqlalchemy.orm.relationship(
+        "ReactionSystem", backref="systems", uselist=True)
 
+    #reaction = sqlalchemy.orm.relationship("ReactionSystems", backref='systems', uselist=True)
+    
+    publication = sqlalchemy.orm.relationship("Publication",
+                                               secondary=association_pubsys,
+                                               uselist=True)
+
+    
     ###################################
     # GENERAL ATOMS FORMATS
     ###################################
@@ -248,120 +278,64 @@ class System(Base):
 
     @hybrid_property
     def _positions(self):
-        "String representation of positions, use this instead of 'positions'"
         return json.dumps(
             ase.db.sqlite.deblob(self.positions).reshape(-1, 3).tolist()
         )
 
     @hybrid_property
     def _cell(self):
-        "String representation of cell, use this instead of 'cell'"
         return (ase.db.sqlite.deblob(self.cell).reshape(-1, 3).tolist())
 
     @hybrid_property
     def _pbc(self):
-        "String representation of periodic boundary conditions, use this instead of 'pbc'"
         return (self.pbc & np.array([1, 2, 4])).astype(bool).tolist()
 
     @hybrid_property
     def _initial_magmoms(self):
-        "String representation of initial magnetic moments, use this instead of 'initial_magmoms'"
         return ase.db.sqlite.deblob(self.initial_magmoms)
 
     @hybrid_property
     def _initial_charges(self):
-        "String representation of initial charges, use this instead of 'initial_charges'"
         return ase.db.sqlite.deblob(self.initial_charges)
 
     @hybrid_property
     def _masses(self):
-        "String representation of masses, use this instead of 'masses'"
         return ase.db.sqlite.deblob(self.masses)
 
     @hybrid_property
     def _tags(self):
-        "String representation of tags, use this instead of 'tags'"
         return ase.db.sqlite.deblob(self.tags, np.int32)
 
     @hybrid_property
     def _momenta(self):
-        "String representation of momenta, use this instead of 'momenta'"
         return ase.db.sqlite.deblob(self.moment, shape=(-1, 3))
 
     @hybrid_property
     def _forces(self):
-        "String representation of forces, use this instead of 'forces'"
         return ase.db.sqlite.deblob(self.forces, shape=(-1, 3))
 
     @hybrid_property
     def _stress(self):
-        "String representation of stress, use this instead of 'stress'"
         return ase.db.sqlite.deblob(self.stress)
 
     @hybrid_property
     def _dipole(self):
-        "String representation of dipole, use this instead of 'dipole'"
         return ase.db.sqlite.deblob(self.dipole)
 
     @hybrid_property
     def _magmoms(self):
-        "String representation of magnetic moments, use this instead of 'magmoms'"
         return (ase.db.sqlite.deblob(self.magmoms).tolist())
 
     @hybrid_property
     def _charges(self):
-        "String representation of charges, use this instead of 'charges'"
         return (ase.db.sqlite.deblob(self.charges).tolist())
 
-    ###################################
-    # PUBLICATION METADATA
-    ###################################
-    @hybrid_property
-    def _publication_doi(self):
-        return json.loads(self.key_value_pairs).get('publication_doi', '')
-
-    @hybrid_property
-    def _publication_year(self):
-        return json.loads(self.key_value_pairs).get('publication_year', '')
-
-    @hybrid_property
-    def _publication_authors(self):
-        return json.loads(self.key_value_pairs).get('publication_authors', '')
-
-    @hybrid_property
-    def _publication_title(self):
-        return json.loads(self.key_value_pairs).get('publication_title', '')
-
-    @hybrid_property
-    def _publication_journal(self):
-        return json.loads(self.key_value_pairs).get('publication_journal', '')
-
-    @hybrid_property
-    def _publication_pages(self):
-        return json.loads(self.key_value_pairs).get('publication_pages', '')
-
-    @hybrid_property
-    def _publication_year(self):
-        return json.loads(self.key_value_pairs).get('publication_year', '')
-
-    @hybrid_property
-    def _publication_volume(self):
-        return json.loads(self.key_value_pairs).get('publication_volume', '')
-
-    @hybrid_property
-    def _publication_number(self):
-        return json.loads(self.key_value_pairs).get('publication_number', '')
-
-    @hybrid_property
-    def _publication_url(self):
-        return json.loads(self.key_value_pairs).get('publication_url', '')
 
     ###################################
-    # CATAPP-DB STANDARD FIELDS
+    # REACTION-DB STANDARD FIELDS
     ###################################
     @hybrid_property
     def _reaction(self):
-        "String presentation of chemical reaction"
         reaction = json.loads(self.key_value_pairs).get('reaction', '')
         reaction = reaction.replace('__', '->').replace('_', '+')
         return reaction
@@ -401,28 +375,31 @@ class System(Base):
 
 class Species(Base):
     __tablename__ = 'species'
-    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'stage'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
+        'stage.systems.id'),# if PRODUCTION else 'main.systems.id'),
+                           primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
-    Z = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
+    z = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
     n = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
 
 
 class Key(Base):
     __tablename__ = 'keys'
-    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'stage'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
+        'stage.systems.id'),# if PRODUCTION else 'main.systems.id'),
+                           primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
 
 
 class NumberKeyValue(Base):
     __tablename__ = 'number_key_values'
-    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'stage'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
+        'stage.systems.id'),# if PRODUCTION else 'main.systems.id'),
+                           primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.Float,)
@@ -430,9 +407,13 @@ class NumberKeyValue(Base):
 
 class TextKeyValue(Base):
     __tablename__ = 'text_key_values'
-    __table_args__ = ({'schema': 'public' if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'stage'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id' if PRODUCTION else 'main.systems.id'), primary_key=True)
+        'stage.systems.id'),# if PRODUCTION else 'main.systems.id'),
+                           primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.String,)
+
+
+

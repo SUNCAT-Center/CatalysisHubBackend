@@ -3,13 +3,13 @@ API for GraphQL enhanced queries against catapp and ase-db database
 
 Some Examples:
 
-- Get total number of rows in table (in this case catapp):
-    {catapp (first: 0) {
+- Get total number of rows in table (in this case reactions):
+    {reactions (first: 0) {
       totalCount
     }}
 
-- Filter by reactants and products from catapp:
-    {catapp(reactants: "OH", products: "H2O") {
+- Filter by reactants and products from reactions:
+    {reactions(reactants: "OH", products: "H2O") {
       edges {
         node {
           Reaction
@@ -19,8 +19,8 @@ Some Examples:
       }
     }}
 
-- Filter by several reactants or products from catapp:
-    {catapp(reactants: "COstar+NOstar") {
+- Filter by several reactants or products from reactions:
+    {reactions(reactants: "COstar+NOstar") {
       edges {
         node {
           Reaction
@@ -30,19 +30,21 @@ Some Examples:
       }
     }}
 
-- Author-name from catapp:
-    {catapp(publication_Authors: "~Bajdich") {
+- Author-name from publications:
+    {publications(authors: "~Bajdich") {
       edges {
         node {
-          chemicalComposition
-          Reaction
-          reactionEnergy
+          reactions {
+            chemicalComposition
+            Reaction
+            reactionEnergy
+           }	
+         }
         }
-      }
-    }}
+      }}
 
-- Full text search in catapp (title, authors, year, reactants and products ):
-    {catapp(search: "oxygen evolution bajdich 2017 OOH") {
+- Full text search in reactions (title, authors, year, reactants and products): ### Doesn't work!
+    {reactions(search: "oxygen evolution bajdich 2017 OOH") {
       edges {
         node {
           Reaction
@@ -53,14 +55,56 @@ Some Examples:
       }
     }}
 
-- Distinct reactants and products from catapp (works with and without "~"):
-    {catapp(reactants: "~OH", products: "~", distinct: true) {
+- Full text search in publications (title, authors, year): 
+    {reactions(pubtextsearch: "oxygen evolution bajdich 2017") {
+      edges {
+        node {
+          PublicationTitle
+          PublicationAuthors
+          year
+          reactions {
+           Reaction
+         }
+        }
+      }
+    }}
+
+- Full text search in reactions (chemical composition, facet, reactants, products): 
+    {reactions(yextsearch: "OOH Li") {
+      edges {
+        node {
+          Reaction
+          publications{
+            title
+            authors
+         }
+        }
+      }
+    }}
+
+
+- Distinct reactants and products from reactions (works with and without "~"):
+    {reactions(reactants: "~OH", products: "~", distinct: true) {
       edges {
         node {
           Reaction
           reactionEnergy
         }
       }
+    }}
+
+
+- ASE structures belonging to reactions:
+   {reactions(reactants: "~OH" {
+      edges {
+        node {
+          reactionsSystems {
+            systems {
+              Cifdata
+            }
+          }
+        }
+      } 
     }}
 
 
@@ -77,7 +121,7 @@ Some Examples:
       }
     }}
 
-- Author-name from ase-db:
+- Author-name from ase-db: # Doesnt work
     {textKeys(key: "publication_authors", value: "~Bajdich") {
       edges {
         node {
@@ -89,30 +133,29 @@ Some Examples:
       }
     }}
 
-- Get all distinct DOIs
-   {textKeys(key: "publication_doi", value: "~", distinct: true) {
+- Get all distinct DOIs 
+   {publications {
       edges {
         node {
-          key
-          value
+          doi
         }
       }
     }}
 
-
 - Get all entries published since (and including) 2015
     allowed comparisons
-{
-  numberKeys(key: "publication_year", value: 2015, op: "ge") {
-    edges {
-      node {
+
+   {publications(year: 2015, op: "ge", first:1) {
+     edges {
+       node {
+        id
+        year
         systems {
-          keyValuePairs
+           keyValuePairs
         }
       }
     }
-  }
-}
+  }}
 
 """
 try:
@@ -134,12 +177,11 @@ import six
 # local imports
 import models
 
-
 class CountableConnection(graphene.relay.Connection):
     class Meta:
         abstract = True
 
-    total_count = graphene.Int(description="Total number of hits regardless of pagination.")
+    total_count = graphene.Int()
 
     @staticmethod
     def resolve_total_count(root, info):
@@ -174,27 +216,38 @@ class CustomSQLAlchemyObjectType(graphene_sqlalchemy.SQLAlchemyObjectType):
             id,
             **options)
 
+        
+class Publication(CustomSQLAlchemyObjectType):
+    
+    class Meta:
+        model = models.Publication
+        interfaces = (graphene.relay.Node,)
 
-class Catapp(CustomSQLAlchemyObjectType):
-    "Reaction energetics with links to corresponding systems structures."
+    reactions = graphene.List('api.Reaction')
+    systems = graphene.List('api.System')
+
+
+class ReactionSystem(CustomSQLAlchemyObjectType):
 
     class Meta:
-        model = models.Catapp
+        model = models.ReactionSystem
         interfaces = (graphene.relay.Node, )
 
-    _systems = graphene.List('api.System', description="Structures belonging to reaction.")
-
-    def resolve__systems(self, info):
-        query = System.get_query(info).filter(
-            models.System.unique_id.in_(self.ase_ids.values())
-        )
-        return query.all()
-
-
+    #name = graphene.InputField()
+    #systems = graphene.List('api.Systems')
+    
+class Reaction(CustomSQLAlchemyObjectType):
+    
+    class Meta:
+        model = models.Reaction
+        interfaces = (graphene.relay.Node, )
+        
+    reaction_systems = graphene.List(ReactionSystem)
+    
+    
 class System(CustomSQLAlchemyObjectType):
-    "Atomic structures."
 
-    _input_file = graphene.String(format=graphene.String(description='"abinit" "castep-cell" "cfg" "cif" "dlp4" "eon" "espresso-in" "extxyz" "findsym" "gen" "gromos" "json" "jsv" "nwchem" "proteindatabank" "py" "turbomole" "v-sim" "vasp" "xsf" "xyz"'))
+    _input_file = graphene.String(format=graphene.String())
 
     class Meta:
         model = models.System
@@ -239,7 +292,6 @@ class System(CustomSQLAlchemyObjectType):
             mem_file = StringIO.StringIO()
             mem_file.name = 'Export from http://catappdatabase.herokuapp.com/graphql'
             ase.io.write(mem_file, self._toatoms(), format)
-
             return mem_file.getvalue()
         else:
             return 'Unsupported format. Should be one of %s'\
@@ -247,7 +299,6 @@ class System(CustomSQLAlchemyObjectType):
 
 
 class NumberKeyValue(CustomSQLAlchemyObjectType):
-    "Internal table for storing numeric tags."
 
     class Meta:
         model = models.NumberKeyValue
@@ -255,7 +306,6 @@ class NumberKeyValue(CustomSQLAlchemyObjectType):
 
 
 class TextKeyValue(CustomSQLAlchemyObjectType):
-    "Internal table for storing string tags."
 
     class Meta:
         model = models.TextKeyValue
@@ -282,14 +332,17 @@ class Species(CustomSQLAlchemyObjectType):
         model = models.Species
         interfaces = (graphene.relay.Node, )
 
-
+#class Search(CustomSQLAlchemyObjectType):
+#    class Meta:
+#        types = (Publications, Catapp)
+#        interfaces = (graphene.relay.Node, )
+        
 class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
     RELAY_ARGS = ['first', 'last', 'before', 'after']
     SPECIAL_ARGS = ['distinct', 'op', 'jsonkey']
 
     @classmethod
     def get_query(cls, model, info, **args):
-
         from sqlalchemy import or_
         query = super(FilteringConnectionField, cls).get_query(model, info)
         distinct_filter = False  # default value for distinct
@@ -297,11 +350,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
         jsonkey_input = None
         ALLOWED_OPS = ['gt', 'lt', 'le', 'ge', 'eq', 'ne',
                        '=',  '>',  '<',  '>=', '<=', '!=']
-        # ALLOWED_JSON_OPS = ['->','->>', '@>', '<@', '?',
-        #                     '?|', '?&', '||', '-', '#-']
-        
-        # print("\n\nMODEL:: {model}".format(**locals()))
-        # print(dir(model))
+
         for field, value in args.items():
             if field == 'distinct':
                 distinct_filter = value
@@ -323,30 +372,10 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
 
                 column = getattr(model, field, None)
 
-                if field == "search":
-                    reactant_str = cast(model.reactants, sqlalchemy.String)
-                    product_str = cast(model.products, sqlalchemy.String)
-                    reaction_str = func.replace(func.replace(reactant_str +
-                                                             product_str,
-                                                             'gas', ''),
-                                                'star', '')
-                    composition_str = model.chemical_composition
 
-                    composition_el_str = model.chemical_composition
-                    for i in range(0,10): # replace all int by white space
-                        composition_el_str = func.replace(composition_el_str,
-                                                          str(i), ' ')
-                    composition_str += " " + composition_el_str + " " + model.facet
-                    author_str = model.publication["authors"].astext
-                    title_str = model.publication["title"].astext
-                    year_str = model.publication["year"].astext
-                    search_str = title_str + " " + author_str + " " + \
-                                 reaction_str + " " + year_str + " " + \
-                                 composition_str
-                    ts_vector = func.to_tsvector(search_str)
-
-                    query = query.filter(ts_vector.match("'{}'".format(value)))
-
+                if str(column.type) == "TSVECTOR":
+                    query = query.filter(column.match("'{}'".format(value)))
+                    
                 elif str(column.type) == "JSONB":
                     jsonb = True
                     if jsonkey is not None:
@@ -387,7 +416,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                                     query = query.filter(column.has_key(value))
 
                     #if distinct_filter:
-                        #TO DO: SELECT DISTINCT jsonb_object_keys(reactants) FROM catapp
+                        #TO DO: SELECT DISTINCT jsonb_object_keys(reactants) FROM reaction
                             
                 elif isinstance(value, six.string_types):
                     if value.startswith("~"):
@@ -417,7 +446,6 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
 
                 if distinct_filter:
                     query = query.distinct(column)#.group_by(getattr(model, field))
-                    
         return query
 
 
@@ -447,11 +475,10 @@ def get_filter_fields(model):
             column_type = column_type[2]
             if column_type == 'Integer':
                 filter_fields[column_name] = getattr(graphene, 'Int')()
+            elif column_type == 'TSVECTOR':
+                filter_fields[column_name] = getattr(graphene, 'String')()
             elif column_type == 'JSONB':
                 filter_fields[column_name] = getattr(graphene, 'String')()
-                if column_name == 'publication':
-                    for key in publication_keys:
-                        filter_fields['publication__' + key] = getattr(graphene, 'String')()
             else:
                 filter_fields[column_name] = getattr(graphene, column_type)()
     # always add a distinct filter
@@ -459,8 +486,8 @@ def get_filter_fields(model):
     filter_fields['op'] = graphene.String()
     filter_fields['search'] = graphene.String()
     filter_fields['jsonkey'] = graphene.String()
+    
     return filter_fields
-
 
 class Query(graphene.ObjectType):
     node = graphene.relay.Node.Field()
@@ -475,10 +502,14 @@ class Query(graphene.ObjectType):
         TextKeyValue, **get_filter_fields(models.TextKeyValue))
     number_keys = FilteringConnectionField(
         NumberKeyValue, **get_filter_fields(models.NumberKeyValue))
-    catapp = FilteringConnectionField(
-        Catapp, **get_filter_fields(models.Catapp))
-
+    reactions = FilteringConnectionField(
+        Reaction, **get_filter_fields(models.Reaction))
+    reaction_systems = FilteringConnectionField(
+        ReactionSystem, **get_filter_fields(models.ReactionSystem))
+    publications = FilteringConnectionField(
+        Publication, **get_filter_fields(models.Publication))
 
 
 schema = graphene.Schema(
-    query=Query, types=[System, Species, TextKeyValue, NumberKeyValue, Key, Catapp],)
+    query=Query, types=[System, Species, TextKeyValue, NumberKeyValue, Key, Reaction, ReactionSystem, Publication
+    ])

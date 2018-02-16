@@ -14,6 +14,11 @@ cache:
     apt: true
     pip: true
 
+services:
+    - postgresql
+    
+addons:
+  postgresql: "9.6"
 
 env:
     - DB_PASSWORD=''
@@ -21,6 +26,11 @@ env:
 install:
     - pip install -r requirements.txt
 
+before_script:
+  - psql -c 'create database travis_ci_test;' -U postgres
+  - psql travis_ci_test	< tests/pg_dump
+  - psql travis_ci_test -c 'alter role postgres set search_path to stage;'
+  
 script:
     - nosetests --with-coverage --cover-inclusive --cover-package=. --cover-erase
     - coverage report --omit 'lib/*,tests/*' --show-missing
