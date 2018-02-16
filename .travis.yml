@@ -16,6 +16,9 @@ cache:
 
 services:
     - postgresql
+    
+addons:
+  postgresql: "9.4"
 
 env:
     - DB_PASSWORD=''
