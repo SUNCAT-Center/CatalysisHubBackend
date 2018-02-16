@@ -25,7 +25,11 @@ import ase.build
 import ase.io.formats
 
 
-import bulk_enumerator as be
+try:
+    import bulk_enumerator as be
+except:
+    print("Warnin: could not import bulk_enumerator, check installation.")
+    be = None
 import apps.utils
 
 bulk_enumerator = flask.Blueprint('bulk_enumerator', __name__)
