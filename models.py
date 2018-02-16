@@ -39,7 +39,7 @@ class JsonEncodedDict(sqla.TypeDecorator):
 # set to local database path
 
 
-if os.environ.get('DB_PASSWORD0', ''):
+if os.environ.get('DB_PASSWORD1', ''):
     url = sqlalchemy.engine.url.URL('postgres',
                                     username='catappuser',
                                     password=os.environ['DB_PASSWORD0'],
@@ -110,9 +110,8 @@ class Publication(Base):
     publisher = sqlalchemy.Column(sqlalchemy.String, )
     doi = sqlalchemy.Column(sqlalchemy.String, )
     tags = sqlalchemy.Column(JSONB, )
-    pubtextsearch = sqlalchemy.Column(TSVECTOR, )   
-    reaction = sqlalchemy.orm.relationship("Reaction", backref="publication")#, uselist=True)
-
+    pubtextsearch = sqlalchemy.Column(TSVECTOR, ) 
+    reactions = sqlalchemy.orm.relationship("Reaction", backref="publication")#, uselist=True)
     systems = sqlalchemy.orm.relationship("System",
                                           secondary=association_pubsys, uselist=True)
     

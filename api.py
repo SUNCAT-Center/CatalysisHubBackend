@@ -3,13 +3,13 @@ API for GraphQL enhanced queries against catapp and ase-db database
 
 Some Examples:
 
-- Get total number of rows in table (in this case catapp):
-    {catapp (first: 0) {
+- Get total number of rows in table (in this case reactions):
+    {reactions (first: 0) {
       totalCount
     }}
 
-- Filter by reactants and products from catapp:
-    {catapp(reactants: "OH", products: "H2O") {
+- Filter by reactants and products from reactions:
+    {reactions(reactants: "OH", products: "H2O") {
       edges {
         node {
           Reaction
@@ -19,8 +19,8 @@ Some Examples:
       }
     }}
 
-- Filter by several reactants or products from catapp:
-    {catapp(reactants: "COstar+NOstar") {
+- Filter by several reactants or products from reactions:
+    {reactions(reactants: "COstar+NOstar") {
       edges {
         node {
           Reaction
@@ -34,7 +34,7 @@ Some Examples:
     {publications(authors: "~Bajdich") {
       edges {
         node {
-          catapp {
+          reactions {
             chemicalComposition
             Reaction
             reactionEnergy
@@ -43,8 +43,8 @@ Some Examples:
         }
       }}
 
-- Full text search in catapp (title, authors, year, reactants and products): ### Doesn't work!
-    {catapp(search: "oxygen evolution bajdich 2017 OOH") {
+- Full text search in reactions (title, authors, year, reactants and products): ### Doesn't work!
+    {reactions(search: "oxygen evolution bajdich 2017 OOH") {
       edges {
         node {
           Reaction
@@ -56,21 +56,21 @@ Some Examples:
     }}
 
 - Full text search in publications (title, authors, year): 
-    {catapp(pubtextsearch: "oxygen evolution bajdich 2017") {
+    {reactions(pubtextsearch: "oxygen evolution bajdich 2017") {
       edges {
         node {
           PublicationTitle
           PublicationAuthors
           year
-          catapp {
+          reactions {
            Reaction
          }
         }
       }
     }}
 
-- Full text search in catapp (chemical composition, facet, reactants, products): 
-    {catapp(yextsearch: "OOH Li") {
+- Full text search in reactions (chemical composition, facet, reactants, products): 
+    {reactions(yextsearch: "OOH Li") {
       edges {
         node {
           Reaction
@@ -83,8 +83,8 @@ Some Examples:
     }}
 
 
-- Distinct reactants and products from catapp (works with and without "~"):
-    {catapp(reactants: "~OH", products: "~", distinct: true) {
+- Distinct reactants and products from reactions (works with and without "~"):
+    {reactions(reactants: "~OH", products: "~", distinct: true) {
       edges {
         node {
           Reaction
@@ -95,10 +95,10 @@ Some Examples:
 
 
 - ASE structures belonging to reactions:
-   {catapp(reactants: "~OH" {
+   {reactions(reactants: "~OH" {
       edges {
         node {
-          catappSystems {
+          reactionsSystems {
             systems {
               Cifdata
             }
@@ -223,7 +223,7 @@ class Publication(CustomSQLAlchemyObjectType):
         model = models.Publication
         interfaces = (graphene.relay.Node,)
 
-    catapp = graphene.List('api.Reaction')
+    reactions = graphene.List('api.Reaction')
     systems = graphene.List('api.System')
 
 
@@ -416,7 +416,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                                     query = query.filter(column.has_key(value))
 
                     #if distinct_filter:
-                        #TO DO: SELECT DISTINCT jsonb_object_keys(reactants) FROM catapp
+                        #TO DO: SELECT DISTINCT jsonb_object_keys(reactants) FROM reaction
                             
                 elif isinstance(value, six.string_types):
                     if value.startswith("~"):
