@@ -18,7 +18,7 @@ services:
     - postgresql
     
 addons:
-  postgresql: "9.4"
+  postgresql: "9.6"
 
 env:
     - DB_PASSWORD=''
@@ -28,7 +28,8 @@ install:
 
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
-  - psql travis_ci_test	< tests/pg_dump 
+  - psql travis_ci_test	< tests/pg_dump
+  - psql travis_ci_test -c 'set search_path to stage;'
   
 script:
     - nosetests --with-coverage --cover-inclusive --cover-package=. --cover-erase
