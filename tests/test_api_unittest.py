@@ -1,4 +1,3 @@
-
 import os
 import sys
 import unittest
@@ -74,7 +73,7 @@ class ReactionBackendTestCase(unittest.TestCase):
 
         # test that the right number of systems is returned
         rv_data = self.get_data('{systems { edges { node { uniqueId } } }}')
-        assert len(rv_data['data']['systems']['edges']) == 330
+        assert len(rv_data['data']['systems']['edges']) == 704
 
         # assert that unique id has 32 characters
         uniqueId = rv_data['data']['systems']['edges'][0]['node']['uniqueId']
@@ -106,15 +105,16 @@ class ReactionBackendTestCase(unittest.TestCase):
         assert 'dftFunctional' in results[0]['node']
         assert results[0]['node']['dftFunctional'] == 'PBE+U=3.32'
 
-        assert 'publication' in results[0]['node']
+        #assert 'publication' in results[0]['node']
 
-        publication = (eval(results[0]['node']['publication']))
-        assert publication['doi'] == '10.1021/jacs.7b02622'
-        assert publication['journal'] == 'JACS'
+        #publication = (eval(results[0]['node']['publication']))
+        #assert publication['doi'] == '10.1021/jacs.7b02622'
+        #assert publication['journal'] == 'JACS'
 
 
 
         # TEST if we can query by DOI
+        """
         query = '{systems(keyValuePairs: "~doi\\": \\"10.1021/acs.jpcc.6b03375") { edges { node { natoms Formula Facet uniqueId energy DftCode DftFunctional PublicationTitle PublicationAuthors PublicationYear PublicationDoi } } }}'
         rv_data = self.get_data(query, )
         results = rv_data['data']['systems']['edges']
@@ -122,12 +122,12 @@ class ReactionBackendTestCase(unittest.TestCase):
         print(len(results))
         print(results[0])
         assert len(results) == 242
-
+        """
         # TEST if we can query parts of reactions DB for autocompletion
         query = '{reactions(products: "~", reactants: "~NO", distinct: true) { edges { node { reactants products } } }}'
         rv_data = self.get_data(query, )
 
-        assert len(rv_data['data']['reactions']['edges']) == 18
+        assert len(rv_data['data']['reactions']['edges']) == 1
         assert 'reactants' in rv_data['data']['reactions']['edges'][0]['node']
         assert 'products' in rv_data['data']['reactions']['edges'][0]['node']
 
@@ -136,7 +136,7 @@ class ReactionBackendTestCase(unittest.TestCase):
         rv_data = self.get_data(query, )
         pprint.pprint(rv_data['data']['reactions']['edges'])
         print(len(rv_data['data']['reactions']['edges']))
-        assert len(rv_data['data']['reactions']['edges']) == 4
+        assert len(rv_data['data']['reactions']['edges']) == 2
 
         query = '{reactions(last: 10, reactants: "~COH", products: "~") { edges { node { reactants } } }}'
         rv_data = self.get_data(query, verbose=True)
@@ -145,7 +145,7 @@ class ReactionBackendTestCase(unittest.TestCase):
 
         query = '{reactions (first: 0) { totalCount }}'
         rv_data = self.get_data(query, verbose=True)
-        assert rv_data['data']['reactions']['totalCount'] == 210, "Sample db has 210 entries"
+        assert rv_data['data']['reactions']['totalCount'] == 541, "Sample db has 210 entries"
 
         return
         # CONTINUE HERE BY PUSHING THE RETURN STATEMENT DOWN
@@ -154,12 +154,14 @@ class ReactionBackendTestCase(unittest.TestCase):
         query = """{reactions ( last: 5, surfaceComposition: "~", facet: "~", reactants: "~", products: "~" ) {
                    edges {
                      node {
-                       id DFTCode
+                       id 
+                       DFTCode
                        DFTFunctional
                        reactants
                        products
+                       pubId
                        #Equation
-                       aseIds
+                       #aseIds
                        #reactantIds
                        #productIds
                        facet
@@ -172,7 +174,7 @@ class ReactionBackendTestCase(unittest.TestCase):
                  }}
                  """
         rv_data = self.get_data(query, verbose=True)
-
+        
         query = """
                 {systems(uniqueId: """ + \
                 uniqueId + \
@@ -198,10 +200,11 @@ class ReactionBackendTestCase(unittest.TestCase):
                            }
                          }}
                 """
-        rv_data = self.get_data(query, verbose=True)
+        
+        #rv_data = self.get_data(query, verbose=True)
 
-        query = ' {reactions(reactants: "~", distinct: true) { edges { node { reactants } } }} '
-        rv_data = self.get_data(query, verbose=True)
+        #query = ' {reactions(reactants: "~", distinct: true) { edges { node { reactants } } }} '
+        #rv_data = self.get_data(query, verbose=True)
 
 
         query = ' {reactions(products: "~", distinct: true) { edges { node { products } } }} '
@@ -233,12 +236,12 @@ class ReactionBackendTestCase(unittest.TestCase):
              }
            }
          }}"""
-        rv_data = self.get_data(query, verbose=True)
+        #rv_data = self.get_data(query, verbose=True)
 
 
 
         query = '{systems(last: 10) { edges { node { PublicationYear } } }}'
-        rv_data = self.get_data(query, verbose=True)
+        #rv_data = self.get_data(query, verbose=True)
 
         query = '{systems(last: 10) { edges { node { Formula } } }}'
         rv_data = self.get_data(query, verbose=True)
