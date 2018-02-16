@@ -4,3 +4,4 @@ bin/
 include/
 share/
 .Python
+docs/build
