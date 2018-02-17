@@ -193,9 +193,11 @@ def get_wyckoff_from_structure(request=None):
 
             instring = (in_file.getvalue())
 
-    atoms = apps.utils.ase_convert(instring, informat='cif', atoms_out=True, )
-    poscar = apps.utils.ase_convert(instring, informat='cif', outformat='vasp')
-    cif = apps.utils.ase_convert(instring, informat='cif', outformat='cif')
+    filetype = ase.io.formats.filetype(filename, read=False)
+
+    atoms = apps.utils.ase_convert(instring, informat=filetype, atoms_out=True, )
+    poscar = apps.utils.ase_convert(instring, informat=filetype, outformat='vasp')
+    cif = apps.utils.ase_convert(instring, informat=filetype, outformat='cif')
 
     bulk = be.bulk.BULK(1e-5)
     bulk.set_structure_from_file(poscar)
