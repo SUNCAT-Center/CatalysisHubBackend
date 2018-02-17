@@ -167,8 +167,8 @@ def get_adsorption_sites(request=None):
         'bulk_cif', (json.loads(generate_bulk_cif(request).data)['cifdata'])))
     cif_images = json.loads(generate_slab_cif(request).data)['images']
 
-    place_holder = str(json.loads(request.args.get(
-        'adsorbateParams', '{}')).get('placeHolder', 'F'))
+    place_holder = str(json.loads(request.args.get( 'adsorbateParams', '{}')).get('placeHolder', 'F'))
+    adsorbate = str(json.loads(request.args.get( 'adsorbateParams', '{}')).get('adsorbate', 'O'))
 
     site_type = str(json.loads(request.args.get(
         'adsorbateParams', '{}')).get('siteType', 'all'))
@@ -212,43 +212,49 @@ def get_adsorption_sites(request=None):
     for atoms_i, atoms in enumerate(copy.deepcopy(images)):
         gen = catkit.surface.SlabGenerator(
             bulk=bulk_atoms,
-            miller_index=[miller_x, miller_y, miller_z
-                          ],
+            miller_index=[miller_x, miller_y, miller_z, ],
             layers=layers,
             vacuum=vacuum,
         )
         atoms = gen.get_slab(primitive=True)
-        try:
-            #print("TRY ATOMS {atoms_i}".format(**locals()))
-            sites = gen.adsorption_sites(
-                atoms,
-                symmetry_reduced=True,
-            )
-            pprint.pprint(sites)
-        except ValueError as e:
-            error_message = str(e)
+        #print("TRY ATOMS {atoms_i}".format(**locals()))
+        sites = gen.adsorption_sites(
+            atoms,
+            symmetry_reduced=True,
+        )
+        #pprint.pprint(sites)
 
-        try:
-            sites_list.append(sites)
+            #raise
 
-            label_index = 0
-            alt_labels.append({})
-            for site_label in sorted(sites):
-                if site_type != 'all' and site_label != site_type:
-                    continue
-                for site_label_i, site in enumerate(sites[site_label][0]):
-                    if len(site) > 0:
-                        atoms += ase.atom.Atom(place_holder, site + [0., 0., 1.5])
+        label_index = 0
+        alt_labels.append({})
+        #print("SITES SITES SITE")
+        #pprint.pprint(sites)
+        for adsorbate_site_label in sorted(sites):
+            if site_type != 'all' and site_label != site_type:
+                continue
+            for adsorbate_site_i, adsorbate_site in enumerate(sites[adsorbate_site_label][0]):
+                if len(adsorbate_site) == 0:
+                    continue # skip empty sites
+                atoms = gen.get_slab(primitive=True)
+
+
+                for site_label_i, site_label in enumerate(sites):
+
+                    for site_i, site in enumerate(sites[site_label][0]):
+                        if adsorbate_site_label == site_label and adsorbate_site_i == site_i:
+                            atoms += ase.atom.Atom(adsorbate, site + [0., 0., 1.5])
+                        else:
+                            atoms += ase.atom.Atom(place_holder, site + [0., 0., 1.5])
+
                         natoms = len(atoms) - 1
                         alt_labels[-1][len(atoms) - 1] = site_label + \
                             ' ' + str(site_label_i)
                         label_index += 1
 
-            with StringIO.StringIO() as f:
-                ase.io.write(f, atoms, format='cif')
-                cif_images.append(f.getvalue())
-        except:
-            pass
+                with StringIO.StringIO() as f:
+                    ase.io.write(f, atoms, format='cif')
+                    cif_images.append(f.getvalue())
 
     return flask.jsonify({
         'data': (sites_list),
@@ -531,7 +537,7 @@ def convert_atoms(request=None):
             # Monkey-patching ase.io.formats
             if filetype == 'inp':
                 filetype = 'espresso-in'
-            print("FILETYPE '{filetype}'".format(**locals()))
+            #print("FILETYPE '{filetype}'".format(**locals()))
             try:
                 atoms = ase.io.read(
                     filename=in_file,
