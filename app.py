@@ -19,17 +19,7 @@ except:
 app = flask.Flask(__name__)
 app.debug = True
 
-cors = CORS(app, resources={r"/graphql/*":
-    {"origins":
-        ["localhost:.*",
-            "catapp-browser.herokuapp.com",
-            "*"
-
-
-            ]
-        }
-    }
-    )
+cors = CORS(app)
 
 @app.route('/')
 
@@ -44,6 +34,10 @@ def apps():
 #print api.schema
 # AtoML app
 #app.register_blueprint(atoml_blueprint)
+
+from apps.activityMaps import activityMaps
+app.register_blueprint(activityMaps,  url_prefix='/apps/activityMaps')
+
 
 # Graphql view
 app.add_url_rule('/graphql',
