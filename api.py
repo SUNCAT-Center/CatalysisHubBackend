@@ -399,11 +399,14 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                         load_fields[keyname].append(convert(name))
                         fields = None
 
+        print(load_fields, field_names)
+        
         query = query.options(load_only(*load_fields[field_names[0]]))
-        for field_name in field_names[1:]:
-            column = getattr(model, convert(field_name), None)
+        
+        column = getattr(model, convert(field_names[1]), None)
             
-            query = query.options(joinedload(column, innerjoin=True).load_only(*load_fields[field_name]))
+        query = query.options(joinedload(column, innerjoin=True).load_only(*load_fields[field_names[1]]))
+        
 
         for field, value in args.items():
             if field == 'distinct':
