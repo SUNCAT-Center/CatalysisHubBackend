@@ -103,15 +103,15 @@ def systems(request=None):
                     energies[reactant] = energy
 
                 dE_OH = energies['OH']
-                dE_O__dE_OH = energies['O'] - energies['OH']
+                dE_O__dE_OH =  energies['O'] - energies['OH']
 
                 system_name = '{formula:20s}{facet:20s}'.format(**locals())
                 short_systems.append({
                     'uid': uid,
                     'formula': formula,
                     'facet': facet,
-                    'dE_OH': dE_OH,
-                    'dE_O__dE_OH ':dE_O__dE_OH,
+                    'y': dE_OH,
+                    'x': dE_O__dE_OH,
                     })
 
     return flask.jsonify({
