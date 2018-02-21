@@ -374,7 +374,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
             elif field == 'jsonkey':
                 jsonkey_input = value
 
-
+        """
         fields = info.field_asts[0].selection_set.selections[0].selection_set.selections[0].selection_set.selections
         load_fields = []
 
@@ -387,7 +387,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
             load_fields.append(convert(field.name.value))
             
         #query = query.options(load_only(*load_fields))
-
+        """
         for field, value in args.items():
             if field not in (cls.RELAY_ARGS + cls.SPECIAL_ARGS):
                 from sqlalchemy.sql.expression import func, cast
