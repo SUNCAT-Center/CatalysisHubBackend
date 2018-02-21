@@ -36,14 +36,11 @@ def reactant_query(reactant="O", limit=50):
         edges {{
           node {{
             reactionEnergy
-            reactionSystems {{
-              name
               systems {{
                 uniqueId
                 Formula
                 Facet
               }}
-            }}
           }}
         }}
         totalCount
