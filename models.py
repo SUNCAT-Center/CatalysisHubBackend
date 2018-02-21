@@ -149,6 +149,7 @@ class Reaction(Base):
     textsearch = sqlalchemy.Column(TSVECTOR, )
 
     reaction_systems = sqlalchemy.orm.relationship("ReactionSystem",
+                                                   #primaryjoin="""ReactionSystem.reaction_id==Reaction.id""",
                                                    #uselist=False,
                                                    backref="reactions")
 
@@ -156,7 +157,7 @@ class Reaction(Base):
             primaryjoin="""ReactionSystem.reaction_id==Reaction.id""",
             secondaryjoin="ReactionSystem.ase_id==System.unique_id",
             secondary=sqlalchemy.inspect(ReactionSystem).tables[0],
-            lazy='joined',
+            #lazy='joined',
             uselist=True,
             backref='reactions')
     

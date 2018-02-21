@@ -248,15 +248,7 @@ class ReactionSystem(CustomSQLAlchemyObjectType):
 
     #name = graphene.InputField()
     #systems = graphene.List('api.Systems')
-    
-class Reaction(CustomSQLAlchemyObjectType):
-    
-    class Meta:
-        model = models.Reaction
-        interfaces = (graphene.relay.Node, )
         
-    reaction_systems = graphene.List(ReactionSystem)
-    
     
 class System(CustomSQLAlchemyObjectType):
 
@@ -265,6 +257,8 @@ class System(CustomSQLAlchemyObjectType):
     class Meta:
         model = models.System
         interfaces = (graphene.relay.Node, )
+
+    publication = graphene.List('api.Publication')
 
     @staticmethod
     def resolve__input_file(self, info, format="py"):
@@ -345,6 +339,18 @@ class Species(CustomSQLAlchemyObjectType):
         model = models.Species
         interfaces = (graphene.relay.Node, )
 
+
+class Reaction(CustomSQLAlchemyObjectType):
+    
+    class Meta:
+        model = models.Reaction
+        interfaces = (graphene.relay.Node, )
+        
+    reaction_systems = graphene.List(ReactionSystem)
+    systems = graphene.List(System)
+
+    
+
 #class Search(CustomSQLAlchemyObjectType):
 #    class Meta:
 #        types = (Publications, Catapp)
@@ -359,11 +365,48 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
         from sqlalchemy import or_
         from sqlalchemy.orm import load_only
         query = super(FilteringConnectionField, cls).get_query(model, info)
+        from sqlalchemy.orm import joinedload
         distinct_filter = False  # default value for distinct
         op = 'eq'
         jsonkey_input = None
         ALLOWED_OPS = ['gt', 'lt', 'le', 'ge', 'eq', 'ne',
                        '=',  '>',  '<',  '>=', '<=', '!=']
+
+        cont_fields = ['edges', 'node']
+        skip_fields = ['totalCount']
+        fields = info.field_asts#[0].selection_set.selections
+        load_fields = {}
+        field_names = []    
+        def convert(name):
+            import re
+            s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+            return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+        while isinstance(fields, list):
+            for field in fields:
+                name = field.name.value
+                if name in cont_fields:
+                    fields = field.selection_set.selections
+                elif name in skip_fields or name[0].isupper():
+                    continue
+                else:
+                    if field.selection_set is not None:
+                        keyname = name
+                        field_names.append(name)
+                        load_fields.update({keyname: []})
+                        fields = field.selection_set.selections
+                    else:                        
+                        load_fields[keyname].append(convert(name))
+                        fields = None
+
+        print(load_fields, field_names)
+        
+        query = query.options(load_only(*load_fields[field_names[0]]))
+
+        if len(field_names) > 1:
+            column = getattr(model, convert(field_names[1]), None)
+            query = query.options(joinedload(column, innerjoin=True).load_only(*load_fields[field_names[1]]))
+        
 
         for field, value in args.items():
             if field == 'distinct':
@@ -374,20 +417,6 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
             elif field == 'jsonkey':
                 jsonkey_input = value
 
-        """
-        fields = info.field_asts[0].selection_set.selections[0].selection_set.selections[0].selection_set.selections
-        load_fields = []
-
-        def convert(name):
-            import re
-            s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-            return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
-        
-        for field in fields:
-            load_fields.append(convert(field.name.value))
-            
-        #query = query.options(load_only(*load_fields))
-        """
         for field, value in args.items():
             if field not in (cls.RELAY_ARGS + cls.SPECIAL_ARGS):
                 from sqlalchemy.sql.expression import func, cast
@@ -399,7 +428,6 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                     jsonkey = jsonkey_input
 
                 column = getattr(model, field, None)
-
 
                 if str(column.type) == "TSVECTOR":
                     query = query.filter(column.match("'{}'".format(value)))
@@ -475,6 +503,8 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                 if distinct_filter:
                     query = query.distinct(column)#.group_by(getattr(model, field))
 
+                    
+       # print(query)
         return query
 
 
@@ -537,7 +567,6 @@ class Query(graphene.ObjectType):
         ReactionSystem, **get_filter_fields(models.ReactionSystem))
     publications = FilteringConnectionField(
         Publication, **get_filter_fields(models.Publication))
-
 
 schema = graphene.Schema(
     query=Query, types=[System, Species, TextKeyValue, NumberKeyValue, Key, Reaction, ReactionSystem, Publication
