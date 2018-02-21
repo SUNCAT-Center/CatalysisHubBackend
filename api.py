@@ -402,10 +402,10 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
         print(load_fields, field_names)
         
         query = query.options(load_only(*load_fields[field_names[0]]))
-        
-        column = getattr(model, convert(field_names[1]), None)
-            
-        query = query.options(joinedload(column, innerjoin=True).load_only(*load_fields[field_names[1]]))
+
+        if len(field_names) > 1:
+            column = getattr(model, convert(field_names[1]), None)
+            query = query.options(joinedload(column, innerjoin=True).load_only(*load_fields[field_names[1]]))
         
 
         for field, value in args.items():
