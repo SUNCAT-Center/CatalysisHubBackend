@@ -102,16 +102,26 @@ def systems(request=None):
                     energy = systems[uid][reactant]['energy']
                     energies[reactant] = energy
 
-                dE_OH = energies['OH']
-                dE_O__dE_OH =  energies['O'] - energies['OH']
+                error_correction = -1 # to be fixed in API
+                dE_OH = error_correction * energies['OH']
+                dE_O =  error_correction * energies['O']
+                dE_OOH = error_correction * energies['OOH']
+
+                # cf. https://pubs.acs.org/doi/pdfplus/10.1021/jacs.7b02622
+                dG_OH = dE_OH + 0.30225 
+                dG_O = dE_O + ( -0.0145  )
+                dG_OOH =  dE_OOH + 0.34475
+
+                dG_O__dG_OH = dG_O - dG_OH
+                
 
                 system_name = '{formula:20s}{facet:20s}'.format(**locals())
                 short_systems.append({
                     'uid': uid,
                     'formula': formula,
                     'facet': facet,
-                    'y': dE_OH,
-                    'x': dE_O__dE_OH,
+                    'y': dG_OH,
+                    'x': dG_O__dG_OH,
                     })
 
     return flask.jsonify({
