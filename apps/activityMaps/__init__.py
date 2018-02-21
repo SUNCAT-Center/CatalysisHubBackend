@@ -32,7 +32,7 @@ ROOT = 'http://catappdatabase2.herokuapp.com/graphql'
 
 def reactant_query(reactant="O", limit=50):
     query = {'query': """{{
-      reactions(first: {limit}, reactants: "{reactant}") {{
+      reactions( reactants: "{reactant}") {{
         edges {{
           node {{
             reactionEnergy
@@ -48,7 +48,8 @@ def reactant_query(reactant="O", limit=50):
         }}
         totalCount
       }}
-    }}""".format(**locals())}
+    }}""".replace('\n', '').format(**locals())}
+    print(query)
 
     return requests.get(ROOT, query).json()
 
