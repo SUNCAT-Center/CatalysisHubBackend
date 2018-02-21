@@ -357,6 +357,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
     @classmethod
     def get_query(cls, model, info, **args):
         from sqlalchemy import or_
+        from sqlalchemy.orm import load_only
         query = super(FilteringConnectionField, cls).get_query(model, info)
         distinct_filter = False  # default value for distinct
         op = 'eq'
@@ -372,7 +373,21 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                     op = value
             elif field == 'jsonkey':
                 jsonkey_input = value
+
+
+        fields = info.field_asts[0].selection_set.selections[0].selection_set.selections[0].selection_set.selections
+        load_fields = []
+
+        def convert(name):
+            import re
+            s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+            return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
         
+        for field in fields:
+            load_fields.append(convert(field.name.value))
+            
+        #query = query.options(load_only(*load_fields))
+
         for field, value in args.items():
             if field not in (cls.RELAY_ARGS + cls.SPECIAL_ARGS):
                 from sqlalchemy.sql.expression import func, cast
@@ -459,6 +474,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
 
                 if distinct_filter:
                     query = query.distinct(column)#.group_by(getattr(model, field))
+
         return query
 
 
