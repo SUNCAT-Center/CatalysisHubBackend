@@ -39,7 +39,7 @@ class JsonEncodedDict(sqla.TypeDecorator):
 # set to local database path
 
 
-if os.environ.get('DB_PASSWORD1', ''):
+if os.environ.get('DB_PASSWORD0', ''):
     url = sqlalchemy.engine.url.URL('postgres',
                                     username='catappuser',
                                     password=os.environ['DB_PASSWORD0'],
@@ -121,8 +121,8 @@ class ReactionSystem(Base):
     __table_args__ = ({'schema': 'stage'})# if PRODUCTION else 'main'})
 
     name = sqlalchemy.Column(sqlalchemy.String, )
-    ase_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
-        'stage.systems.unique_id'), # if PRODUCTION else 'main.publication.pub_id'),
+    ase_id = sqlalchemy.Column(sqlalchemy.String,
+                               sqlalchemy.ForeignKey('stage.systems.unique_id'), # if PRODUCTION else 'main.publication.pub_id'),
                                primary_key=True)
     reaction_id = sqlalchemy.Column(sqlalchemy.Integer,  sqlalchemy.ForeignKey(
         'stage.reaction.id'), # if PRODUCTION else 'main.reaction.id'),
@@ -148,11 +148,19 @@ class Reaction(Base):
         'stage.publication.pub_id'))# if PRODUCTION else 'main.publication.pub_id'))
     textsearch = sqlalchemy.Column(TSVECTOR, )
 
-
     reaction_systems = sqlalchemy.orm.relationship("ReactionSystem",
+                                                   #primaryjoin="""ReactionSystem.reaction_id==Reaction.id""",
                                                    #uselist=False,
                                                    backref="reactions")
-   
+
+    systems = sqlalchemy.orm.relationship("System",
+            primaryjoin="""ReactionSystem.reaction_id==Reaction.id""",
+            secondaryjoin="ReactionSystem.ase_id==System.unique_id",
+            secondary=sqlalchemy.inspect(ReactionSystem).tables[0],
+            #lazy='joined',
+            uselist=True,
+            backref='reactions')
+    
     @hybrid_property
     def _equation(self):
         equation = ''
@@ -237,8 +245,11 @@ class System(Base):
         "TextKeyValue", backref="systems", uselist=True)
     number_keys = sqlalchemy.orm.relationship(
         "NumberKeyValue", backref="systems", uselist=True)
+    
     reaction_systems= sqlalchemy.orm.relationship(
-        "ReactionSystem", backref="systems", uselist=True)
+        "ReactionSystem",
+        backref="systems",
+        uselist=True)
 
     #reaction = sqlalchemy.orm.relationship("ReactionSystems", backref='systems', uselist=True)
     

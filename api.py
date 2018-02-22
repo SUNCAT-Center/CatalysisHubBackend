@@ -3,12 +3,14 @@ API for GraphQL enhanced queries against catapp and ase-db database
 
 Some Examples:
 
-- Get total number of rows in table (in this case reactions):
+- Get total number of rows in table (in this case reactions)::
+
     {reactions (first: 0) {
       totalCount
     }}
 
-- Filter by reactants and products from reactions:
+- Filter by reactants and products from reactions::
+
     {reactions(reactants: "OH", products: "H2O") {
       edges {
         node {
@@ -19,7 +21,8 @@ Some Examples:
       }
     }}
 
-- Filter by several reactants or products from reactions:
+- Filter by several reactants or products from reactions::
+
     {reactions(reactants: "COstar+NOstar") {
       edges {
         node {
@@ -30,7 +33,8 @@ Some Examples:
       }
     }}
 
-- Author-name from publications:
+- Author-name from publications::
+
     {publications(authors: "~Bajdich") {
       edges {
         node {
@@ -43,7 +47,8 @@ Some Examples:
         }
       }}
 
-- Full text search in reactions (title, authors, year, reactants and products): ### Doesn't work!
+- Full text search in reactions (title, authors, year, reactants and products): ### Doesn't work! ::
+
     {reactions(search: "oxygen evolution bajdich 2017 OOH") {
       edges {
         node {
@@ -55,7 +60,8 @@ Some Examples:
       }
     }}
 
-- Full text search in publications (title, authors, year): 
+- Full text search in publications (title, authors, year)::
+
     {reactions(pubtextsearch: "oxygen evolution bajdich 2017") {
       edges {
         node {
@@ -69,7 +75,8 @@ Some Examples:
       }
     }}
 
-- Full text search in reactions (chemical composition, facet, reactants, products): 
+- Full text search in reactions (chemical composition, facet, reactants, products)::
+
     {reactions(yextsearch: "OOH Li") {
       edges {
         node {
@@ -83,7 +90,8 @@ Some Examples:
     }}
 
 
-- Distinct reactants and products from reactions (works with and without "~"):
+- Distinct reactants and products from reactions (works with and without "~")::
+
     {reactions(reactants: "~OH", products: "~", distinct: true) {
       edges {
         node {
@@ -94,7 +102,8 @@ Some Examples:
     }}
 
 
-- ASE structures belonging to reactions:
+- ASE structures belonging to reactions::
+
    {reactions(reactants: "~OH" {
       edges {
         node {
@@ -109,19 +118,21 @@ Some Examples:
 
 
 - Distinct ase ids for a particular adsorbate jsonkey (only works if full key
-  is given + 'gas'/'star'):
-(aseIds: "~", jsonkey: "OOHstar", distinct: true,
-            chemicalComposition: "~Co24") {
-      edges {
-        node {
-  	  chemicalComposition
-          Reaction
-          aseIds
-        }
-      }
-    }}
+  is given + 'gas'/'star')::
 
-- Author-name from ase-db: # Doesnt work
+    (aseIds: "~", jsonkey: "OOHstar", distinct: true,
+                chemicalComposition: "~Co24") {
+          edges {
+            node {
+              chemicalComposition
+              Reaction
+              aseIds
+            }
+          }
+        }}
+
+- Author-name from ase-db: # Doesnt work::
+
     {textKeys(key: "publication_authors", value: "~Bajdich") {
       edges {
         node {
@@ -133,7 +144,8 @@ Some Examples:
       }
     }}
 
-- Get all distinct DOIs 
+- Get all distinct DOIs::
+
    {publications {
       edges {
         node {
@@ -142,20 +154,21 @@ Some Examples:
       }
     }}
 
-- Get all entries published since (and including) 2015
-    allowed comparisons
+- Get all entries published since (and including) 2015::
 
-   {publications(year: 2015, op: "ge", first:1) {
-     edges {
-       node {
-        id
-        year
-        systems {
-           keyValuePairs
-        }
-      }
-    }
-  }}
+    # allowed comparisons
+
+    {publications(year: 2015, op: "ge", first:1) {
+      edges {
+        node {
+         id
+         year
+         systems {
+            keyValuePairs
+         }
+       }
+     }
+   }}
 
 """
 try:
@@ -235,15 +248,7 @@ class ReactionSystem(CustomSQLAlchemyObjectType):
 
     #name = graphene.InputField()
     #systems = graphene.List('api.Systems')
-    
-class Reaction(CustomSQLAlchemyObjectType):
-    
-    class Meta:
-        model = models.Reaction
-        interfaces = (graphene.relay.Node, )
         
-    reaction_systems = graphene.List(ReactionSystem)
-    
     
 class System(CustomSQLAlchemyObjectType):
 
@@ -253,11 +258,13 @@ class System(CustomSQLAlchemyObjectType):
         model = models.System
         interfaces = (graphene.relay.Node, )
 
+    publication = graphene.List('api.Publication')
+
     @staticmethod
     def resolve__input_file(self, info, format="py"):
         """Return the structure as input for one of several
         DFT codes as supported by ASE. Default format is "py".
-        Run
+        Run::
 
             {systems(last: 1) {
               totalCount
@@ -268,16 +275,16 @@ class System(CustomSQLAlchemyObjectType):
               }
             }}
 
-        to show available formats. Try one of the available formats like,
+        to show available formats. Try one of the available formats like,::
 
-        {systems(last: 10) {
-          totalCount
-          edges {
-            node {
-              InputFile(format:"espresso-in")
-            }
-          }
-        }}
+            {systems(last: 10) {
+              totalCount
+              edges {
+                node {
+                  InputFile(format:"espresso-in")
+                }
+              }
+            }}
 
         to generate QE input.
 
@@ -332,6 +339,18 @@ class Species(CustomSQLAlchemyObjectType):
         model = models.Species
         interfaces = (graphene.relay.Node, )
 
+
+class Reaction(CustomSQLAlchemyObjectType):
+    
+    class Meta:
+        model = models.Reaction
+        interfaces = (graphene.relay.Node, )
+        
+    reaction_systems = graphene.List(ReactionSystem)
+    systems = graphene.List(System)
+
+    
+
 #class Search(CustomSQLAlchemyObjectType):
 #    class Meta:
 #        types = (Publications, Catapp)
@@ -344,12 +363,50 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
     @classmethod
     def get_query(cls, model, info, **args):
         from sqlalchemy import or_
+        from sqlalchemy.orm import load_only
         query = super(FilteringConnectionField, cls).get_query(model, info)
+        from sqlalchemy.orm import joinedload
         distinct_filter = False  # default value for distinct
         op = 'eq'
         jsonkey_input = None
         ALLOWED_OPS = ['gt', 'lt', 'le', 'ge', 'eq', 'ne',
                        '=',  '>',  '<',  '>=', '<=', '!=']
+
+        cont_fields = ['edges', 'node']
+        skip_fields = ['totalCount']
+        fields = info.field_asts#[0].selection_set.selections
+        load_fields = {}
+        field_names = []    
+        def convert(name):
+            import re
+            s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+            return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+        while isinstance(fields, list):
+            for field in fields:
+                name = field.name.value
+                if name in cont_fields:
+                    fields = field.selection_set.selections
+                elif name in skip_fields or name[0].isupper():
+                    continue
+                else:
+                    if field.selection_set is not None:
+                        keyname = name
+                        field_names.append(name)
+                        load_fields.update({keyname: []})
+                        fields = field.selection_set.selections
+                    else:                        
+                        load_fields[keyname].append(convert(name))
+                        fields = None
+
+        print(load_fields, field_names)
+        
+        query = query.options(load_only(*load_fields[field_names[0]]))
+
+        if len(field_names) > 1:
+            column = getattr(model, convert(field_names[1]), None)
+            query = query.options(joinedload(column, innerjoin=True).load_only(*load_fields[field_names[1]]))
+        
 
         for field, value in args.items():
             if field == 'distinct':
@@ -359,7 +416,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                     op = value
             elif field == 'jsonkey':
                 jsonkey_input = value
-        
+
         for field, value in args.items():
             if field not in (cls.RELAY_ARGS + cls.SPECIAL_ARGS):
                 from sqlalchemy.sql.expression import func, cast
@@ -371,7 +428,6 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                     jsonkey = jsonkey_input
 
                 column = getattr(model, field, None)
-
 
                 if str(column.type) == "TSVECTOR":
                     query = query.filter(column.match("'{}'".format(value)))
@@ -446,6 +502,9 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
 
                 if distinct_filter:
                     query = query.distinct(column)#.group_by(getattr(model, field))
+
+                    
+       # print(query)
         return query
 
 
@@ -508,7 +567,6 @@ class Query(graphene.ObjectType):
         ReactionSystem, **get_filter_fields(models.ReactionSystem))
     publications = FilteringConnectionField(
         Publication, **get_filter_fields(models.Publication))
-
 
 schema = graphene.Schema(
     query=Query, types=[System, Species, TextKeyValue, NumberKeyValue, Key, Reaction, ReactionSystem, Publication
