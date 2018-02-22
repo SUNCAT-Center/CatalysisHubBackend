@@ -30,27 +30,26 @@ ROOT = 'http://2f4bb6d4.ngrok.io/graphql/'
 ROOT = 'http://catappdatabase2.herokuapp.com/graphql'
 
 
-def reactant_query(reactant="O", limit=50):
+def reactant_query(reactant="O", limit=5000):
     query = {'query': """{{
       reactions(first: {limit}, reactants: "{reactant}") {{
         edges {{
           node {{
             reactionEnergy
-
-              systems {{
-                uniqueId
-              }}
+             facet
+             chemicalComposition
+            reactionSystems {{
+                name
+                aseId
+            }}
           }}
         }}
-        totalCount
       }}
-    }}""".replace('\n', '').format(**locals())}
+    }}""".format(**locals())}
 
-    print(ROOT)
-    print(query)
+    response = requests.get(ROOT, query).json()
 
-    return requests.get(ROOT, query).json()
-
+    return response
 
 
 @activityMaps.route('/systems/', methods=['GET', 'POST'])
@@ -78,41 +77,48 @@ def systems(request=None):
         systems = {}
         for reactant in raw_systems:
             for edge in raw_systems[reactant]['data']['reactions']['edges']:
-                star_list = list(filter(lambda x: x['name'] == 'star', edge['node']['systems']))
+                star_list = list(filter(lambda x: x['name'] == 'star', edge[
+                                 'node']['reactionSystems']))
                 if len(star_list) == 0:
                     continue
                 star = star_list[0]
 
-                uniqueId = star['systems']['uniqueId']
+                uniqueId = star['aseId']
                 #systems.setdefault(reactant, {}).setdefault(uniqueId, []).append(star)
-                systems.setdefault(uniqueId, {})[reactant] =  {
+                systems.setdefault(uniqueId, {})['facet'] = edge[
+                    'node']['facet']
+                systems.setdefault(uniqueId, {})['chemicalComposition'] = edge[
+                    'node']['chemicalComposition']
+                systems.setdefault(uniqueId, {}).setdefault('reactants', {})[reactant] = {
                     'systems': edge['node']['reactionSystems'],
-                    'energy': edge['node']['reactionEnergy']
-                        }
+                    'energy': edge['node']['reactionEnergy'],
+                }
 
         short_systems = []
         for uid in systems:
-            if len(systems[uid].keys())  == len(reactants):
+            if len(systems[uid]['reactants'].keys()) == len(reactants):
                 energies = {}
-                for reactant in systems[uid]:
-                    star = list(filter(lambda x: x['name'] == 'star', systems[uid][reactant]['systems']))[0]
-                    facet = star['systems']['Facet']
-                    formula = star['systems']['Formula']
-                    energy = systems[uid][reactant]['energy']
+                formula = systems[uid]['chemicalComposition']
+                facet = systems[uid]['facet']
+
+                for reactant in systems[uid]['reactants']:
+                    star = list(filter(lambda x: x['name'] == 'star', systems[
+                                uid]['reactants'][reactant]['systems']))[0]
+                    energy = systems[uid]['reactants'][reactant]['energy']
                     energies[reactant] = energy
 
-                error_correction = -1 # to be fixed in API
+
+                error_correction = -1  # to be fixed in API
                 dE_OH = error_correction * energies['OH']
-                dE_O =  error_correction * energies['O']
+                dE_O = error_correction * energies['O']
                 dE_OOH = error_correction * energies['OOH']
 
                 # cf. https://pubs.acs.org/doi/pdfplus/10.1021/jacs.7b02622
-                dG_OH = dE_OH + 0.30225 
-                dG_O = dE_O + ( -0.0145  )
-                dG_OOH =  dE_OOH + 0.34475
+                dG_OH = dE_OH + 0.30225
+                dG_O = dE_O + (-0.0145)
+                dG_OOH = dE_OOH + 0.34475
 
                 dG_O__dG_OH = dG_O - dG_OH
-                
 
                 system_name = '{formula:20s}{facet:20s}'.format(**locals())
                 short_systems.append({
@@ -121,8 +127,8 @@ def systems(request=None):
                     'facet': facet,
                     'y': dG_OH,
                     'x': dG_O__dG_OH,
-                    })
+                })
 
     return flask.jsonify({
         'systems': short_systems,
-        })
+    })
