@@ -32,20 +32,21 @@ ROOT = 'http://catappdatabase2.herokuapp.com/graphql'
 
 def reactant_query(reactant="O", limit=50):
     query = {'query': """{{
-      reactions( reactants: "{reactant}") {{
+      reactions(first: {limit}, reactants: "{reactant}") {{
         edges {{
           node {{
             reactionEnergy
+
               systems {{
                 uniqueId
-                Formula
-                Facet
               }}
           }}
         }}
         totalCount
       }}
     }}""".replace('\n', '').format(**locals())}
+
+    print(ROOT)
     print(query)
 
     return requests.get(ROOT, query).json()
@@ -77,7 +78,7 @@ def systems(request=None):
         systems = {}
         for reactant in raw_systems:
             for edge in raw_systems[reactant]['data']['reactions']['edges']:
-                star_list = list(filter(lambda x: x['name'] == 'star', edge['node']['reactionSystems']))
+                star_list = list(filter(lambda x: x['name'] == 'star', edge['node']['systems']))
                 if len(star_list) == 0:
                     continue
                 star = star_list[0]
