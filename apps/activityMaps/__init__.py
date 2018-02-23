@@ -30,6 +30,18 @@ ROOT = 'http://2f4bb6d4.ngrok.io/graphql/'
 ROOT = 'http://catappdatabase2.herokuapp.com/graphql'
 
 
+class ReactionModel(object):
+
+    def __init__(self):
+        pass
+
+    def get_raw_systems(self, filters):
+        pass
+
+    def get_xyz(self, systems):
+        pass
+
+
 def reactant_query(reactant="O", limit=5000):
     query = {'query': """{{
       reactions(first: {limit}, reactants: "{reactant}") {{
@@ -63,6 +75,21 @@ def systems(request=None):
     CACHE_FILE = 'reaction_systems_{activityMap}.json'.format(**locals())
 
     if activityMap == 'OER':
+
+        def overpotential(doh, do):
+
+            def ooh_oh_scaling(doh):
+                # like ambars
+                # dooh=0.5*doh  + 3.0		 #O
+                # normal one
+                dooh = doh + 3.2
+                return dooh
+
+            dooh = ooh_oh_scaling(doh)
+            dg14 = [doh, do - doh, dooh - do, -dooh + 4.92]
+            m = max(dg14)
+            return m - 1.23
+
         reactants = ['OOH', 'OH', 'O', ]
         if os.path.exists(CACHE_FILE):
             with open(CACHE_FILE) as infile:
@@ -107,7 +134,6 @@ def systems(request=None):
                     energy = systems[uid]['reactants'][reactant]['energy']
                     energies[reactant] = energy
 
-
                 error_correction = -1  # to be fixed in API
                 dE_OH = error_correction * energies['OH']
                 dE_O = error_correction * energies['O']
@@ -125,9 +151,15 @@ def systems(request=None):
                     'uid': uid,
                     'formula': formula,
                     'facet': facet,
-                    'y': dG_OH,
                     'x': dG_O__dG_OH,
+                    'y': dG_OH,
+                    'z': - overpotential(dG_OH, dG_O),
                 })
+
+    short_systems = sorted(
+        short_systems,
+        key=lambda _x: - _x['z']
+    )
 
     return flask.jsonify({
         'systems': short_systems,
