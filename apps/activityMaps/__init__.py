@@ -32,8 +32,10 @@ ROOT = 'http://catappdatabase2.herokuapp.com/graphql'
 
 class ReactionModel(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, xlabel=None, ylabel=None, zlabel=None):
+        self.xlabel = xlabel
+        self.ylabel = ylabel
+        self.zlabel = zlabel
 
     def get_raw_systems(self, filters):
         pass
@@ -76,7 +78,7 @@ def systems(request=None):
 
     if activityMap == 'OER':
 
-        def overpotential(doh, do):
+        def overpotential(doh, do, dooh=None):
 
             def ooh_oh_scaling(doh):
                 # like ambars
@@ -85,7 +87,8 @@ def systems(request=None):
                 dooh = doh + 3.2
                 return dooh
 
-            dooh = ooh_oh_scaling(doh)
+            if dooh is None:
+                dooh = ooh_oh_scaling(doh)
             dg14 = [doh, do - doh, dooh - do, -dooh + 4.92]
             m = max(dg14)
             return m - 1.23
@@ -153,7 +156,7 @@ def systems(request=None):
                     'facet': facet,
                     'x': dG_O__dG_OH,
                     'y': dG_OH,
-                    'z': - overpotential(dG_OH, dG_O),
+                    'z': - overpotential(dG_OH, dG_O, dG_OOH),
                 })
 
     short_systems = sorted(
@@ -163,4 +166,7 @@ def systems(request=None):
 
     return flask.jsonify({
         'systems': short_systems,
+        'xlabel': 'ΔG(O) - ΔG(OH) [eV]',
+        'ylabel': 'ΔG(OH) [eV]',
+        'zlabel': 'overpotential [eV]',
     })
