@@ -104,7 +104,6 @@ def generate_slab_cif(request=None, return_atoms=False):
     bulk_cif = str(request.args.get(
         'bulk_cif', (json.loads(generate_bulk_cif(request).data)['cifdata'])))
 
-
     mem_file = StringIO.StringIO()
     mem_file.write(bulk_cif)
     mem_file.seek(0)
@@ -124,10 +123,8 @@ def generate_slab_cif(request=None, return_atoms=False):
     mem_files = []
     n_terminations = len(terminations)
 
-
-
     for (iterm, term) in enumerate(terminations):
-        if  not all_terminations and 0 <= termination < n_terminations:
+        if not all_terminations and 0 <= termination < n_terminations:
             if iterm != termination:
                 continue
             terminations = [terminations[termination]]
@@ -147,35 +144,40 @@ def generate_slab_cif(request=None, return_atoms=False):
 
 
 @catKitDemo.route('/get_adsorption_sites', methods=['GET', 'POST'])
-def get_adsorption_sites(request=None):
+def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
     request = flask.request if request is None else request
     if type(request.args) is str:
         request.args = json.loads(request.args)
 
-    miller_x = int(json.loads(request.args.get(
-        'slabParams', '{}')).get('millerX', 1))
-    miller_y = int(json.loads(request.args.get(
-        'slabParams', '{}')).get('millerY', 1))
-    miller_z = int(json.loads(request.args.get(
-        'slabParams', '{}')).get('millerZ', 1))
-    layers = int(json.loads(request.args.get(
-        'slabParams', '{}')).get('layers', 4))
-    axis = int(json.loads(request.args.get('slabParams', '{}')).get('axis', 2))
-    vacuum = float(json.loads(request.args.get(
-        'slabParams', '{}')).get('vacuum', 10.))
+    if type(request.args.get('slabParams', '{}')) is str:
+        slab_params = json.loads(request.args.get('slabParams', '{}'))
+    else:
+        slab_params = request.args.get('slabParams', {})
+
+    miller_x = int(slab_params.get('millerX', 1))
+    miller_y = int(slab_params.get('millerY', 1))
+    miller_z = int(slab_params.get('millerZ', 1))
+    layers = int(slab_params.get('layers', 4))
+    axis = int(slab_params.get('axis', 2))
+    vacuum = float(slab_params.get('vacuum', 10.))
+
     bulk_cif = str(request.args.get(
         'bulk_cif', (json.loads(generate_bulk_cif(request).data)['cifdata'])))
     cif_images = json.loads(generate_slab_cif(request).data)['images']
 
-    place_holder = str(json.loads(request.args.get( 'adsorbateParams', '{}')).get('placeHolder', 'F'))
-    adsorbate = str(json.loads(request.args.get( 'adsorbateParams', '{}')).get('adsorbate', 'O'))
+    if type(request.args.get('adsorbateParams', '{}')) is str:
+        adsorbate_params = json.loads(
+            request.args.get('adsorbateParams', '{}'))
+    else:
+        adsorbate_params = request.args.get('adsorbateParams', {})
 
-    site_type = str(json.loads(request.args.get(
-        'adsorbateParams', '{}')).get('siteType', 'all'))
+    if place_holder is None:
+        place_holder = str(adsorbate_params.get('placeHolder', 'F'))
 
+    adsorbate = str(adsorbate_params.get('adsorbate', 'O'))
 
-    #print("GET ADSORPTION SITES")
-    #print(miller_x, miller_y, miller_z)
+    site_type = str(adsorbate_params.get('siteType', 'all'))
+
 
     # create bulk atoms
     mem_file = StringIO.StringIO()
@@ -207,8 +209,10 @@ def get_adsorption_sites(request=None):
 
     alt_labels = []
     cif_images = []
-    #print(images)
+    site_names = []
+    site_types = []
     error_message = ''
+    atoms_objects = []
     for atoms_i, atoms in enumerate(copy.deepcopy(images)):
         gen = catkit.surface.SlabGenerator(
             bulk=bulk_atoms,
@@ -217,51 +221,69 @@ def get_adsorption_sites(request=None):
             vacuum=vacuum,
         )
         atoms = gen.get_slab(primitive=True)
-        #print("TRY ATOMS {atoms_i}".format(**locals()))
         sites = gen.adsorption_sites(
             atoms,
             symmetry_reduced=True,
         )
-        #pprint.pprint(sites)
-
-            #raise
 
         label_index = 0
         alt_labels.append({})
-        #print("SITES SITES SITE")
-        #pprint.pprint(sites)
         for adsorbate_site_label in sorted(sites):
-            if site_type != 'all' and site_label != site_type:
+            site_types.append(adsorbate_site_label)
+            if site_type != 'all' and adsorbate_site_label != site_type:
                 continue
             for adsorbate_site_i, adsorbate_site in enumerate(sites[adsorbate_site_label][0]):
                 if len(adsorbate_site) == 0:
-                    continue # skip empty sites
+                    continue  # skip empty sites
                 atoms = gen.get_slab(primitive=True)
-
 
                 for site_label_i, site_label in enumerate(sites):
 
                     for site_i, site in enumerate(sites[site_label][0]):
                         if adsorbate_site_label == site_label and adsorbate_site_i == site_i:
-                            atoms += ase.atom.Atom(adsorbate, site + [0., 0., 1.5])
-                        else:
-                            atoms += ase.atom.Atom(place_holder, site + [0., 0., 1.5])
+                            atoms += ase.atom.Atom(adsorbate,
+                                                   site + [0., 0., 1.5])
+
+                        elif place_holder in ase.atoms.chemical_symbols:
+                            if site_type != 'all' and site_label != site_type:
+                                continue
+                            atoms += ase.atom.Atom(place_holder,
+                                                   site + [0., 0., 1.5])
 
                         natoms = len(atoms) - 1
                         alt_labels[-1][len(atoms) - 1] = site_label + \
                             ' ' + str(site_label_i)
                         label_index += 1
 
-                with StringIO.StringIO() as f:
-                    ase.io.write(f, atoms, format='cif')
-                    cif_images.append(f.getvalue())
+                site_names.append(
+                    '{adsorbate_site_label}{adsorbate_site_i}'.format(**locals()))
 
-    return flask.jsonify({
-        'data': (sites_list),
-        'cifImages': cif_images,
-        'altLabels': alt_labels,
-        'error': error_message
-    })
+                if return_atoms:
+                    atoms_objects.append(atoms)
+                else:
+
+                    with StringIO.StringIO() as f:
+                        ase.io.write(f, atoms, format='cif')
+                        cif_images.append(f.getvalue())
+
+    if return_atoms:
+        return ({
+            'data': (sites_list),
+            'images': atoms_objects,
+            'site_types': site_types,
+            'site_names': site_names,
+            'altLabels': alt_labels,
+            'error': error_message
+        })
+    else:
+        return flask.jsonify({
+            'data': (sites_list),
+            'cifImages': cif_images,
+            'site_types': site_types,
+            'site_names': site_names,
+            'altLabels': alt_labels,
+            'error': error_message
+        })
 
 
 @catKitDemo.route('/place_adsorbates', methods=['GET', 'POST'])
@@ -289,15 +311,17 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
 
     cif_images = json.loads(generate_slab_cif(request).data)['images']
 
-    # bulk_cif = str(request.args.get(
-    #'bulk_cif', (json.loads(generate_bulk_cif(request).data)['cifdata'])))
+    #print("PLACE ADSORBATES")
+    #pprint.pprint(request.args)
 
-    # create bulk atoms
-    #mem_file = StringIO.StringIO()
-    # mem_file.write(bulk_cif)
-    # mem_file.seek(0)
+    if type(request.args.get('adsorbateParams', '{}')) is str:
+        adsorbate_params = json.loads(
+            request.args.get('adsorbateParams', '{}'))
+    else:
+        adsorbate_params = request.args.get('adsorbateParams', {})
 
-    #bulk_atoms = ase.io.read(mem_file, format='cif')
+    site_type = str(adsorbate_params.get('siteType', 'all'))
+    adsorbate = str(adsorbate_params.get('adsorbate', 'empty'))
 
     bulk_atoms = generate_bulk_cif(request, return_atoms=True)
 
@@ -336,27 +360,27 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
         sites = gen.adsorption_sites(
             atoms, symmetry_reduced=True,
         )
-        for k in sorted(sites):
-            v = sites[k]
-            if len(v) != 3:
+        for adsorbate_site_label in sorted(sites):
+            if site_type != 'all' and adsorbate_site_label != site_type:
                 continue
-            positions, points, _ = v
-            lp = len(positions)
+            for adsorbate_site_i, adsorbate_site in enumerate(sites[adsorbate_site_label][0]):
+                if len(adsorbate_site) == 0:
+                    continue  # skip empty sites
+                atoms = gen.get_slab(primitive=True)
 
-            for j, site in enumerate(positions):
-                occupation_list = site_occupation.get(
-                    str(i), {}).get(str(k), {})
-                if j < len(occupation_list):
-                    occupation = occupation_list[j]
-                else:
-                    occupation = 'empty'
+                for site_label_i, site_label in enumerate(sites):
 
-                if occupation != 'empty':
-                    atoms += ase.atoms.Atoms(occupation,
-                                             [site + np.array([0, 0, 1.5])])
-                elif place_holder != 'empty':
-                    atoms += ase.atoms.Atoms(place_holder,
-                                             [site + np.array([0, 0, 1.5])])
+                    for site_i, site in enumerate(sites[site_label][0]):
+                        if adsorbate_site_label == site_label and adsorbate_site_i == site_i:
+                            atoms += ase.atom.Atom(adsorbate,
+                                                   site + [0., 0., 1.5])
+
+                        elif place_holder in ase.atoms.chemical_symbols:
+                            if site_type != 'all' and site_label != site_type:
+                                continue
+                            atoms += ase.atom.Atom(place_holder,
+                                                   site + [0., 0., 1.5])
+
         images[i] = atoms
 
     mem_files = []
@@ -382,7 +406,7 @@ def generate_dft_input(request=None):
     if type(request.args) is str:
         request.args = json.loads(request.args)
 
-    pprint.pprint(request.args)
+    #pprint.pprint(request.args)
 
     # Generate Zip File
     ####################
@@ -406,6 +430,7 @@ def generate_dft_input(request=None):
     for i, calculation in enumerate(calculations):
         bulk_params = (calculation.get('bulkParams', {}))
         slab_params = (calculation.get('slabParams', {}))
+        adsorbate_params = (calculation.get('adsorbateParams', {}))
         site_occupation = (calculation.get('siteOccupations', {}))
         dft_params = (calculation.get('dftParams', {}))
 
@@ -429,27 +454,25 @@ def generate_dft_input(request=None):
         mock_request = MockRequest(calculation)
         # Here be Dragons
         ####################
-        print("Calculation {i}".format(**locals()))
+        #print("Calculation {i}".format(**locals()))
 
         # 0. Construct ASE DFT Calculator
         #######################
 
         # 3. Add adsorbates
         #################################
-        images = place_adsorbates(
+        adsorbates = get_adsorption_sites(
             mock_request, return_atoms=True, place_holder='empty')
+        #pprint.pprint(adsorbates)
+        images = adsorbates['images']
+        site_names = adsorbates['site_names']
         adsorbates_strings = []
         for image_i, image in enumerate(images):
             # Generate Adsorbates String
-            adsorbates = []
-            for site_label in site_occupation.get(str(image_i), {}).keys():
-                for site_i, site in enumerate(site_occupation[str(image_i)][site_label]):
-                    occ = site_occupation[str(image_i)][site_label][site_i]
-                    if occ != 'empty':
-                        adsorbates.append(
-                            '{occ}{site_label}'.format(**locals()))
+            adsorbate = str(adsorbate_params.get('adsorbate', 'empty'))
+            site_name = site_names[image_i]
+            adsorbates = '{adsorbate}star{site_name}'.format(**locals())
 
-            adsorbates = '_'.join(adsorbates)
             adsorbates_strings.append(adsorbates)
             slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{adsorbates}/{composition}_{structure}/{facet}'.format(
                 **locals())
@@ -463,9 +486,16 @@ def generate_dft_input(request=None):
 
         # 2. Create empty surface slab
         #################################
-        slab_images = generate_slab_cif(mock_request, return_atoms=True)
+        slab_images = generate_slab_cif(
+            mock_request, return_atoms=True) * len(site_names)
+        #print("SLAB IMAGES")
+        #print(site_names)
+        #print(len(site_names))
+        #print(slab_images)
         for slab_image_i, slab_image in enumerate(slab_images):
-            adsorbates = adsorbates_strings[slab_image_i]
+            adsorbate = str(adsorbate_params.get('adsorbate', 'empty'))
+            site_name = site_names[slab_image_i]
+            adsorbates = '{adsorbate}star{site_name}'.format(**locals())
             slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{adsorbates}/{composition}_{structure}/{facet}'.format(
                 **locals())
 
@@ -479,7 +509,13 @@ def generate_dft_input(request=None):
         # 1. Create Bulk Input
         #######################
         bulk_atoms = generate_bulk_cif(mock_request, return_atoms=True)
-        bulk_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{adsorbates[0]}/{composition}_{structure}'.format(
+        #print("CREATE BULK INPUT")
+        #print(calcstr)
+        #print(dft_params)
+        #print(adsorbates)
+        #print(composition)
+        #print(structure)
+        bulk_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{adsorbates}/{composition}_{structure}'.format(
             **locals())
         with StringIO.StringIO() as mem_file:
             ase.io.write(mem_file, bulk_atoms, format=SUFFIX)
@@ -569,7 +605,7 @@ def convert_atoms(request=None):
 def upload_dataset(request=None):
     request = flask.request if request is None else request
     filename = request.files['file'].filename
-    print(filename)
+    #print(filename)
     suffix = os.path.splitext(filename)[1]
     if suffix == '.zip':
         message = ("You uploaded a zip file")
