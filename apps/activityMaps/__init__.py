@@ -32,10 +32,11 @@ ROOT = 'http://catappdatabase2.herokuapp.com/graphql'
 
 class ReactionModel(object):
 
-    def __init__(self, xlabel=None, ylabel=None, zlabel=None):
+    def __init__(self, xlabel=None, ylabel=None, zlabel=None, reference=''):
         self.xlabel = xlabel
         self.ylabel = ylabel
         self.zlabel = zlabel
+        self.reference = reference
 
     def get_raw_systems(self, filters):
         pass
@@ -169,4 +170,5 @@ def systems(request=None):
         'xlabel': 'ΔG(O) - ΔG(OH) [eV]',
         'ylabel': 'ΔG(OH) [eV]',
         'zlabel': 'overpotential [eV]',
+        'reference': 'Man, Isabela C., Hai‐Yan Su, Federico Calle‐Vallejo, Heine A. Hansen, José I. Martínez, Nilay G. Inoglu, John Kitchin, Thomas F. Jaramillo, Jens K. Nørskov, and Jan Rossmeisl. "Universality in oxygen evolution electrocatalysis on oxide surfaces." ChemCatChem 3, no. 7 (2011): 1159-1165.'
     })
