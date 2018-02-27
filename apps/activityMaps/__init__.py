@@ -170,5 +170,5 @@ def systems(request=None):
         'xlabel': 'ΔG(O) - ΔG(OH) [eV]',
         'ylabel': 'ΔG(OH) [eV]',
         'zlabel': 'overpotential [eV]',
-        'reference': 'Man, Isabela C., Hai‐Yan Su, Federico Calle‐Vallejo, Heine A. Hansen, José I. Martínez, Nilay G. Inoglu, John Kitchin, Thomas F. Jaramillo, Jens K. Nørskov, and Jan Rossmeisl. "Universality in oxygen evolution electrocatalysis on oxide surfaces." ChemCatChem 3, no. 7 (2011): 1159-1165.'
+        'reference': 'Man, Isabela C., Hai‐Yan Su, Federico Calle‐Vallejo, Heine A. Hansen, José I. Martínez, Nilay G. Inoglu, John Kitchin, Thomas F. Jaramillo, Jens K. Nørskov, and Jan Rossmeisl. "Universality in oxygen evolution electrocatalysis on oxide surfaces." ChemCatChem 3, no. 7 (2011): 1159-1165. DOI: 10.1002/cctc.201000397'
     })
