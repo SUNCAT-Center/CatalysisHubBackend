@@ -398,8 +398,6 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                     else:                        
                         load_fields[keyname].append(convert(name))
                         fields = None
-
-        print(load_fields, field_names)
         
         query = query.options(load_only(*load_fields[field_names[0]]))
 
