@@ -80,8 +80,6 @@ app.register_blueprint(bulk_enumerator, url_prefix='/apps/bulkEnumerator')
 from apps.activityMaps import activityMaps
 app.register_blueprint(activityMaps,  url_prefix='/apps/activityMaps')
 
-
-
 # Graphql view
 app.add_url_rule('/graphql',
         view_func=flask_graphql.GraphQLView.as_view(
