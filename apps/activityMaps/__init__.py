@@ -170,5 +170,5 @@ def systems(request=None):
         'xlabel': 'ΔG(O) - ΔG(OH) [eV]',
         'ylabel': 'ΔG(OH) [eV]',
         'zlabel': 'overpotential [eV]',
-        'reference': 'Man, Isabela C., Hai‐Yan Su, Federico Calle‐Vallejo, Heine A. Hansen, José I. Martínez, Nilay G. Inoglu, John Kitchin, Thomas F. Jaramillo, Jens K. Nørskov, and Jan Rossmeisl. "Universality in oxygen evolution electrocatalysis on oxide surfaces." ChemCatChem 3, no. 7 (2011): 1159-1165. DOI: 10.1002/cctc.201000397'
+        'reference': '[1] Friebel, Daniel, Mary W. Louie, Michal Bajdich, Kai E. Sanwald, Yun Cai, Anna M. Wise, Mu-Jeng Cheng et al. "Identification of highly active Fe sites in (Ni, Fe) OOH for electrocatalytic water splitting." Journal of the American Chemical Society 137, no. 3 (2015): 1305-1313. DOI: 10.1021/ja511559d [2] Man, Isabela C., Hai‐Yan Su, Federico Calle‐Vallejo, Heine A. Hansen, José I. Martínez, Nilay G. Inoglu, John Kitchin, Thomas F. Jaramillo, Jens K. Nørskov, and Jan Rossmeisl. "Universality in oxygen evolution electrocatalysis on oxide surfaces." ChemCatChem 3, no. 7 (2011): 1159-1165. DOI: 10.1002/cctc.201000397'
     })
