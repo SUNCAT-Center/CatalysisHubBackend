@@ -47,7 +47,7 @@ class ReactionModel(object):
 
 def reactant_query(reactant="O", limit=5000):
     query = {'query': """{{
-      reactions(first: {limit}, reactants: "{reactant}") {{
+      reactions(first: {limit}, products: "{reactant}") {{
         edges {{
           node {{
             reactionEnergy
