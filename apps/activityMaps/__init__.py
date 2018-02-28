@@ -138,7 +138,7 @@ def systems(request=None):
                     energy = systems[uid]['reactants'][reactant]['energy']
                     energies[reactant] = energy
 
-                error_correction = -1  # to be fixed in API
+                error_correction = +1  # to be fixed in API
                 dE_OH = error_correction * energies['OH']
                 dE_O = error_correction * energies['O']
                 dE_OOH = error_correction * energies['OOH']
