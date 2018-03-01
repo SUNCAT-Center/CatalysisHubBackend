@@ -24,6 +24,8 @@ import ase.build
 import ase.io.formats
 
 
+import apps.utils.gas_phase_references
+
 import catkit
 import catkit.surface
 
@@ -178,7 +180,6 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
 
     site_type = str(adsorbate_params.get('siteType', 'all'))
 
-
     # create bulk atoms
     mem_file = StringIO.StringIO()
     mem_file.write(bulk_cif)
@@ -311,9 +312,6 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
 
     cif_images = json.loads(generate_slab_cif(request).data)['images']
 
-    #print("PLACE ADSORBATES")
-    #pprint.pprint(request.args)
-
     if type(request.args.get('adsorbateParams', '{}')) is str:
         adsorbate_params = json.loads(
             request.args.get('adsorbateParams', '{}'))
@@ -406,8 +404,6 @@ def generate_dft_input(request=None):
     if type(request.args) is str:
         request.args = json.loads(request.args)
 
-    #pprint.pprint(request.args)
-
     # Generate Zip File
     ####################
     timestr = time.strftime(
@@ -427,6 +423,20 @@ def generate_dft_input(request=None):
     zf.writestr('{calcstr}/input.json'.format(**locals()),
                 input_json,
                 )
+    adsorbate_names = []
+    gas_phase_molecules = set()
+    for i, calculation in enumerate(calculations):
+        adsorbate_params = (calculation.get('adsorbateParams', {}))
+        adsorbate_names.append(adsorbate_params['adsorbate'])
+    symbols = apps.utils.gas_phase_references.molecules2symbols(
+        adsorbate_names)
+    references = apps.utils.gas_phase_references.construct_reference_system(
+        symbols)
+    stoichiometry = apps.utils.gas_phase_references.get_atomic_stoichiometry(
+        references)
+    stoichiometry_factors = apps.utils.gas_phase_references.get_stoichiometry_factors(
+        adsorbate_names, references)
+
     for i, calculation in enumerate(calculations):
         bulk_params = (calculation.get('bulkParams', {}))
         slab_params = (calculation.get('slabParams', {}))
@@ -442,6 +452,8 @@ def generate_dft_input(request=None):
 
         composition = ''.join(bulk_params.get('elements', []))
         structure = bulk_params.get('structure', '')
+
+        adsorbate_names.append(adsorbate_params['adsorbate'])
 
         # Fix filetype and extension
         FORMAT2EXTENSION = {v: k for k,
@@ -463,18 +475,25 @@ def generate_dft_input(request=None):
         #################################
         adsorbates = get_adsorption_sites(
             mock_request, return_atoms=True, place_holder='empty')
-        #pprint.pprint(adsorbates)
         images = adsorbates['images']
         site_names = adsorbates['site_names']
         adsorbates_strings = []
         for image_i, image in enumerate(images):
             # Generate Adsorbates String
             adsorbate = str(adsorbate_params.get('adsorbate', 'empty'))
+            reactants = []
+            for molecule, factor in stoichiometry_factors[adsorbate].items():
+                reactants.append('{factor}{molecule}gas'.format(**locals()))
+                gas_phase_molecules.add(molecule)
+
+            reactants = '_'.join(reactants)
             site_name = site_names[image_i]
+            equation = 'star{site_name}_{reactants}__{adsorbate}star{site_name}'.format(
+                **locals())
             adsorbates = '{adsorbate}star{site_name}'.format(**locals())
 
             adsorbates_strings.append(adsorbates)
-            slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{adsorbates}/{composition}_{structure}/{facet}'.format(
+            slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{equation}/{composition}_{structure}/{facet}'.format(
                 **locals())
 
             with StringIO.StringIO() as mem_file:
@@ -484,50 +503,71 @@ def generate_dft_input(request=None):
                     mem_file.getvalue(),
                 )
 
-        # 2. Create empty surface slab
-        #################################
-        slab_images = generate_slab_cif(
-            mock_request, return_atoms=True) * len(site_names)
-        #print("SLAB IMAGES")
-        #print(site_names)
-        #print(len(site_names))
-        #print(slab_images)
-        for slab_image_i, slab_image in enumerate(slab_images):
-            adsorbate = str(adsorbate_params.get('adsorbate', 'empty'))
-            site_name = site_names[slab_image_i]
-            adsorbates = '{adsorbate}star{site_name}'.format(**locals())
-            slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{adsorbates}/{composition}_{structure}/{facet}'.format(
+            # 2. Create empty surface slab
+            #################################
+            slab_images = generate_slab_cif(
+                mock_request, return_atoms=True) * len(site_names)
+            for slab_image_i, slab_image in enumerate(slab_images):
+                adsorbate = str(adsorbate_params.get('adsorbate', 'empty'))
+                site_name = site_names[slab_image_i]
+
+                reactants = []
+                for molecule, factor in stoichiometry_factors[adsorbate].items():
+
+                    reactants.append(
+                        '{factor}{molecule}gas'.format(**locals()))
+                reactants = '_'.join(reactants)
+                site_name = site_names[image_i]
+                equation = 'star{site_name}_{reactants}__{adsorbate}star{site_name}'.format(
+                    **locals())
+
+                adsorbates = '{adsorbate}star{site_name}'.format(**locals())
+                slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{equation}/{composition}_{structure}/{facet}/star.{SUFFIX}'.format(
+                    **locals())
+
+                if not slab_path in zf.namelist():
+                    with StringIO.StringIO() as mem_file:
+                        ase.io.write(mem_file, slab_image, format=SUFFIX)
+                        zf.writestr(
+                            slab_path.format(**locals()),
+                            mem_file.getvalue(),
+                        )
+
+            # 1. Create Bulk Input
+            #######################
+            bulk_atoms = generate_bulk_cif(mock_request, return_atoms=True)
+
+            reactants = []
+            for molecule, factor in stoichiometry_factors[adsorbate].items():
+
+                reactants.append('{factor}{molecule}gas'.format(**locals()))
+            reactants = '_'.join(reactants)
+            site_name = site_names[image_i]
+            equation = 'star{site_name}_{reactants}__{adsorbate}star{site_name}'.format(
                 **locals())
 
+            bulk_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{equation}/{composition}_{structure}'.format(
+                **locals())
             with StringIO.StringIO() as mem_file:
-                ase.io.write(mem_file, slab_image, format=SUFFIX)
+                ase.io.write(mem_file, bulk_atoms, format=SUFFIX)
                 zf.writestr(
-                    '{slab_path}/star.{SUFFIX}'.format(**locals()),
+                    '{bulk_path}/bulk.{SUFFIX}'.format(**locals()),
                     mem_file.getvalue(),
                 )
-
-        # 1. Create Bulk Input
-        #######################
-        bulk_atoms = generate_bulk_cif(mock_request, return_atoms=True)
-        #print("CREATE BULK INPUT")
-        #print(calcstr)
-        #print(dft_params)
-        #print(adsorbates)
-        #print(composition)
-        #print(structure)
-        bulk_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{adsorbates}/{composition}_{structure}'.format(
-            **locals())
-        with StringIO.StringIO() as mem_file:
-            ase.io.write(mem_file, bulk_atoms, format=SUFFIX)
-            zf.writestr(
-                '{bulk_path}/bulk.{SUFFIX}'.format(**locals()),
-                mem_file.getvalue(),
-            )
 
         # 4. Add gas phase calculations
         #################################
 
         # TODO
+        for molecule_name in gas_phase_molecules:
+            molecule = ase.build.molecule(molecule_name)
+            molecule.cell = np.diag([15, 16, 17])
+            molecule_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{molecule_name}.{SUFFIX}'.format(
+                **locals())
+
+            with StringIO.StringIO() as mem_file:
+                ase.io.write(mem_file, molecule, format=SUFFIX)
+                zf.writestr(molecule_path, mem_file.getvalue())
 
     #zf.compress_type = zipfile.ZIP_DEFLATED
     zf.close()
@@ -605,7 +645,6 @@ def convert_atoms(request=None):
 def upload_dataset(request=None):
     request = flask.request if request is None else request
     filename = request.files['file'].filename
-    #print(filename)
     suffix = os.path.splitext(filename)[1]
     if suffix == '.zip':
         message = ("You uploaded a zip file")

@@ -24,7 +24,7 @@ def molecules2symbols(molecules, add_hydrogen=True):
     return symbols
 
 
-def construct_reference_system(symbols, candidates=['H2', 'H2O', 'NH3', 'CH4', 'CO', 'H2S', 'HCl', 'N2', 'O2']):
+def construct_reference_system(symbols, candidates=['H2', 'H2O', 'NH3', 'CH4', 'CO', 'SH2', 'HCl', 'N2', 'O2']):
     """
     Take a list of symbols and construct gas phase
     references system, when possible avoiding O2.
@@ -40,7 +40,7 @@ def construct_reference_system(symbols, candidates=['H2', 'H2O', 'NH3', 'CH4', '
         for candidate in candidates:
             symbols = ase.atoms.string2symbols(candidate)
 
-            if set(added_symbols) == set(references.keys() + symbols):
+            if set(added_symbols) == set(list(references.keys()) + symbols):
                 references[symbol] = candidate
                 break
         else:
@@ -98,15 +98,18 @@ def get_stoichiometry_factors(adsorbates, references):
     stoichiometry_factors = {}
     for adsorbate in adsorbates:
         for symbol in ase.atoms.string2symbols(adsorbate):
-            symbol_index = map(lambda _x: _x[0], references).index(symbol)
+            symbol_index = list(
+                map(lambda _x: _x[0], references)).index(symbol)
 
             for (factor, (ref_symbol, ref_molecule)) in zip(stoichiometry[symbol_index], references):
                 stoichiometry_factors.setdefault(adsorbate, {})[ref_molecule] = stoichiometry_factors.setdefault(
                     adsorbate, {}).get(ref_molecule, 0) + factor
 
+        nonzero_factors = {}
         for key, value in stoichiometry_factors[adsorbate].items():
-            if np.isclose(value, 0.):
-                stoichiometry_factors[adsorbate].pop(key)
+            if not np.isclose(value, 0.):
+                nonzero_factors[key] = value
+        stoichiometry_factors[adsorbate] = nonzero_factors
 
     return stoichiometry_factors
 
