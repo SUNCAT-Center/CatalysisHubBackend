@@ -63,7 +63,7 @@ def get_wyckoff_list(request=None):
     tolerance = float(request.args.get('tolerance', 1e-3))
 
     # build results
-    bulk = be.bulk.BULK(1e-5)
+    bulk = be.bulk.BULK()
     bulk.set_spacegroup(spacegroup)
     wyckoff_list = bulk.get_wyckoff_list()
     wyckoff_list.sort(
@@ -133,7 +133,7 @@ def get_structure(request=None):
     #assert len(wyckoff_positions) == len(wyckoff_params)
 
     # build results
-    bulk = be.bulk.BULK(tolerance=tolerance)
+    bulk = be.bulk.BULK()
     bulk.set_spacegroup(spacegroup)
     bulk.set_wyckoff(wyckoff_positions)
     bulk.set_species(wyckoff_species)
@@ -207,7 +207,7 @@ def get_wyckoff_from_structure(request=None):
     poscar = apps.utils.ase_convert(instring, informat=filetype, outformat='vasp')
     cif = apps.utils.ase_convert(instring, informat=filetype, outformat='cif')
 
-    bulk = be.bulk.BULK(1e-5)
+    bulk = be.bulk.BULK()
     bulk.set_structure_from_file(poscar)
 
     # Evaluate Structure
@@ -262,7 +262,7 @@ def get_wyckoff_from_cif(request=None):
     poscar = apps.utils.ase_convert(instring, informat=filetype, outformat='vasp')
     cif = apps.utils.ase_convert(instring, informat=filetype, outformat='cif')
 
-    bulk = be.bulk.BULK(1e-5)
+    bulk = be.bulk.BULK()
     bulk.set_structure_from_file(poscar)
 
     # Evaluate Structure
