@@ -7,6 +7,7 @@ import zipfile
 import time
 import datetime
 import random
+import re
 
 
 # workaround to work on both Python 2 and Python 3
@@ -34,6 +35,12 @@ import apps.utils
 
 bulk_enumerator = flask.Blueprint('bulk_enumerator', __name__)
 
+
+def stripb(string):
+    return re.sub("^b'([^']*)'", r'\1', string)
+
+def mstripb(liste):
+    return list(map(stripb, liste))
 
 @bulk_enumerator.route('/get_wyckoff_list', methods=['GET', 'POST'])
 def get_wyckoff_list(request=None):
@@ -65,7 +72,7 @@ def get_wyckoff_list(request=None):
 
     wyckoff_list = list(map(
         lambda x: dict(x, **{
-            'symbol': x['symbol'].split("'")[1],
+            'symbol': stripb(x['symbol']),
             'species': '',
             'value': '0.5',
         }),
@@ -175,25 +182,26 @@ def get_wyckoff_from_structure(request=None):
     import ase.io
     import ase.io.formats
     request = flask.request if request is None else request
-    filename = request.files['file'].filename
+    if hasattr(request, 'files'):
+        filename = request.files['file'].filename
+        with StringIO.BytesIO() as in_bfile:
+            request.files['file'].save(in_bfile)
+            with StringIO.StringIO() as in_file:
+                content = in_file.getvalue()
+                in_bfile.seek(0)
+                try:
+                    in_file.write(in_bfile.getvalue().decode('UTF-8'))
+                except Exception as error:
+                    in_file = in_bfile
+                in_file.seek(0)
 
-    with StringIO.BytesIO() as in_bfile:
-        request.files['file'].save(in_bfile)
-        with StringIO.StringIO() as in_file:
-            content = in_file.getvalue()
-            in_bfile.seek(0)
-            try:
-                in_file.write(in_bfile.getvalue().decode('UTF-8'))
-            except Exception as error:
-                in_file = in_bfile
-                # return flask.jsonify({
-                #'error': 'Binary files not supported, yet.\n{error}'.format(**locals())
-                #})
-            in_file.seek(0)
+                instring = (in_file.getvalue())
+        filetype = ase.io.formats.filetype(filename, read=False)
 
-            instring = (in_file.getvalue())
+    elif 'cif' in request.args:
+        instring = request.args('cif')
+        filetype = 'cif'
 
-    filetype = ase.io.formats.filetype(filename, read=False)
 
     atoms = apps.utils.ase_convert(instring, informat=filetype, atoms_out=True, )
     poscar = apps.utils.ase_convert(instring, informat=filetype, outformat='vasp')
@@ -231,4 +239,73 @@ def get_wyckoff_from_structure(request=None):
         'species': species,
         'synonyms': synonyms,
         'species_permutations': species_permutations,
+    })
+
+
+@bulk_enumerator.route('/get_wyckoff_from_cif', methods=['GET', 'POST'])
+def get_wyckoff_from_cif(request=None):
+    """
+    Function clone of get_wyckoff_from_structure, except working w/ string input
+    instead of file upload.
+    """
+
+    import ase.io
+    import ase.io.formats
+    request = flask.request if request is None else request
+    pprint.pprint(request.args)
+
+    instring = request.args.get('cif')
+    filetype = 'cif'
+
+
+    atoms = apps.utils.ase_convert(instring, informat=filetype, atoms_out=True, )
+    poscar = apps.utils.ase_convert(instring, informat=filetype, outformat='vasp')
+    cif = apps.utils.ase_convert(instring, informat=filetype, outformat='cif')
+
+    bulk = be.bulk.BULK(1e-5)
+    bulk.set_structure_from_file(poscar)
+
+    # Evaluate Structure
+    #####################
+    t0 = time.time()
+    wyckoff_list = bulk.get_wyckoff_list()
+    wyckoff_list = list(map(
+        lambda x: dict(x, **{
+            'symbol': stripb(x['symbol']),
+        }),
+        wyckoff_list,
+    ))
+
+    parameter_values = bulk.get_parameter_values()
+    parameter_values = list(map(
+        lambda x: dict(x, **{
+            'name': stripb(x['name']),
+            'value': x['value'],
+        }),
+        parameter_values,
+    ))
+    spacegroup = bulk.get_spacegroup()
+    wyckoff = bulk.get_wyckoff()
+    species = bulk.get_species()
+    synonyms = bulk.get_synonyms()
+    species_permutations = bulk.get_species_permutations()
+
+    poscar = bulk.get_std_poscar().decode('utf-8')
+    cif = str(apps.utils.ase_convert(poscar, informat='vasp', outformat='cif'))
+
+    ts = time.time() - t0
+
+    bulk.delete()
+
+    return flask.jsonify({
+        'poscar': poscar,
+        'cif': cif,
+        'wyckoff_list': wyckoff_list,
+        'runtime': ts,
+        'parameter_values': parameter_values,
+        'spacegroup': spacegroup,
+        'wyckoff': mstripb(wyckoff),
+        'species': mstripb(species),
+        'synonyms': mstripb(synonyms),
+        'species_permutations': mstripb(species_permutations),
     })
