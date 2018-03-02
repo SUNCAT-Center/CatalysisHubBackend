@@ -35,6 +35,10 @@ VALID_OUT_FORMATS = ["abinit", "castep-cell", "cfg", "cif", "dlp4", "eon", "espr
                      "gen", "gromos", "json", "jsv", "nwchem", "proteindatabank", "py", "turbomole", "v-sim", "vasp", "xsf", "xyz"]
 
 
+# safe settings for non-cubic large gas phase cell
+GAS_PHASE_CELL = [15, 16, 17]
+
+
 class MockRequest(object):
 
     def __init__(self, args):
@@ -493,7 +497,7 @@ def generate_dft_input(request=None):
             adsorbates = '{adsorbate}star{site_name}'.format(**locals())
 
             adsorbates_strings.append(adsorbates)
-            slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{equation}/{composition}_{structure}/{facet}'.format(
+            slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{composition}_{structure}/{facet}/{equation}'.format(
                 **locals())
 
             with StringIO.StringIO() as mem_file:
@@ -522,7 +526,7 @@ def generate_dft_input(request=None):
                     **locals())
 
                 adsorbates = '{adsorbate}star{site_name}'.format(**locals())
-                slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{equation}/{composition}_{structure}/{facet}/star.{SUFFIX}'.format(
+                slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{composition}_{structure}/{facet}/star.{SUFFIX}'.format(
                     **locals())
 
                 if not slab_path in zf.namelist():
@@ -546,14 +550,16 @@ def generate_dft_input(request=None):
             equation = 'star{site_name}_{reactants}__{adsorbate}star{site_name}'.format(
                 **locals())
 
-            bulk_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{equation}/{composition}_{structure}'.format(
+            bulk_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{composition}_{structure}/{composition}_bulk.{SUFFIX}'.format(
                 **locals())
-            with StringIO.StringIO() as mem_file:
-                ase.io.write(mem_file, bulk_atoms, format=SUFFIX)
-                zf.writestr(
-                    '{bulk_path}/bulk.{SUFFIX}'.format(**locals()),
-                    mem_file.getvalue(),
-                )
+
+            if not bulk_path in zf.namelist():
+                with StringIO.StringIO() as mem_file:
+                    ase.io.write(mem_file, bulk_atoms, format=SUFFIX)
+                    zf.writestr(
+                        bulk_path,
+                        mem_file.getvalue(),
+                    )
 
         # 4. Add gas phase calculations
         #################################
@@ -561,13 +567,14 @@ def generate_dft_input(request=None):
         # TODO
         for molecule_name in gas_phase_molecules:
             molecule = ase.build.molecule(molecule_name)
-            molecule.cell = np.diag([15, 16, 17])
-            molecule_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{molecule_name}.{SUFFIX}'.format(
+            molecule.cell = np.diag(GAS_PHASE_CELL)
+            molecule_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/gas/{molecule_name}_gas.{SUFFIX}'.format(
                 **locals())
 
-            with StringIO.StringIO() as mem_file:
-                ase.io.write(mem_file, molecule, format=SUFFIX)
-                zf.writestr(molecule_path, mem_file.getvalue())
+            if not molecule_path in zf.namelist():
+                with StringIO.StringIO() as mem_file:
+                    ase.io.write(mem_file, molecule, format=SUFFIX)
+                    zf.writestr(molecule_path, mem_file.getvalue())
 
     #zf.compress_type = zipfile.ZIP_DEFLATED
     zf.close()
