@@ -157,15 +157,20 @@ def get_structure(request=None):
     # default_cell_params.update(cell_params)
     #cell_params = default_cell_params
     for required_parameter in required_parameters:
-        cell_params[required_parameter] = cell_params.get(required_parameter,
-                                                          default_cell_params.get(required_parameter,
-                                                                                  .1 + random.random() * .8))
+        cell_params[required_parameter] = round(float(
+        cell_params.get(required_parameter,
+          default_cell_params.get(required_parameter,
+                                  .1 + random.random() * .8))), 5)
         # i.e. a random number in [.1, .9]
 
+    cell_params = {key: float(value) for key, value in cell_params.items()}
+    pprint.pprint(cell_params)
     bulk.set_parameter_values(*list(zip(*list(cell_params.items()))))
 
     std_poscar = bulk.get_std_poscar()
     primitive_poscar = bulk.get_primitive_poscar()
+
+    print(std_poscar)
 
     # reclaim memory
     bulk.delete()
@@ -256,7 +261,6 @@ def get_wyckoff_from_cif(request=None):
 
     instring = request.args.get('cif')
     filetype = 'cif'
-
 
     atoms = apps.utils.ase_convert(instring, informat=filetype, atoms_out=True, )
     poscar = apps.utils.ase_convert(instring, informat=filetype, outformat='vasp')
