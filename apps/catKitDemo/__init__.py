@@ -38,7 +38,6 @@ VALID_OUT_FORMATS = ["abinit", "castep-cell", "cfg", "cif", "dlp4", "eon", "espr
 # safe settings for non-cubic large gas phase cell
 GAS_PHASE_CELL = [15, 16, 17]
 
-
 class MockRequest(object):
 
     def __init__(self, args):
@@ -69,7 +68,7 @@ def generate_bulk_cif(request=None, return_atoms=False):
     for i in range(1, 5):
         print("ELEMENTS {elements}".format(**locals()))
         print("STRUCTURE {structure}".format(**locals()))
-        print("LATTICE CONSTANT {lattice_constants}")
+        print("LATTICE CONSTANT {lattice_constants}".format(**locals()))
         print("CUBIC {cubic}".format(**locals()))
 
         try:
