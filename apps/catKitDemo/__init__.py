@@ -67,6 +67,11 @@ def generate_bulk_cif(request=None, return_atoms=False):
     elements = bulk_params.get('elements')
 
     for i in range(1, 5):
+        print("ELEMENTS {elements}".format(**locals()))
+        print("STRUCTURE {structure}".format(**locals()))
+        print("LATTICE CONSTANT {lattice_constants}")
+        print("CUBIC {cubic}".format(**locals()))
+
         try:
             atoms = ase.build.bulk(
                 ''.join(elements[:i]), structure, a=lattice_constant, cubic=cubic)
