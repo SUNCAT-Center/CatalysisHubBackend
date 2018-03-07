@@ -9,7 +9,6 @@ import datetime
 import random
 import re
 
-
 # workaround to work on both Python 2 and Python 3
 try:
     import io as StringIO
