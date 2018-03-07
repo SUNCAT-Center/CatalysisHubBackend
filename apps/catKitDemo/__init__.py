@@ -68,7 +68,7 @@ def generate_bulk_cif(request=None, return_atoms=False):
     for i in range(1, 5):
         print("ELEMENTS {elements}".format(**locals()))
         print("STRUCTURE {structure}".format(**locals()))
-        print("LATTICE CONSTANT {lattice_constants}".format(**locals()))
+        print("LATTICE CONSTANT {lattice_constant}".format(**locals()))
         print("CUBIC {cubic}".format(**locals()))
 
         try:
