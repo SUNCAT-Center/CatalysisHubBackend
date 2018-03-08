@@ -38,6 +38,7 @@ VALID_OUT_FORMATS = ["abinit", "castep-cell", "cfg", "cif", "dlp4", "eon", "espr
 # safe settings for non-cubic large gas phase cell
 GAS_PHASE_CELL = [15, 16, 17]
 
+
 class MockRequest(object):
 
     def __init__(self, args):
@@ -66,10 +67,6 @@ def generate_bulk_cif(request=None, return_atoms=False):
     elements = bulk_params.get('elements')
 
     for i in range(1, 5):
-        print("ELEMENTS {elements}".format(**locals()))
-        print("STRUCTURE {structure}".format(**locals()))
-        print("LATTICE CONSTANT {lattice_constant}".format(**locals()))
-        print("CUBIC {cubic}".format(**locals()))
 
         try:
             atoms = ase.build.bulk(
@@ -596,9 +593,9 @@ def convert_atoms(request=None):
     import ase.io
     import ase.io.formats
     request = flask.request if request is None else request
-    filename = request.files['file'].filename
-    out_format = None
-    #out_format = request.files['outFormat']
+
+    cif = request.args.get('cif', '')
+    out_format = request.args.get('format', None)
 
     if not out_format:
         out_format = 'cif'
@@ -607,48 +604,32 @@ def convert_atoms(request=None):
             "error": "outFormat {outformat} is invalid. Should be on of {VALID_OUT_FORMATS}".format(**locals()),
         }
 
-    with StringIO.BytesIO() as in_bfile:
-        request.files['file'].save(in_bfile)
-        with StringIO.StringIO() as in_file:
-            content = in_file.getvalue()
-            in_bfile.seek(0)
-            try:
-                in_file.write(in_bfile.getvalue().decode('UTF-8'))
-            except Exception as error:
-                in_file = in_bfile
-                # return flask.jsonify({
-                #'error': 'Binary files not supported, yet.\n{error}'.format(**locals())
-                #})
-            in_file.seek(0)
-            filetype = ase.io.formats.filetype(filename, read=False)
-            # Monkey-patching ase.io.formats
-            if filetype == 'inp':
-                filetype = 'espresso-in'
-            #print("FILETYPE '{filetype}'".format(**locals()))
-            try:
-                atoms = ase.io.read(
-                    filename=in_file,
-                    index=None,
-                    format=filetype,
-                )
-            except Exception as error:
-                if filetype == 'espresso-in':
-                    return flask.jsonify({
-                        'error': 'Upload Error: Need QE >=5.3 Input File.'.format(**locals())
-                    })
-                return flask.jsonify({
-                    'error': 'Upload Error: filetype = {filetype}\n{error}'.format(**locals())
-                })
-            with StringIO.StringIO() as out_file:
-                out_file.name = 'CatApp Browser Export'
-                ase.io.write(out_file, atoms, out_format)
-                out_content = out_file.getvalue()
+    with StringIO.StringIO() as in_file:
+        in_file.write(cif)
+        in_file.seek(0)
+        atoms = ase.io.read(
+            filename=in_file,
+            index=None,
+            format='cif',
+        )
+
+    composition = atoms.get_chemical_formula(mode='metal')
+
+    with StringIO.StringIO() as out_file:
+        out_file.name = 'CatApp Browser Export'
+        ase.io.write(out_file, atoms, out_format)
+        out_content = out_file.getvalue()
+
+    format2extension = {value: key for key,
+                        value in ase.io.formats.extension2format.items()}
+
+    extension = format2extension.get(out_format, out_format)
 
     return flask.jsonify({
         'image': str(out_content),
-        'input_filetype': filetype,
+        'input_filetype': 'cif',
         'output_filetype': out_format,
-        'filename': filename,
+        'filename': 'structure_{composition}.{extension}'.format(**locals()),
     })
 
 
