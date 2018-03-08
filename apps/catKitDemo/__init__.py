@@ -630,6 +630,8 @@ def convert_atoms(request=None):
         'input_filetype': 'cif',
         'output_filetype': out_format,
         'filename': 'structure_{composition}.{extension}'.format(**locals()),
+        'filename_trunk': 'structure_{composition}'.format(**locals()),
+        'extension': extension,
     })
 
 
