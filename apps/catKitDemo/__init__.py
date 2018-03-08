@@ -594,8 +594,12 @@ def convert_atoms(request=None):
     import ase.io.formats
     request = flask.request if request is None else request
 
-    cif = request.args.get('cif', '')
-    out_format = request.args.get('format', None)
+    cif = request.args.get('cif',
+                           request.get_json().get('params', {}).get('cif', '')
+                           )
+    out_format = request.args.get('format',
+                                  request.get_json().get('params', {}).get('format', '')
+                                  )
 
     if not out_format:
         out_format = 'cif'
