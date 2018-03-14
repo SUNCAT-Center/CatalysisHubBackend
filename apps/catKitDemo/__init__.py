@@ -453,10 +453,14 @@ def generate_dft_input(request=None):
         miller_x = slab_params.get('millerX', 'N')
         miller_y = slab_params.get('millerY', 'N')
         miller_z = slab_params.get('millerZ', 'N')
-        facet = '{miller_x}{miller_y}{miller_z}'.format(**locals())
+        facet = '{miller_x}_{miller_y}_{miller_z}'.format(**locals())
 
         composition = ''.join(bulk_params.get('elements', []))
         structure = bulk_params.get('structure', '')
+
+        # Use Spacegroup-Wyckoff based synonym
+        structure = bulk_params.get('wyckoff', {}).get(
+            'synonyms', [structure])[0]
 
         adsorbate_names.append(adsorbate_params['adsorbate'])
 
@@ -498,7 +502,7 @@ def generate_dft_input(request=None):
             adsorbates = '{adsorbate}star{site_name}'.format(**locals())
 
             adsorbates_strings.append(adsorbates)
-            slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{composition}_{structure}/{facet}/{equation}'.format(
+            slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{composition}__{structure}/{facet}/{equation}'.format(
                 **locals())
 
             with StringIO.StringIO() as mem_file:
@@ -527,7 +531,7 @@ def generate_dft_input(request=None):
                     **locals())
 
                 adsorbates = '{adsorbate}star{site_name}'.format(**locals())
-                slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{composition}_{structure}/{facet}/star.{SUFFIX}'.format(
+                slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{composition}__{structure}/{facet}/star.{SUFFIX}'.format(
                     **locals())
 
                 if not slab_path in zf.namelist():
@@ -551,7 +555,7 @@ def generate_dft_input(request=None):
             equation = 'star{site_name}_{reactants}__{adsorbate}star{site_name}'.format(
                 **locals())
 
-            bulk_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{composition}_{structure}/{composition}_bulk.{SUFFIX}'.format(
+            bulk_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{composition}__{structure}/bulk.{SUFFIX}'.format(
                 **locals())
 
             if not bulk_path in zf.namelist():
