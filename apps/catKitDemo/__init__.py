@@ -404,7 +404,7 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
 
 
 @catKitDemo.route('/generate_dft_input', methods=['GET', 'POST'])
-def generate_dft_input(request=None):
+def generate_dft_input(request=None, return_data=False):
     request = flask.request if request is None else request
     if type(request.args) is str:
         request.args = json.loads(request.args)
@@ -421,10 +421,13 @@ def generate_dft_input(request=None):
         '{"volume": "",\n"publisher": "",\n"doi": "",\n"title": "",\n"journal": "",\n"authors": [],\n"year": "",\n"number": "",\n"pages": ""}\n')
 #
 
+    data = []
+
     # Unpack request
     ####################
     calculations = json.loads(request.args.get('calculations', '[]'))
     input_json = json.dumps(calculations, indent=4, sort_keys=True)
+
     zf.writestr('{calcstr}/input.json'.format(**locals()),
                 input_json,
                 )
@@ -448,6 +451,7 @@ def generate_dft_input(request=None):
         adsorbate_params = (calculation.get('adsorbateParams', {}))
         site_occupation = (calculation.get('siteOccupations', {}))
         dft_params = (calculation.get('dftParams', {}))
+        calculation_data = {}
 
         # Unpack a little further ...
         miller_x = slab_params.get('millerX', 'N')
@@ -505,12 +509,19 @@ def generate_dft_input(request=None):
             slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{composition}__{structure}/{facet}/{equation}'.format(
                 **locals())
 
-            with StringIO.StringIO() as mem_file:
-                ase.io.write(mem_file, image, format=SUFFIX)
-                zf.writestr(
-                    '{slab_path}/{adsorbates}.{SUFFIX}'.format(**locals()),
-                    mem_file.getvalue(),
-                )
+            if return_data:
+                calculation_data.setdefault(dft_params['calculator'], {}) \
+                                .setdefault(dft_params['functional'], {}) \
+                                .setdefault('{composition}__{structure}'.format(**locals()), {}) \
+                                .setdefault(facet, {}) \
+                                .setdefault(equation, image)
+            else:
+                with StringIO.StringIO() as mem_file:
+                    ase.io.write(mem_file, image, format=SUFFIX)
+                    zf.writestr(
+                        '{slab_path}/{adsorbates}.{SUFFIX}'.format(**locals()),
+                        mem_file.getvalue(),
+                    )
 
             # 2. Create empty surface slab
             #################################
@@ -535,12 +546,19 @@ def generate_dft_input(request=None):
                     **locals())
 
                 if not slab_path in zf.namelist():
-                    with StringIO.StringIO() as mem_file:
-                        ase.io.write(mem_file, slab_image, format=SUFFIX)
-                        zf.writestr(
-                            slab_path.format(**locals()),
-                            mem_file.getvalue(),
-                        )
+                    if return_data:
+                        calculation_data.setdefault(dft_params['calculator'], {}) \
+                                        .setdefault(dft_params['functional'], {}) \
+                                        .setdefault('{composition}__{structure}'.format(**locals()), {}) \
+                                        .setdefault(facet, {}) \
+                                        .setdefault('star', slab_image)
+                    else:
+                        with StringIO.StringIO() as mem_file:
+                            ase.io.write(mem_file, slab_image, format=SUFFIX)
+                            zf.writestr(
+                                slab_path.format(**locals()),
+                                mem_file.getvalue(),
+                            )
 
             # 1. Create Bulk Input
             #######################
@@ -559,12 +577,18 @@ def generate_dft_input(request=None):
                 **locals())
 
             if not bulk_path in zf.namelist():
-                with StringIO.StringIO() as mem_file:
-                    ase.io.write(mem_file, bulk_atoms, format=SUFFIX)
-                    zf.writestr(
-                        bulk_path,
-                        mem_file.getvalue(),
-                    )
+                if return_data:
+                    calculation_data.setdefault(dft_params['calculator'], {}) \
+                                    .setdefault(dft_params['functional'], {}) \
+                                    .setdefault('{composition}__{structure}'.format(**locals()), {}) \
+                                    .setdefault('bulk', bulk_atoms)
+                else:
+                    with StringIO.StringIO() as mem_file:
+                        ase.io.write(mem_file, bulk_atoms, format=SUFFIX)
+                        zf.writestr(
+                            bulk_path,
+                            mem_file.getvalue(),
+                        )
 
         # 4. Add gas phase calculations
         #################################
@@ -577,11 +601,21 @@ def generate_dft_input(request=None):
                 **locals())
 
             if not molecule_path in zf.namelist():
-                with StringIO.StringIO() as mem_file:
-                    ase.io.write(mem_file, molecule, format=SUFFIX)
-                    zf.writestr(molecule_path, mem_file.getvalue())
+                if return_data:
+                    calculation_data.setdefault(dft_params['calculator'], {}) \
+                                    .setdefault(dft_params['functional'], {}) \
+                                    .setdefault('gas', {}) \
+                                    .setdefault('{molecule_name}_gas'.format(**locals()), molecule)
+                else:
+                    with StringIO.StringIO() as mem_file:
+                        ase.io.write(mem_file, molecule, format=SUFFIX)
+                        zf.writestr(molecule_path, mem_file.getvalue())
 
-    #zf.compress_type = zipfile.ZIP_DEFLATED
+        data.append(calculation_data)
+
+    if return_data:
+        return data
+
     zf.close()
     zip_mem_file.seek(0)
     return flask.send_file(
