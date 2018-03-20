@@ -7,14 +7,20 @@ Some Examples:
 
     {reactions (first: 0) {
       totalCount
+       edges {
+         node {
+           id
+        }
+      }
     }}
 
 - Filter by reactants and products from reactions::
 
-    {reactions(reactants: "OH", products: "H2O") {
+    {reactions(reactants: "H2O", products: "OH") {
       edges {
         node {
-          Reaction
+          reactants
+          products
           reactionEnergy
           activationEnergy
         }
@@ -23,10 +29,11 @@ Some Examples:
 
 - Filter by several reactants or products from reactions::
 
-    {reactions(reactants: "COstar+NOstar") {
+    {reactions(products: "Nstar+CH3star") {
       edges {
         node {
-          Reaction
+          reactants
+          products
           reactionEnergy
           activationEnergy
         }
@@ -40,50 +47,39 @@ Some Examples:
         node {
           reactions {
             chemicalComposition
-            Reaction
+            reactants
+            products
             reactionEnergy
            }	
          }
         }
       }}
 
-- Full text search in reactions (title, authors, year, reactants and products): ### Doesn't work! ::
+- Full text search in reactions (reactants, products, chemical composition, facet)::
 
-    {reactions(search: "oxygen evolution bajdich 2017 OOH") {
-      edges {
-        node {
-          Reaction
-          PublicationTitle
-          PublicationAuthors
-          year
+  {reactions(textsearch: "CO CH 111") {
+    edges {
+      node {
+        reactants
+        products
+        publication {
+          title
+          authors
         }
       }
-    }}
+    }
+  }}
 
 - Full text search in publications (title, authors, year)::
-
-    {reactions(pubtextsearch: "oxygen evolution bajdich 2017") {
+    {publications(pubtextsearch: "oxygen evolution bajdich 2017") {
       edges {
         node {
-          PublicationTitle
-          PublicationAuthors
+          title
+          authors
           year
           reactions {
-           Reaction
-         }
-        }
-      }
-    }}
-
-- Full text search in reactions (chemical composition, facet, reactants, products)::
-
-    {reactions(yextsearch: "OOH Li") {
-      edges {
-        node {
-          Reaction
-          publications{
-            title
-            authors
+            reactants
+            products
          }
         }
       }
@@ -95,7 +91,8 @@ Some Examples:
     {reactions(reactants: "~OH", products: "~", distinct: true) {
       edges {
         node {
-          Reaction
+          reactants
+          products
           reactionEnergy
         }
       }
@@ -104,45 +101,16 @@ Some Examples:
 
 - ASE structures belonging to reactions::
 
-   {reactions(reactants: "~OH" {
+   {reactions(reactants: "~OH", first:1) {
       edges {
         node {
-          reactionsSystems {
-            systems {
-              Cifdata
-            }
+          systems {
+            Cifdata            
           }
         }
       } 
     }}
 
-
-- Distinct ase ids for a particular adsorbate jsonkey (only works if full key
-  is given + 'gas'/'star')::
-
-    (aseIds: "~", jsonkey: "OOHstar", distinct: true,
-                chemicalComposition: "~Co24") {
-          edges {
-            node {
-              chemicalComposition
-              Reaction
-              aseIds
-            }
-          }
-        }}
-
-- Author-name from ase-db: # Doesnt work::
-
-    {textKeys(key: "publication_authors", value: "~Bajdich") {
-      edges {
-        node {
-          systems {
-            energy
-            keyValuePairs
-          }
-        }
-      }
-    }}
 
 - Get all distinct DOIs::
 
@@ -156,9 +124,7 @@ Some Examples:
 
 - Get all entries published since (and including) 2015::
 
-    # allowed comparisons
-
-    {publications(year: 2015, op: "ge", first:1) {
+    {publications(year: 2015, op: "ge", last:1) {
       edges {
         node {
          id
@@ -437,7 +403,8 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                         column = column[jsonkey].astext
                     values = value.split('+')
                         
-                    for value in values:    
+                    for value in values:
+                        value = value.strip()
                         if value.startswith("~"):
                             column = cast(column, sqlalchemy.String)
                             #if field == 'reactants' or field == 'products':
@@ -502,7 +469,6 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                     query = query.distinct(column)#.group_by(getattr(model, field))
 
                     
-       # print(query)
         return query
 
 
