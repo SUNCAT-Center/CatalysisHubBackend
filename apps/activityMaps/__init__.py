@@ -78,8 +78,9 @@ def systems(request=None):
     activityMap = str(request.args.get('activityMap', 'OER'))
     CACHE_FILE = 'reaction_systems_{activityMap}.json'.format(**locals())
 
+    short_systems = []
+    labels = {}
     if activityMap == 'OER':
-
         def overpotential(doh, do, dooh=None):
 
             def ooh_oh_scaling(doh):
@@ -126,7 +127,6 @@ def systems(request=None):
                     'energy': edge['node']['reactionEnergy'],
                 }
 
-        short_systems = []
         for uid in systems:
             if len(systems[uid]['reactants'].keys()) == len(reactants):
                 energies = {}
@@ -160,7 +160,22 @@ def systems(request=None):
                     'y': dG_OH,
                     'z': - overpotential(dG_OH, dG_O, dG_OOH),
                 })
+        labels.update({
+            'xlabel': 'ΔG(O) - ΔG(OH) [eV]',
+            'ylabel': 'ΔG(OH) [eV]',
+            'zlabel': 'Overpotential [eV]',
+            'reference': '[1] Friebel, Daniel, Mary W. Louie, Michal Bajdich, Kai E. Sanwald, Yun Cai, Anna M. Wise, Mu-Jeng Cheng et al. "Identification of highly active Fe sites in (Ni, Fe) OOH for electrocatalytic water splitting." Journal of the American Chemical Society 137, no. 3 (2015): 1305-1313. DOI: 10.1021/ja511559d [2] Man, Isabela C., Hai‐Yan Su, Federico Calle‐Vallejo, Heine A. Hansen, José I. Martínez, Nilay G. Inoglu, John Kitchin, Thomas F. Jaramillo, Jens K. Nørskov, and Jan Rossmeisl. "Universality in oxygen evolution electrocatalysis on oxide surfaces." ChemCatChem 3, no. 7 (2011): 1159-1165. DOI: 10.1002/cctc.201000397'
+            })
 
+    elif activityMap == 'NRR':
+        labels.update({
+            'xlabel': 'Nitrogen Adsorption Energy ΔE(N) [eV]',
+            'ylabel': 'N2 Transition-State Energy E(N-N) [eV]',
+            'zlabel': 'log10(TOF) [1/s]',
+            'reference': ''
+            })
+
+    # sort for top systems list
     short_systems = sorted(
         short_systems,
         key=lambda _x: - _x['z']
@@ -168,8 +183,8 @@ def systems(request=None):
 
     return flask.jsonify({
         'systems': short_systems,
-        'xlabel': 'ΔG(O) - ΔG(OH) [eV]',
-        'ylabel': 'ΔG(OH) [eV]',
-        'zlabel': 'overpotential [eV]',
-        'reference': '[1] Friebel, Daniel, Mary W. Louie, Michal Bajdich, Kai E. Sanwald, Yun Cai, Anna M. Wise, Mu-Jeng Cheng et al. "Identification of highly active Fe sites in (Ni, Fe) OOH for electrocatalytic water splitting." Journal of the American Chemical Society 137, no. 3 (2015): 1305-1313. DOI: 10.1021/ja511559d [2] Man, Isabela C., Hai‐Yan Su, Federico Calle‐Vallejo, Heine A. Hansen, José I. Martínez, Nilay G. Inoglu, John Kitchin, Thomas F. Jaramillo, Jens K. Nørskov, and Jan Rossmeisl. "Universality in oxygen evolution electrocatalysis on oxide surfaces." ChemCatChem 3, no. 7 (2011): 1159-1165. DOI: 10.1002/cctc.201000397'
+        'xlabel': labels.get('xlabel', ''),
+        'ylabel': labels.get('ylabel', ''),
+        'zlabel': labels.get('zlabel', ''),
+        'reference': labels.get('reference', ''),
     })
