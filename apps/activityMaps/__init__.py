@@ -165,15 +165,15 @@ def systems(request=None):
             'ylabel': 'ΔG(OH) [eV]',
             'zlabel': 'Overpotential [eV]',
             'reference': '[1] Friebel, Daniel, Mary W. Louie, Michal Bajdich, Kai E. Sanwald, Yun Cai, Anna M. Wise, Mu-Jeng Cheng et al. "Identification of highly active Fe sites in (Ni, Fe) OOH for electrocatalytic water splitting." Journal of the American Chemical Society 137, no. 3 (2015): 1305-1313. DOI: 10.1021/ja511559d [2] Man, Isabela C., Hai‐Yan Su, Federico Calle‐Vallejo, Heine A. Hansen, José I. Martínez, Nilay G. Inoglu, John Kitchin, Thomas F. Jaramillo, Jens K. Nørskov, and Jan Rossmeisl. "Universality in oxygen evolution electrocatalysis on oxide surfaces." ChemCatChem 3, no. 7 (2011): 1159-1165. DOI: 10.1002/cctc.201000397'
-            })
+        })
 
     elif activityMap == 'NRR':
         labels.update({
             'xlabel': 'Nitrogen Adsorption Energy ΔE(N) [eV]',
             'ylabel': 'N2 Transition-State Energy E(N-N) [eV]',
             'zlabel': 'log10(TOF) [1/s]',
-            'reference': ''
-            })
+            'reference': 'Montoya, Joseph H., Charlie Tsai, Aleksandra Vojvodic, and Jens K. Nørskov. "The challenge of electrochemical ammonia synthesis: A new perspective on the role of nitrogen scaling relations." ChemSusChem 8, no. 13 (2015): 2180-2186.  DOI: 10.1002/cssc.201500322',
+        })
 
     # sort for top systems list
     short_systems = sorted(
