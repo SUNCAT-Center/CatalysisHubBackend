@@ -175,6 +175,23 @@ def systems(request=None):
             'reference': 'Montoya, Joseph H., Charlie Tsai, Aleksandra Vojvodic, and Jens K. Nørskov. "The challenge of electrochemical ammonia synthesis: A new perspective on the role of nitrogen scaling relations." ChemSusChem 8, no. 13 (2015): 2180-2186.  DOI: 10.1002/cssc.201500322',
         })
 
+    elif activityMap == 'ORR':
+        labels.update({
+            'xlabel': 'ΔG(OH) [eV]',
+            'ylabel': 'ΔG(OOH) [eV]',
+            'zlabel': 'Overpotential [eV]',
+            'reference': '',
+        })
+
+    elif activityMap == 'CO_Hydrogenation':
+        labels.update({
+            'xlabel': 'ΔG(CO) [eV]',
+            'ylabel': 'ΔG(OH) [eV]',
+            'zlabel': 'TOF [1/s]',
+            'reference': 'Schumann, Julia, Andrew J. Medford, Jong Suk Yoo, Zhi-Jian Zhao, Pallavi Bothra, Ang Cao, Felix Studt, Frank Abild-Pedersen, and Jens K. Norskov. "Selectivity of synthesis gas conversion to C2+ oxygenates on fcc (111) transition metal surfaces." ACS Catalysis (2018). DOI: 10.1021/acscatal.8b00201.',
+        })
+
+
     # sort for top systems list
     short_systems = sorted(
         short_systems,
