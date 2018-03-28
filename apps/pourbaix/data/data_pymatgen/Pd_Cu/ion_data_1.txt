@@ -1,0 +1,1 @@
+[{"Name": "Pd[2+]", "Reference Solid": "PdO", "Energy": 1.83166, "Source": "D. D. Wagman et al., Selected values of chemical thermodynamic properties, NBS Technical note 270, Washington; 1968-1971", "Major_Elements": ["Pd"], "Reference solid energy": -0.8834306133139722}]
