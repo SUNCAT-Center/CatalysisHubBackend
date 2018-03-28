@@ -188,7 +188,7 @@ def systems(request=None):
             'xlabel': 'ΔG(CO) [eV]',
             'ylabel': 'ΔG(OH) [eV]',
             'zlabel': 'TOF [1/s]',
-            'reference': 'Schumann, Julia, Andrew J. Medford, Jong Suk Yoo, Zhi-Jian Zhao, Pallavi Bothra, Ang Cao, Felix Studt, Frank Abild-Pedersen, and Jens K. Norskov. "Selectivity of synthesis gas conversion to C2+ oxygenates on fcc (111) transition metal surfaces." ACS Catalysis (2018). DOI: 10.1021/acscatal.8b00201.',
+            'reference': 'Schumann, Julia, Andrew J. Medford, Jong Suk Yoo, Zhi-Jian Zhao, Pallavi Bothra, Ang Cao, Felix Studt, Frank Abild-Pedersen, and Jens K. Nørskov. "Selectivity of synthesis gas conversion to C2+ oxygenates on fcc (111) transition metal surfaces." ACS Catalysis (2018). DOI: 10.1021/acscatal.8b00201.',
         })
 
     elif activityMap == 'CO2RR':
