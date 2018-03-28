@@ -169,10 +169,10 @@ def systems(request=None):
 
     elif activityMap == 'NRR':
         labels.update({
-            'xlabel': 'Nitrogen Adsorption Energy ΔE(N) [eV]',
-            'ylabel': 'N2 Transition-State Energy E(N-N) [eV]',
-            'zlabel': 'log10(TOF) [1/s]',
-            'reference': 'Montoya, Joseph H., Charlie Tsai, Aleksandra Vojvodic, and Jens K. Nørskov. "The challenge of electrochemical ammonia synthesis: A new perspective on the role of nitrogen scaling relations." ChemSusChem 8, no. 13 (2015): 2180-2186.  DOI: 10.1002/cssc.201500322',
+            'xlabel': 'Nitrogen Adsorption Energy ΔG(NNH) [eV]',
+            'ylabel': 'N2 Transition-State Energy ΔG(NH2) - ΔG(NH) [eV]',
+            'zlabel': 'U(L) [V s. RHE]',
+            'reference': 'Montoya, Joseph H., Charlie Tsai, Aleksandra Vojvodic, and Jens K. Nørskov. "The challenge of electrochemical ammonia synthesis: A new perspective on the role of nitrogen scaling relations." ChemSusChem 8, no. 13 (2015): 2180-2186. DOI: 10.1002/cssc.201500322',
         })
 
     elif activityMap == 'ORR':
@@ -180,7 +180,7 @@ def systems(request=None):
             'xlabel': 'ΔG(OH) [eV]',
             'ylabel': 'ΔG(OOH) [eV]',
             'zlabel': 'Overpotential [eV]',
-            'reference': '',
+            'reference': 'Kulkarni, Ambarish, Samira Siahrostami, Anjli Patel, and Jens K. Nørskov. "Understanding Catalytic Activity Trends in the Oxygen Reduction Reaction." Chemical reviews (2018). DOI: 10.1021/acs.chemrev.7b00488',
         })
 
     elif activityMap == 'CO_Hydrogenation':
@@ -198,7 +198,6 @@ def systems(request=None):
             'zlabel': 'log(TOF) [1/s]',
             'reference': 'Liu, Xinyan, Jianping Xiao, Hongjie Peng, Xin Hong, Karen Chan, and Jens K. Nørskov. "Understanding trends in electrochemical carbon dioxide reduction rates." Nature Communications 8 (2017): 15438.',
         })
-
 
     # sort for top systems list
     short_systems = sorted(
