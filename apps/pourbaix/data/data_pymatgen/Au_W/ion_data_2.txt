@@ -1,0 +1,1 @@
+[{"Name": "WO4[2-]", "Reference Solid": "WO3", "Energy": -9.53977, "Source": "H. E. Barner and R. V. Scheuerman, Handbook of thermochemical data for compounds and aqueous species, Wiley, New York (1978)", "Major_Elements": ["W"], "Reference solid energy": -7.917510864461772}]
