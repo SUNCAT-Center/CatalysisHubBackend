@@ -191,6 +191,14 @@ def systems(request=None):
             'reference': 'Schumann, Julia, Andrew J. Medford, Jong Suk Yoo, Zhi-Jian Zhao, Pallavi Bothra, Ang Cao, Felix Studt, Frank Abild-Pedersen, and Jens K. Norskov. "Selectivity of synthesis gas conversion to C2+ oxygenates on fcc (111) transition metal surfaces." ACS Catalysis (2018). DOI: 10.1021/acscatal.8b00201.',
         })
 
+    elif activityMap == 'CO2RR':
+        labels.update({
+            'xlabel': 'ΔE(CO*) [eV]',
+            'ylabel': 'ΔE(H-CO) [eV]',
+            'zlabel': 'log(TOF) [1/s]',
+            'reference': 'Liu, Xinyan, Jianping Xiao, Hongjie Peng, Xin Hong, Karen Chan, and Jens K. Nørskov. "Understanding trends in electrochemical carbon dioxide reduction rates." Nature Communications 8 (2017): 15438.',
+        })
+
 
     # sort for top systems list
     short_systems = sorted(
