@@ -122,10 +122,11 @@ class ReactionSystem(Base):
     __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
 
     name = sqlalchemy.Column(sqlalchemy.String, )
+    energy_correction = sqlalchemy.Column(sqlalchemy.Float, )
     ase_id = sqlalchemy.Column(sqlalchemy.String,
                                sqlalchemy.ForeignKey('public.systems.unique_id'), # if PRODUCTION else 'main.publication.pub_id'),
                                primary_key=True)
-    reaction_id = sqlalchemy.Column(sqlalchemy.Integer,  sqlalchemy.ForeignKey(
+    id = sqlalchemy.Column(sqlalchemy.Integer,  sqlalchemy.ForeignKey(
         'public.reaction.id'), # if PRODUCTION else 'main.reaction.id'),
                                   primary_key=True)
     
@@ -151,12 +152,12 @@ class Reaction(Base):
     textsearch = sqlalchemy.Column(TSVECTOR, )
 
     reaction_systems = sqlalchemy.orm.relationship("ReactionSystem",
-                                                   #primaryjoin="""ReactionSystem.reaction_id==Reaction.id""",
+                                                   #primaryjoin="""ReactionSystem.id==Reaction.id""",
                                                    #uselist=False,
                                                    backref="reactions")
 
     systems = sqlalchemy.orm.relationship("System",
-            primaryjoin="""ReactionSystem.reaction_id==Reaction.id""",
+            primaryjoin="""ReactionSystem.id==Reaction.id""",
             secondaryjoin="ReactionSystem.ase_id==System.unique_id",
             secondary=sqlalchemy.inspect(ReactionSystem).tables[0],
             #lazy='joined',
