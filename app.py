@@ -16,7 +16,7 @@ except:
     print('Warning: import atoml_blueprint failed. It may not be available.')
     atoml_blueprint = None
 
-from apps.pourbaix.run_pourbaix import pourbaix
+#from apps.pourbaix.run_pourbaix import pourbaix
 
 app = flask.Flask(__name__)
 app.debug = True
@@ -48,7 +48,7 @@ def apps():
 
 # Blueprint
 #app.register_blueprint(atoml_blueprint)
-app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
+#app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
 
 # Graphql view
 app.add_url_rule('/graphql',
