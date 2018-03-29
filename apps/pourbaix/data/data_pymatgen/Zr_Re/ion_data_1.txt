@@ -1,0 +1,1 @@
+[{"Name": "ZrO[2+]", "Reference Solid": "ZrO2", "Energy": -8.71151, "Source": "H. E. Barner and R. V. Scheuerman, Handbook of thermochemical data for compounds and aqueous species, Wiley, New York (1978)", "Major_Elements": ["Zr"], "Reference solid energy": -10.810734955564982}]

@@ -1,0 +1,1 @@
+[{"Name": "Pt[2+]", "Reference Solid": "Pt", "Energy": 1.92537, "Source": "D. D. Wagman et al., Selected values of chemical thermodynamic properties, NBS Technical note 270, Washington; 1968-1971", "Major_Elements": ["Pt"], "Reference solid energy": -0.0}]
