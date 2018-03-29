@@ -96,7 +96,6 @@ association_pubsys = \
     )
 
 
-
 class Publication(Base):
     __tablename__ = 'publication'
     __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
@@ -128,7 +127,7 @@ class ReactionSystem(Base):
                                primary_key=True)
     id = sqlalchemy.Column(sqlalchemy.Integer,  sqlalchemy.ForeignKey(
         'public.reaction.id'), # if PRODUCTION else 'main.reaction.id'),
-                                  primary_key=True)
+                           primary_key=True)
     
 class Reaction(Base):
     __tablename__ = 'reaction'
@@ -258,7 +257,8 @@ class System(Base):
     
     publication = sqlalchemy.orm.relationship("Publication",
                                                secondary=association_pubsys,
-                                               uselist=True)
+                                               uselist=True
+    )
 
     
     ###################################
