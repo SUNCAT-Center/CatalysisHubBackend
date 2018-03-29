@@ -16,20 +16,25 @@ except:
     print('Warning: import atoml_blueprint failed. It may not be available.')
     atoml_blueprint = None
 
+from apps.pourbaix.run_pourbaix import pourbaix
+
 app = flask.Flask(__name__)
 app.debug = True
 
-cors = CORS(app, resources={r"/graphql/*":
-    {"origins":
-        ["localhost:.*",
-            "catapp-browser.herokuapp.com",
-            "*"
 
 
-            ]
-        }
-    }
-    )
+cors = CORS(app)
+
+#, resources={r"/graphql/*":
+#    {"origins":
+#        ["localhost:.*",
+#            "catapp-browser.herokuapp.com",
+#            "*"
+
+#            ]
+#        }
+#    }
+#    )
 
 @app.route('/')
 
@@ -39,11 +44,11 @@ def index():
 @app.route('/apps/')
 
 def apps():
-        return "Apps: AtoML"
+        return "Apps: AtoML, pourbaix"
 
-#print api.schema
-# AtoML app
+# Blueprint
 #app.register_blueprint(atoml_blueprint)
+app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
 
 # Graphql view
 app.add_url_rule('/graphql',
