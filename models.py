@@ -113,7 +113,7 @@ class Publication(Base):
     pubtextsearch = sqlalchemy.Column(TSVECTOR, ) 
     reactions = sqlalchemy.orm.relationship("Reaction", backref="publication")#, uselist=True)
     systems = sqlalchemy.orm.relationship("System",
-                                          secondary=association_pubsys, uselist=True)
+                                          secondary=association_pubsys)#, uselist=True)
     
 
 class ReactionSystem(Base):
