@@ -1,8 +1,8 @@
 '''Flask app for Pourbaix Diagrams'''
-import StringIO
+import io #StringIO
 
 import urllib
-import mpld3
+#import mpld3
 import numpy as np
 import plotly.plotly as py
 import plotly.tools as tls
@@ -13,24 +13,26 @@ from pourbaix_ase.pourbaix_plot import solvated_ase,solid_Lange,Pourbaix
 from matplotlib.backends.backend_agg import FigureCanvasAgg 
 from pourbaix_surface.pourbaix_plot import SurfPourbaix
 
+import flask
 from flask import Flask, jsonify,request 
 from flask import Blueprint
 
-from pourbaix_pymatgen.pourdiag import pd_entries
+#from pourbaix_pymatgen.pourdiag import pd_entries
 from pourbaix_pymatgen import pd_generator_data
-from pymatgen.analysis.pourbaix.maker import PourbaixDiagram
-from pymatgen.analysis.pourbaix.plotter import PourbaixPlotter
+#from pymatgen.analysis.pourbaix.maker import PourbaixDiagram
+#from pymatgen.analysis.pourbaix.plotter import PourbaixPlotter
 import sys
 
-pourbaix_blueprint = Blueprint('pourbaix', __name__)
-@pourbaix_blueprint.route('/apps/pourbaix/specieslist_ase', methods=['GET', 'POST'])
+pourbaix = Blueprint('pourbaix', __name__)
+@pourbaix.route('/', methods=['GET', 'POST'])
+
 def get_spacies_ase():
-
     responses = []
-    data = request.get_json()
 
+    data = flask.request.get_json()
+    
     element1 = str(data.get('element1'))     
-    element2 =str(data.get('element2'))
+    element2 = str(data.get('element2'))
     T = float(data.get('temperature'))
     checked_ase = data.get('checkedASE')
     checked_Lange = data.get('checkedLange')
@@ -54,7 +56,7 @@ def get_spacies_ase():
     return jsonify(responses)
 
 
-@pourbaix_blueprint.route('/apps/pourbaix/pourbaix_ase', methods=['GET', 'POST'])
+@pourbaix.route('/pourbaix_ase/', methods=['GET', 'POST'])
 def pourbaix_gen_ase():
 
     responses = []
@@ -94,7 +96,7 @@ def pourbaix_gen_ase():
     fig = plt.gcf()
     canvas = FigureCanvasAgg(fig)
     a_list = a.tolist()
-    output = StringIO.StringIO()
+    output = io.StringIO()
     canvas.print_png(output)
     response = output.getvalue().encode('base64')
     data_url = 'data:image/png;base64,{}'.format(urllib.quote(response.rstrip('\n')))
@@ -110,7 +112,7 @@ def pourbaix_gen_ase():
     return jsonify(responses)
 
 
-@pourbaix_blueprint.route('/apps/pourbaix/pourbaix_pymatgen', methods=['GET', 'POST'])
+@pourbaix.route('/pourbaix_pymatgen/', methods=['GET', 'POST'])
 def pourbaix_gen_pymatgen():
     responses = []
 
@@ -170,7 +172,7 @@ def pourbaix_gen_pymatgen():
 
 
 
-@pourbaix_blueprint.route('/apps/pourbaix/pourbaix_surface', methods=['GET', 'POST'])
+@pourbaix.route('/pourbaix_surface/', methods=['GET', 'POST'])
 def pourbaix_gen_surface():
     responses = []
 
@@ -183,7 +185,7 @@ def pourbaix_gen_surface():
     SurfPourbaix(surfs).pourbaix_plotter()
     fig1 = plt.gcf()
     canvas = FigureCanvasAgg(fig1) 
-    output = StringIO.StringIO()
+    output = io.StringIO()
     canvas.print_png(output)
     response = output.getvalue().encode('base64')
     data_url = 'data:image/jpeg;base64,{}'.format(urllib.quote(response.rstrip('\n')))

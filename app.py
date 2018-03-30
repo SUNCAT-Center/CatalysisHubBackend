@@ -19,6 +19,8 @@ except:
     print('Warning: import atoml_blueprint failed. It may not be available.')
     atoml_blueprint = None
 
+# NumpyEncoder: useful for JSON serializing
+# Dictionaries that contain Numpy Arrays
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.integer):
@@ -30,28 +32,24 @@ class NumpyEncoder(json.JSONEncoder):
         else:
             return super(NumpyEncoder, self).default(obj)
 
-
 app = flask.Flask(__name__)
 app.debug = True
 app.json_encoder = NumpyEncoder
 
-CORS(app)
-#cors = CORS(app, resources={
-    #r"/graphql/*": {"origins":
-        #[   "localhost:.*",
-            #"localhost:3000",
-            #"catapp-browser.herokuapp.com",
-            #"*",
-        #]
-        #},
-    #r"/apps/*": {"origins":
-        #[   "localhost:.*",
-            #"catapp-browser.herokuapp.com",
-            #"*",
-        #]
-        #},
-    #}
-    #)
+
+
+cors = CORS(app)
+
+#, resources={r"/graphql/*":
+#    {"origins":
+#        ["localhost:.*",
+#            "catapp-browser.herokuapp.com",
+#            "*"
+
+#            ]
+#        }
+#    }
+#    )
 
 @app.route('/')
 
@@ -61,11 +59,11 @@ def index():
 @app.route('/apps/')
 
 def apps():
-        return "Apps: AtoML"
+        return "Apps: AtoML, pourbaix"
 
-#print api.schema
-# AtoML app
+# Blueprint
 #app.register_blueprint(atoml_blueprint)
+#app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
 
 
 # link up catKitDemo using blueprint
