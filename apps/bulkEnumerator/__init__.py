@@ -28,7 +28,7 @@ import ase.io.formats
 try:
     import bulk_enumerator as be
 except:
-    print("Warnin: could not import bulk_enumerator, check installation.")
+    print("Warning: could not import bulk_enumerator, check installation.")
     be = None
 import apps.utils
 
@@ -163,13 +163,12 @@ def get_structure(request=None):
         # i.e. a random number in [.1, .9]
 
     cell_params = {key: float(value) for key, value in cell_params.items()}
-    pprint.pprint(cell_params)
     bulk.set_parameter_values(*list(zip(*list(cell_params.items()))))
 
     std_poscar = bulk.get_std_poscar()
     primitive_poscar = bulk.get_primitive_poscar()
 
-    print(std_poscar)
+    synonyms =  mstripb(bulk.get_synonyms())
 
     # reclaim memory
     bulk.delete()
@@ -178,6 +177,7 @@ def get_structure(request=None):
         'std_cif': apps.utils.ase_convert(std_poscar, 'vasp', 'cif'),
         'primitive_cif': apps.utils.ase_convert(primitive_poscar, 'vasp', 'cif'),
         'cell_params': cell_params,
+        'synonyms': synonyms,
     })
 
 
@@ -256,7 +256,6 @@ def get_wyckoff_from_cif(request=None):
     import ase.io
     import ase.io.formats
     request = flask.request if request is None else request
-    pprint.pprint(request.args)
 
     instring = request.args.get('cif')
     filetype = 'cif'
