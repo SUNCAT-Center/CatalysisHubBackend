@@ -11,16 +11,16 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.image as image
 
-from pourbaix_ase.pourbaix_plot import solvated_ase,solid_Lange,Pourbaix
+from .pourbaix_ase.pourbaix_plot import solvated_ase,solid_Lange,Pourbaix
 from matplotlib.backends.backend_agg import FigureCanvasAgg 
-from pourbaix_surface.pourbaix_plot import SurfPourbaix
+from .pourbaix_surface.pourbaix_plot import SurfPourbaix
 
 import flask
 from flask import Flask, jsonify,request 
 from flask import Blueprint
 
 #from pourbaix_pymatgen.pourdiag import pd_entries
-from pourbaix_pymatgen import pd_generator_data
+from .pourbaix_pymatgen import pd_generator_data
 #from pymatgen.analysis.pourbaix.maker import PourbaixDiagram
 #from pymatgen.analysis.pourbaix.plotter import PourbaixPlotter
 import sys
