@@ -31,6 +31,7 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         else:
             return super(NumpyEncoder, self).default(obj)
+from apps.pourbaix.run_pourbaix import pourbaix
 
 app = flask.Flask(__name__)
 app.debug = True
@@ -59,11 +60,11 @@ def index():
 @app.route('/apps/')
 
 def apps():
-        return "Apps: AtoML, pourbaix"
+    return "Apps: AtoML, pourbaix"
 
 # Blueprint
 #app.register_blueprint(atoml_blueprint)
-#app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
+app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
 
 
 # link up catKitDemo using blueprint

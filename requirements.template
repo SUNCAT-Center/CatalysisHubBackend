@@ -32,6 +32,7 @@ promise==2.1.dev20170724043809
 psycopg2==2.7.3.2
 pudb==2017.1.4
 Pygments==2.2.0
+pymatgen==2018.3.23
 pyparsing==2.2.0
 python-dateutil==2.6.1
 pytz==2017.2
