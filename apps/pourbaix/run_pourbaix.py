@@ -6,6 +6,8 @@ import urllib
 import numpy as np
 #import plotly.plotly as py
 #import plotly.tools as tls
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.image as image
 
