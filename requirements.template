@@ -9,6 +9,7 @@ BulkEnumerator-0.0.1-cp36-cp36m-linux_x86_64.whl
 click==6.7
 coverage==4.4.2
 cycler==0.10.0
+FireWorks==1.6.9
 Flask==0.12.2
 Flask-Cors==3.0.3
 Flask-GraphQL==1.4.1
