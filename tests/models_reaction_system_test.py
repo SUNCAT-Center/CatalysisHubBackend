@@ -24,6 +24,6 @@ def reaction_system_has_ase_id_test():
 def reaction_system_has_reaction_id_test():
     import models
     reaction_system = models.ReactionSystem()
-    if not hasattr(reaction_system, 'reaction_id'):
+    if not hasattr(reaction_system, 'id'):
         raise TypeError('reactionSystem has no attribute reaction_id')
         
