@@ -32,5 +32,5 @@ before_script:
   - psql travis_ci_test -c 'alter role postgres set search_path to stage;'
   
 script:
-    - nosetests --with-coverage --cover-inclusive --cover-package=. --cover-erase
+    - nosetests --with-coverage
     - coverage report --omit 'lib/*,tests/*' --show-missing
