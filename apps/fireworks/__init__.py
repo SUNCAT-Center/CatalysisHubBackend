@@ -16,7 +16,11 @@ import fireworks as fw
 import ase
 import ase.io
 import ase.atoms
-import espresso
+try:
+    import espresso
+except:
+    print("Warning: espresso calculator not available.")
+    espresso = None
 
 import apps.catKitDemo
 
