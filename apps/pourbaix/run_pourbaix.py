@@ -11,9 +11,9 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.image as image
 
-from pourbaix_ase.pourbaix_plot import solvated_ase,solid_Lange,Pourbaix
+from .pourbaix_ase.pourbaix_plot import solvated_ase,solid_Lange,Pourbaix
 from matplotlib.backends.backend_agg import FigureCanvasAgg 
-from pourbaix_surface.pourbaix_plot import SurfPourbaix
+from .pourbaix_surface.pourbaix_plot import SurfPourbaix
 
 import flask
 from flask import Flask, jsonify,request 
