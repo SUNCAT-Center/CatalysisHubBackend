@@ -27,10 +27,10 @@ import apps.catKitDemo
 
 # set up the LaunchPad
 launchpad = fw.LaunchPad(
-    host=os.environ['FW_HOST'],
-    name=os.environ['FW_DATABASE'],
-    username=os.environ['FW_USER'],
-    password=os.environ['FW_PASSWORD']
+    host=os.environ.get('FW_HOST', ''),
+    name=os.environ.get('FW_DATABASE', ''),
+    username=os.environ.get('FW_USER', ''),
+    password=os.environ.get('FW_PASSWORD' ''),
 )
 
 # Define the ase-espresso keys we will use.
