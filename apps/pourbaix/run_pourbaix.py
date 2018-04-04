@@ -20,7 +20,7 @@ from flask import Flask, jsonify,request
 from flask import Blueprint
 
 #from pourbaix_pymatgen.pourdiag import pd_entries
-from pourbaix_pymatgen import pd_generator_data
+from .pourbaix_pymatgen import pd_generator_data
 #from pymatgen.analysis.pourbaix.maker import PourbaixDiagram
 #from pymatgen.analysis.pourbaix.plotter import PourbaixPlotter
 import sys
