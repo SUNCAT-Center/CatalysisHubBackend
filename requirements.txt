@@ -7,6 +7,7 @@ git+https://github.com/SUNCAT-Center/CatKit.git#egg=catkit
 click==6.7
 coverage==4.4.2
 cycler==0.10.0
+FireWorks==1.6.9
 Flask==0.12.2
 Flask-Cors==3.0.3
 Flask-GraphQL==1.4.1
@@ -30,6 +31,7 @@ promise==2.1.dev20170724043809
 psycopg2==2.7.3.2
 pudb==2017.1.4
 Pygments==2.2.0
+pymatgen==2018.3.23
 pyparsing==2.2.0
 python-dateutil==2.6.1
 pytz==2017.2
