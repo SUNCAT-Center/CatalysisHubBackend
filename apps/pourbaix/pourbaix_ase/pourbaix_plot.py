@@ -72,7 +72,7 @@ def solvated_ase(symbols):
         symbols = set(string2symbols(symbols))
 
     if len(_solvated) == 0:
-        conn = sqlite3.connect('lange_handbook.db')
+        conn = sqlite3.connect('apps/pourbaix/data/data_ase/lange_handbook.db')
         cur = conn.cursor()
         cur.execute("SELECT * FROM ase_aqueous")
         rows = cur.fetchall()
@@ -117,7 +117,7 @@ def solid_Lange(symbols,T):
     if isinstance(symbols, basestring):
         symbols = set(string2symbols(symbols))
 
-    conn = sqlite3.connect('lange_handbook.db')
+    conn = sqlite3.connect('apps/pourbaix/data/data_ase/lange_handbook.db')
     cur = conn.cursor()
     cur.execute("SELECT * FROM lange_solids")
     rows = cur.fetchall()
