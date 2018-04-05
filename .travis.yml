@@ -33,7 +33,8 @@ before_script:
   
 script:
     #- nosetests --with-coverage --cover-inclusive --cover-package=. --cover-erase
-    - nosetests --with-coverage --cover-package=. --cover-erase && echo 'DONE'
+    #- nosetests --with-coverage --cover-package=. --cover-erase && echo 'DONE'
+    - nosetests && echo 'DONE'
 
 after_success:
     - coverage report --omit 'lib/*,tests/*' --show-missing
