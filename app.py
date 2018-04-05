@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 # global imports
+
+import numpy as np
+import json
 import flask
 import flask_graphql
 from flask_cors import CORS
@@ -16,10 +19,23 @@ except:
     print('Warning: import atoml_blueprint failed. It may not be available.')
     atoml_blueprint = None
 
+# NumpyEncoder: useful for JSON serializing
+# Dictionaries that contain Numpy Arrays
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NumpyEncoder, self).default(obj)
 from apps.pourbaix.run_pourbaix import pourbaix
 
 app = flask.Flask(__name__)
 app.debug = True
+app.json_encoder = NumpyEncoder
 
 
 
