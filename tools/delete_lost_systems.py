@@ -12,7 +12,6 @@ result = cur.fetchall()
 for i, id in enumerate(result):
     id = id[0]
     cur.execute("delete from systems where id = {};".format(id))
-    print i
     con.commit()
 con.close()
 
