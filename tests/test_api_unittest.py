@@ -73,11 +73,11 @@ class ReactionBackendTestCase(unittest.TestCase):
 
         # test that the right number of systems is returned
         rv_data = self.get_data('{systems { edges { node { uniqueId } } }}')
-        assert len(rv_data['data']['systems']['edges']) == 704, "Found " + str(len(rv_data['data']['systems']['edges'])) + " systems instead of 704"
+        assert len(rv_data['data']['systems']['edges']) == 3316, "Found " + str(len(rv_data['data']['systems']['edges'])) + " systems instead of 3316"
 
         # assert that unique id has 32 characters
         uniqueId = rv_data['data']['systems']['edges'][0]['node']['uniqueId']
-        assert len(uniqueId) == 32
+        assert len(uniqueId) == 32, "len(uniqueId) == " + str(len(uniqueId)) + " instead of 32"
 
         rv_data = self.get_data("{systems(uniqueId: \"" + uniqueId + "\") { edges { node { Cifdata } } }}")
         
