@@ -22,7 +22,7 @@ def run_atoml_app():
 
 def _get_model():
     """Load the generated model."""
-    with open('models/catapp_gp_model.pickle', 'rb') as modelfile:
+    with open('apps/AtoML/models/catapp_gp_model.pickle', 'rb') as modelfile:
         model = pickle.load(modelfile)
     return model
 

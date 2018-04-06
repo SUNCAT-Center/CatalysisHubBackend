@@ -8,8 +8,8 @@ import numpy as np
 
 from atoml.regression import GaussianProcess
 
-train_data = np.load('train_data/catapp_features.npy')
-train_target = np.load('train_data/catapp_targets.npy')
+train_data = np.load('apps/AtoML/train_data/catapp_features.npy')
+train_target = np.load('apps/AtoML/train_data/catapp_targets.npy')
 
 kdict = {
     'k1': {
@@ -39,5 +39,5 @@ gp = GaussianProcess(
 )
 print('trained {}'.format(time.time() - st))
 
-with open('models/catapp_gp_model.pickle', 'wb') as model:
+with open('apps/AtoML/models/catapp_gp_model.pickle', 'wb') as model:
     pickle.dump(gp, model, protocol=pickle.HIGHEST_PROTOCOL)
