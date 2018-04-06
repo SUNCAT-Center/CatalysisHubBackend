@@ -1,7 +1,7 @@
 sudo: false
 language: python
 python:
-    - "2.7"
+    #- "2.7"
     - "3.5"
     - "3.6"
 
@@ -29,7 +29,6 @@ install:
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
   - psql travis_ci_test	< tests/pg_dump
-  - psql travis_ci_test -c 'alter role postgres set search_path to stage;'
   
 script:
     - nosetests --with-coverage

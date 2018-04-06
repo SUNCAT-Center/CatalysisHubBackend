@@ -31,7 +31,7 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         else:
             return super(NumpyEncoder, self).default(obj)
-from apps.pourbaix.run_pourbaix import pourbaix
+#from apps.pourbaix.run_pourbaix import pourbaix
 
 app = flask.Flask(__name__)
 app.debug = True
@@ -64,20 +64,7 @@ def apps():
 
 # Blueprint
 #app.register_blueprint(atoml_blueprint)
-app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
-
-
-# link up catKitDemo using blueprint
-from apps.catKitDemo import catKitDemo
-app.register_blueprint(catKitDemo, url_prefix='/apps/catKitDemo')
-
-# link up bulkEnumerator using blueprint
-from apps.bulkEnumerator import bulk_enumerator
-app.register_blueprint(bulk_enumerator, url_prefix='/apps/bulkEnumerator')
-
-# link up bulkEnumerator using blueprint
-from apps.activityMaps import activityMaps
-app.register_blueprint(activityMaps,  url_prefix='/apps/activityMaps')
+#app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
 
 # Graphql view
 app.add_url_rule('/graphql',
