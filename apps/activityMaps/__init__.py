@@ -46,9 +46,9 @@ class ReactionModel(object):
         pass
 
 
-def reactant_query(reactant="O", limit=5000):
+def graphql_query(products='products: "O"', reactants='', facet='', limit=5000):
     query = {'query': """{{
-      reactions(first: {limit}, products: "{reactant}") {{
+      reactions(first: {limit}, {reactants}{products}{facet}) {{
         edges {{
           node {{
             reactionEnergy
@@ -79,6 +79,7 @@ def systems(request=None):
     CACHE_FILE = 'reaction_systems_{activityMap}.json'.format(**locals())
 
     short_systems = []
+    raw_systems = {}
     labels = {}
     if activityMap == 'OER':
         def overpotential(doh, do, dooh=None):
@@ -103,7 +104,8 @@ def systems(request=None):
         else:
             raw_systems = {}
             for reactant in reactants:
-                raw_systems[reactant] = reactant_query(reactant)
+                raw_systems[reactant] = graphql_query(
+                    products='products: "' + reactant + '", ')
             with open(CACHE_FILE, 'w') as outfile:
                 outfile.write(json.dumps(raw_systems, ))
 
@@ -183,7 +185,54 @@ def systems(request=None):
             'reference': 'Kulkarni, Ambarish, Samira Siahrostami, Anjli Patel, and Jens K. Nørskov. "Understanding Catalytic Activity Trends in the Oxygen Reduction Reaction." Chemical reviews (2018). DOI: 10.1021/acs.chemrev.7b00488',
         })
 
-    elif activityMap == 'CO_Hydrogenation':
+    elif activityMap == 'CO_Hydrogenation_111':
+        raw_systems = {}
+        raw_systems['COstar'] = list(map(
+            lambda x: x['node'],
+            graphql_query(
+                products='products: "' + 'COgas' + '", ',
+                reactants='reactants: "' + 'COstar' + '", ',
+                facet='facet: "' + '111' + '", ',
+            )['data']['reactions']['edges']
+        ))
+
+        raw_systems['OHstar'] = list(map(
+            lambda x: x['node'],
+            graphql_query(
+                products='products: "' + 'H2gas+OHstar' + '", ',
+                reactants='reactants: "' + 'H2Ogas' + '", ',
+                facet='facet: "' + '111' + '", ',
+            )['data']['reactions']['edges']
+        ))
+
+        systems = {}
+        for reactant in raw_systems:
+            for raw_system in raw_systems[reactant]:
+                for geometry in raw_system.get('reactionSystems', {}):
+                    if geometry['name'] == 'star':
+                        system = systems.setdefault(geometry['aseId'], {})
+                        system.update({
+                            'formula': raw_system['chemicalComposition'],
+                            'facet': raw_system['facet'],
+                            'uid': geometry['aseId'],
+                        })
+                        if reactant == 'COstar':
+                            system.update({
+                                'x': - raw_system['reactionEnergy'],
+                                'z': 0.0,
+                            })
+                        elif reactant == 'OHstar':
+                            system.update({
+                                'y': raw_system['reactionEnergy'],
+                                'z': 0.0,
+                            })
+
+        short_systems = [
+            system for system in
+            systems.values()
+            if system.get('x', None) and system.get('y', None)
+        ]
+
         labels.update({
             'xlabel': 'ΔG(CO) [eV]',
             'ylabel': 'ΔG(OH) [eV]',
@@ -202,7 +251,7 @@ def systems(request=None):
     # sort for top systems list
     short_systems = sorted(
         short_systems,
-        key=lambda _x: - _x['z']
+        key=lambda _x: - _x.get('z', 0.0)
     )
 
     return flask.jsonify({
