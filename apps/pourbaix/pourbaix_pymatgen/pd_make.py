@@ -13,7 +13,7 @@ from .entry_methods import base_atom
 warnings.filterwarnings('ignore')
 
 
-def entry_data(mtnme_1, mtnme_2, direct_0='data_pymatgen', mprester_key=None):
+def entry_data(mtnme_1, mtnme_2, direct_0='apps/pourbaix/data/data_pymatgen', mprester_key=None):
     """Obtaining entry and ion data from local source.
 
     Parameters:
@@ -34,6 +34,8 @@ def entry_data(mtnme_1, mtnme_2, direct_0='data_pymatgen', mprester_key=None):
     entry_data = os.path.join(direct, 'mp_entries.txt')
 
     # Load entry data
+    # print(os.path.abspath(entry_data))
+    # print(os.path.abspath('.'))
     if os.path.exists(entry_data):
         with open(entry_data, 'r') as f:
             entries = json.load(f, cls=MontyDecoder)

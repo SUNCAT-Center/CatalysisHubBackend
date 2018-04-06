@@ -2,6 +2,7 @@
 import io #StringIO
 
 import urllib
+import base64
 #import mpld3
 import numpy as np
 #import plotly.plotly as py
@@ -98,10 +99,13 @@ def pourbaix_gen_ase():
     fig = plt.gcf()
     canvas = FigureCanvasAgg(fig)
     a_list = a.tolist()
-    output = io.StringIO()
+    output = io.BytesIO()
     canvas.print_png(output)
-    response = output.getvalue().encode('base64')
-    data_url = 'data:image/png;base64,{}'.format(urllib.quote(response.rstrip('\n')))
+    output.seek(0)
+    output_str = output.read()
+
+    response = base64.b64encode(output_str).decode()
+    data_url = 'data:image/jpeg;base64,{0}'.format(response)
 
     fig1 = plt.gcf().clear() #clean the catche for the previous fig
 
@@ -187,11 +191,12 @@ def pourbaix_gen_surface():
     SurfPourbaix(surfs).pourbaix_plotter()
     fig1 = plt.gcf()
     canvas = FigureCanvasAgg(fig1) 
-    output = io.StringIO()
+    output = io.BytesIO()
     canvas.print_png(output)
-    response = output.getvalue().encode('base64')
-    data_url = 'data:image/jpeg;base64,{}'.format(urllib.quote(response.rstrip('\n')))
-
+    output.seek(0)
+    output_str = output.read()
+    response = base64.b64encode(output_str).decode()
+    data_url = 'data:image/jpeg;base64,{0}'.format(response)
     fig1 = plt.gcf().clear() #clean the catche for the previous fig
 
     responses.append({

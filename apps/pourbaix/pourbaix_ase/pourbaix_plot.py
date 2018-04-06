@@ -366,7 +366,7 @@ class Pourbaix:
             import matplotlib.pyplot as plt
             import matplotlib.cm as cm
             # import plotly.plotly as py
-            from mpld3 import plugins
+            # from mpld3 import plugins
 
 
             if ax is None:
@@ -385,8 +385,8 @@ class Pourbaix:
             labels_loc = ax.scatter(y_loc, x_loc)
             labels_text = [name for name in names]
 
-            tooltip = plugins.PointLabelTooltip(labels_loc, labels_text)
-            plugins.connect(fig,tooltip)
+            # tooltip = plugins.PointLabelTooltip(labels_loc, labels_text)
+            # plugins.connect(fig,tooltip)
 
             ax.set_xlabel('pH')
             ax.set_ylabel('U(V)')
