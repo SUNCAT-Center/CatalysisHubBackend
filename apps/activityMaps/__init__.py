@@ -26,9 +26,8 @@ import ase.build
 
 activityMaps = flask.Blueprint('activityMaps', __name__)
 
-ROOT = 'http://127.0.0.1:5000/graphql'
-ROOT = 'http://2f4bb6d4.ngrok.io/graphql/'
-ROOT = 'http://catappdatabase2.herokuapp.com/graphql'
+GRAPHQL_ROOT = 'http://api.catalysis-hub.com/graphql'
+ROOT = 'http://api.catalysis-hub.com/'
 
 
 class ReactionModel(object):
@@ -63,13 +62,21 @@ def graphql_query(products='products: "O"', reactants='', facet='', limit=5000):
       }}
     }}""".format(**locals())}
 
-    response = requests.get(ROOT, query).json()
+    response = requests.get(GRAPHQL_ROOT, query).json()
 
     return response
 
 
 @activityMaps.route('/systems/', methods=['GET', 'POST'])
 def systems(request=None):
+    """
+    GET: Get systems for given reactions
+
+    Examples:
+        {ROOT}/apps/activityMaps/systems/?activitMap=OER
+        {ROOT}/apps/activityMaps/systems/?activitMap=CO_Hydrogenation_111
+
+    """.format(**locals())
     request = flask.request if request is None else request
     if type(request.args) is str:
         request.args = json.loads(request.args)
