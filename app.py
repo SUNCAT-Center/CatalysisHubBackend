@@ -106,6 +106,9 @@ app.add_url_rule('/graphql',
 #            )
 #        )
 
+from apps.activityMaps import activityMaps
+app.register_blueprint(activityMaps,  url_prefix='/apps/activityMaps')
+
 
 if __name__ == '__main__':
     import optparse
