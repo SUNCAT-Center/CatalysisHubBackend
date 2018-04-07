@@ -12,7 +12,7 @@ import datetime
 # workaround to work on both Python 2 and Python 3
 try:
     import io as StringIO
-except:
+except ImportError:
     import StringIO
 
 import numpy as np
@@ -26,8 +26,8 @@ import ase.build
 
 activityMaps = flask.Blueprint('activityMaps', __name__)
 
-GRAPHQL_ROOT = 'http://api.catalysis-hub.com/graphql'
-ROOT = 'http://api.catalysis-hub.com/'
+GRAPHQL_ROOT = 'http://api.catalysis-hub.org/graphql'
+ROOT = 'http://api.catalysis-hub.org/'
 
 
 class ReactionModel(object):
@@ -45,7 +45,8 @@ class ReactionModel(object):
         pass
 
 
-def graphql_query(products='products: "O"', reactants='', facet='', limit=5000):
+def graphql_query(products='products: "O"',
+                  reactants='', facet='', limit=5000):
     query = {'query': """{{
       reactions(first: {limit}, {reactants}{products}{facet}) {{
         edges {{
@@ -60,8 +61,9 @@ def graphql_query(products='products: "O"', reactants='', facet='', limit=5000):
           }}
         }}
       }}
-    }}""".format(**locals())}
+    }}""".format(**locals()).replace('\n', '')}
 
+    print(query['query'])
     response = requests.get(GRAPHQL_ROOT, query).json()
 
     return response
@@ -76,9 +78,11 @@ def systems(request=None):
         {ROOT}/apps/activityMaps/systems/?activitMap=OER
         {ROOT}/apps/activityMaps/systems/?activitMap=CO_Hydrogenation_111
 
-    """.format(**locals())
+    """.format(
+        ROOT=ROOT,
+    )
     request = flask.request if request is None else request
-    if type(request.args) is str:
+    if isinstance(request.args, str):
         request.args = json.loads(request.args)
 
     # unpack arguments
@@ -126,12 +130,15 @@ def systems(request=None):
                 star = star_list[0]
 
                 uniqueId = star['aseId']
-                #systems.setdefault(reactant, {}).setdefault(uniqueId, []).append(star)
                 systems.setdefault(uniqueId, {})['facet'] = edge[
                     'node']['facet']
                 systems.setdefault(uniqueId, {})['chemicalComposition'] = edge[
                     'node']['chemicalComposition']
-                systems.setdefault(uniqueId, {}).setdefault('reactants', {})[reactant] = {
+                systems.setdefault(
+                    uniqueId,
+                    {}).setdefault(
+                    'reactants',
+                    {})[reactant] = {
                     'systems': edge['node']['reactionSystems'],
                     'energy': edge['node']['reactionEnergy'],
                 }
@@ -173,7 +180,22 @@ def systems(request=None):
             'xlabel': 'ΔG(O) - ΔG(OH) [eV]',
             'ylabel': 'ΔG(OH) [eV]',
             'zlabel': 'Overpotential [eV]',
-            'reference': '[1] Friebel, Daniel, Mary W. Louie, Michal Bajdich, Kai E. Sanwald, Yun Cai, Anna M. Wise, Mu-Jeng Cheng et al. "Identification of highly active Fe sites in (Ni, Fe) OOH for electrocatalytic water splitting." Journal of the American Chemical Society 137, no. 3 (2015): 1305-1313. DOI: 10.1021/ja511559d [2] Man, Isabela C., Hai‐Yan Su, Federico Calle‐Vallejo, Heine A. Hansen, José I. Martínez, Nilay G. Inoglu, John Kitchin, Thomas F. Jaramillo, Jens K. Nørskov, and Jan Rossmeisl. "Universality in oxygen evolution electrocatalysis on oxide surfaces." ChemCatChem 3, no. 7 (2011): 1159-1165. DOI: 10.1002/cctc.201000397'
+            'reference': ('[1] Friebel, Daniel, Mary W. Louie,'
+                          ' Michal Bajdich, Kai E. Sanwald, Yun Cai,'
+                          ' Anna M. Wise, Mu-Jeng Cheng et al.'
+                          ' "Identification of highly active Fe sites'
+                          ' in (Ni, Fe) OOH for electrocatalytic water'
+                          ' splitting." Journal of the American Chemical'
+                          ' Society 137, no. 3 (2015): 1305-1313.'
+                          ' DOI: 10.1021/ja511559d [2] Man, Isabela C.,'
+                          ' Hai‐Yan Su, Federico Calle‐Vallejo,'
+                          ' Heine A. Hansen, José I. Martínez,'
+                          ' Nilay G. Inoglu, John Kitchin,'
+                          ' Thomas F. Jaramillo, Jens K. Nørskov,'
+                          ' and Jan Rossmeisl. "Universality in'
+                          ' oxygen evolution electrocatalysis on'
+                          ' oxide surfaces." ChemCatChem 3, no. 7 (2011):'
+                          ' 1159-1165. DOI: 10.1002/cctc.201000397')
         })
 
     elif activityMap == 'NRR':
@@ -181,7 +203,13 @@ def systems(request=None):
             'xlabel': 'Nitrogen Adsorption Energy ΔG(NNH) [eV]',
             'ylabel': 'N2 Transition-State Energy ΔG(NH2) - ΔG(NH) [eV]',
             'zlabel': 'U(L) [V s. RHE]',
-            'reference': 'Montoya, Joseph H., Charlie Tsai, Aleksandra Vojvodic, and Jens K. Nørskov. "The challenge of electrochemical ammonia synthesis: A new perspective on the role of nitrogen scaling relations." ChemSusChem 8, no. 13 (2015): 2180-2186. DOI: 10.1002/cssc.201500322',
+            'reference': ('Montoya, Joseph H., Charlie Tsai,'
+                       ' Aleksandra Vojvodic, and Jens K. Nørskov.'
+                       ' "The challenge of electrochemical ammonia'
+                       ' synthesis: A new perspective on the role of'
+                       ' nitrogen scaling relations." ChemSusChem 8,'
+                       ' no. 13 (2015): 2180-2186.'
+                       ' DOI: 10.1002/cssc.201500322'),
         })
 
     elif activityMap == 'ORR':
@@ -189,7 +217,11 @@ def systems(request=None):
             'xlabel': 'ΔG(OH) [eV]',
             'ylabel': 'ΔG(OOH) [eV]',
             'zlabel': 'Overpotential [eV]',
-            'reference': 'Kulkarni, Ambarish, Samira Siahrostami, Anjli Patel, and Jens K. Nørskov. "Understanding Catalytic Activity Trends in the Oxygen Reduction Reaction." Chemical reviews (2018). DOI: 10.1021/acs.chemrev.7b00488',
+            'reference': ('Kulkarni, Ambarish, Samira Siahrostami,'
+                          ' Anjli Patel, and Jens K. Nørskov. "Understanding'
+                          ' Catalytic Activity Trends in the Oxygen Reduction'
+                          ' Reaction." Chemical reviews (2018).'
+                          ' DOI: 10.1021/acs.chemrev.7b00488'),
         })
 
     elif activityMap == 'CO_Hydrogenation_111':
@@ -244,7 +276,13 @@ def systems(request=None):
             'xlabel': 'ΔE(CO) [eV]',
             'ylabel': 'ΔE(OH) [eV]',
             'zlabel': 'TOF [1/s]',
-            'reference': 'Schumann, Julia, Andrew J. Medford, Jong Suk Yoo, Zhi-Jian Zhao, Pallavi Bothra, Ang Cao, Felix Studt, Frank Abild-Pedersen, and Jens K. Nørskov. "Selectivity of synthesis gas conversion to C2+ oxygenates on fcc (111) transition metal surfaces." ACS Catalysis (2018). DOI: 10.1021/acscatal.8b00201.',
+            'reference': ('Schumann, Julia, Andrew J. Medford,'
+                          ' Jong Suk Yoo, Zhi-Jian Zhao, Pallavi Bothra,'
+                          ' Ang Cao, Felix Studt, Frank Abild-Pedersen,'
+                          ' and Jens K. Nørskov. "Selectivity of synthesis'
+                          ' gas conversion to C2+ oxygenates on fcc (111)'
+                          ' transition metal surfaces." ACS Catalysis (2018).'
+                          ' DOI: 10.1021/acscatal.8b00201.'),
         })
 
     elif activityMap == 'CO2RR':
@@ -252,7 +290,11 @@ def systems(request=None):
             'xlabel': 'ΔE(CO*) [eV]',
             'ylabel': 'ΔE(H-CO) [eV]',
             'zlabel': 'log(TOF) [1/s]',
-            'reference': 'Liu, Xinyan, Jianping Xiao, Hongjie Peng, Xin Hong, Karen Chan, and Jens K. Nørskov. "Understanding trends in electrochemical carbon dioxide reduction rates." Nature Communications 8 (2017): 15438.',
+            'reference': ('Liu, Xinyan, Jianping Xiao, Hongjie Peng,'
+                          ' Xin Hong, Karen Chan, and Jens K. Nørskov.'
+                          ' "Understanding trends in electrochemical'
+                          ' carbon dioxide reduction rates."'
+                          ' Nature Communications 8 (2017): 15438.'),
         })
 
     # sort for top systems list
