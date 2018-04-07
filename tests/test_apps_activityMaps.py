@@ -28,8 +28,9 @@ class ReactionBackendTestCase(unittest.TestCase):
     def test_blank_reaction_query(self):
         data = json.loads(
                 self.app.get('/apps/activityMaps/systems/?activityMap=blank')
-                .data
+                .data.decode('utf-8')
                 )
+
 
         
         test_data = {'reference': '',
