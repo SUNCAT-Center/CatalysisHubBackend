@@ -80,7 +80,7 @@ def apps():
 
 # Blueprint
 #app.register_blueprint(atoml_blueprint)
-#app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
+app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
 
 # Graphql view
 app.add_url_rule('/graphql',
