@@ -270,10 +270,10 @@ def systems(request=None):
             dE_NH = sorted(list(system['E']['NH'].values()))[0]
 
             #  free energy corrections from Aayush Singh
-            dG_NNH = dE_NNH + 1.142
-            # 1.142 eV, free energy correction
-            dG_NH2__dG_NH = dE_NH2 - dE_NH + 0.179
-            # 0.179 eV, free energy correction
+            dG_NNH = dE_NNH + 0.763
+            # 0.763 eV, free energy correction
+            dG_NH2__dG_NH = dE_NH2 - dE_NH + 0.330
+            # 0.330 eV, free energy correction
 
             U_L = limiting_potential(dG_NNH, dG_NH2__dG_NH)
 
@@ -290,8 +290,8 @@ def systems(request=None):
         ]
 
         labels.update({
-            'xlabel': 'Nitrogen Adsorption Energy ΔG(NNH) [eV]',
-            'ylabel': 'N2 Transition-State Energy ΔG(NH2) - ΔG(NH) [eV]',
+            'xlabel': 'ΔG(NNH) [eV]',
+            'ylabel': 'ΔG(NH2) - ΔG(NH) [eV]',
             'zlabel': 'U(L) [V s. RHE]',
             'reference': ('Montoya, Joseph H., Charlie Tsai,'
                           ' Aleksandra Vojvodic, and Jens K. Nørskov.'
