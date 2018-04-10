@@ -235,10 +235,24 @@ def systems(request=None):
             for raw_system in raw_systems[reactant]:
                 for geometry in raw_system.get('reactionSystems', {}):
                     if geometry['name'] == 'star':
-                        system = systems.setdefault(geometry['aseId'], {})
                         site = list(json.loads(
                             raw_system['sites']
                             ).values())[0]
+                        formula = raw_system['chemicalComposition']
+
+                        # skip unstable sites by now
+                        # to be removed.
+                        if (reactant, formula, site) in [
+                                ('NNH', 'Au16', 'ontop'),
+                                ('NNH', 'Au16', 'fcc'),
+                                ('NNH', 'Au16', 'hollow'),
+                                ('NNH', 'Pd16', 'ontop'),
+                                ('NNH', 'Pt16', 'ontop'),
+                                ('NNH', 'Rh16', 'ontop'),
+                                ]:
+                            continue
+
+                        system = systems.setdefault(geometry['aseId'], {})
                         energy = system.get('E', {})
                         energy.setdefault(reactant, {}) \
                               .setdefault(site, raw_system['reactionEnergy'])
@@ -256,10 +270,10 @@ def systems(request=None):
             dE_NH = sorted(list(system['E']['NH'].values()))[0]
 
             #  free energy corrections from Aayush Singh
-            dG_NNH = dE_NNH + 1.142
-            # 1.142 eV, free energy correction
-            dG_NH2__dG_NH = dE_NH2 - dE_NH + 0.179
-            # 0.179 eV, free energy correction
+            dG_NNH = dE_NNH + 0.763
+            # 0.763 eV, free energy correction
+            dG_NH2__dG_NH = dE_NH2 - dE_NH + 0.330
+            # 0.330 eV, free energy correction
 
             U_L = limiting_potential(dG_NNH, dG_NH2__dG_NH)
 
@@ -276,8 +290,8 @@ def systems(request=None):
         ]
 
         labels.update({
-            'xlabel': 'Nitrogen Adsorption Energy ΔG(NNH) [eV]',
-            'ylabel': 'N2 Transition-State Energy ΔG(NH2) - ΔG(NH) [eV]',
+            'xlabel': 'ΔG(NNH) [eV]',
+            'ylabel': 'ΔG(NH2) - ΔG(NH) [eV]',
             'zlabel': 'U(L) [V s. RHE]',
             'reference': ('Montoya, Joseph H., Charlie Tsai,'
                           ' Aleksandra Vojvodic, and Jens K. Nørskov.'
@@ -285,7 +299,10 @@ def systems(request=None):
                           ' synthesis: A new perspective on the role of'
                           ' nitrogen scaling relations." ChemSusChem 8,'
                           ' no. 13 (2015): 2180-2186.'
-                          ' DOI: 10.1002/cssc.201500322'),
+                          ' DOI: 10.1002/cssc.201500322.'
+                          ' Free energy corrections correspond to'
+                          ' Ru(111) surface and N2/H2 gas phase at 300K'
+                          ' and standard pressure.'),
         })
 
     elif activityMap == 'ORR':
