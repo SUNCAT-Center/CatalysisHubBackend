@@ -5,3 +5,5 @@ include/
 share/
 .Python
 docs/build
+.idea
+.DS_Store

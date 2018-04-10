@@ -31,7 +31,7 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         else:
             return super(NumpyEncoder, self).default(obj)
-#from apps.pourbaix.run_pourbaix import pourbaix
+
 
 app = flask.Flask(__name__)
 app.debug = True
@@ -80,7 +80,8 @@ def apps():
 
 # Blueprint
 #app.register_blueprint(atoml_blueprint)
-#app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
+from apps.pourbaix.run_pourbaix import pourbaix
+app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
 
 # Graphql view
 app.add_url_rule('/graphql',
