@@ -52,8 +52,9 @@ def graphql_query(products='products: "O"',
         edges {{
           node {{
             reactionEnergy
-             facet
-             chemicalComposition
+            sites
+            facet
+            chemicalComposition
             reactionSystems {{
                 name
                 aseId
@@ -63,7 +64,6 @@ def graphql_query(products='products: "O"',
       }}
     }}""".format(**locals()).replace('\n', '')}
 
-    print(query['query'])
     response = requests.get(GRAPHQL_ROOT, query).json()
 
     return response
@@ -199,17 +199,93 @@ def systems(request=None):
         })
 
     elif activityMap == 'NRR':
+        def limiting_potential(dG_NNH, dG_NH2__dG_NH):
+            return -max(dG_NNH, dG_NH2__dG_NH)
+
+        raw_systems = {}
+        raw_systems['NNH'] = list(map(
+            lambda x: x['node'],
+            graphql_query(
+                reactants='reactants: "star+H2gas+N2gas",',
+                products='products: "NNHstar" ,',
+                facet='facet: "' + '~111' + '", ',
+            )['data']['reactions']['edges']
+        ))
+
+        raw_systems['NH2'] = list(map(
+            lambda x: x['node'],
+            graphql_query(
+                reactants='reactants: "star+H2gas+N2gas",',
+                products=' products: "NH2star", ',
+                facet='facet: "' + '~111' + '", ',
+            )['data']['reactions']['edges']
+        ))
+
+        raw_systems['NH'] = list(map(
+            lambda x: x['node'],
+            graphql_query(
+                reactants='reactants: "star+H2gas+N2gas",',
+                products='products: "NHstar", ',
+                facet='facet: "' + '~111' + '", ',
+            )['data']['reactions']['edges']
+        ))
+
+        systems = {}
+        for reactant in raw_systems:
+            for raw_system in raw_systems[reactant]:
+                for geometry in raw_system.get('reactionSystems', {}):
+                    if geometry['name'] == 'star':
+                        system = systems.setdefault(geometry['aseId'], {})
+                        site = list(json.loads(
+                            raw_system['sites']
+                            ).values())[0]
+                        energy = system.get('E', {})
+                        energy.setdefault(reactant, {}) \
+                              .setdefault(site, raw_system['reactionEnergy'])
+                        system.update({
+                            'formula': raw_system['chemicalComposition'],
+                            'facet': raw_system['facet'],
+                            'uid': geometry['aseId'],
+                            'E': energy,
+                        })
+
+        for uid in systems:
+            system = systems[uid]
+            dE_NNH = sorted(list(system['E']['NNH'].values()))[0]
+            dE_NH2 = sorted(list(system['E']['NH2'].values()))[0]
+            dE_NH = sorted(list(system['E']['NH'].values()))[0]
+
+            #  free energy corrections from Aayush Singh
+            dG_NNH = dE_NNH + 1.142
+            # 1.142 eV, free energy correction
+            dG_NH2__dG_NH = dE_NH2 - dE_NH + 0.179
+            # 0.179 eV, free energy correction
+
+            U_L = limiting_potential(dG_NNH, dG_NH2__dG_NH)
+
+            #system.pop('E')
+            system.update({
+                'x': dG_NNH,
+                'y': dG_NH2__dG_NH,
+                'z': U_L,
+                })
+
+        short_systems = [
+            system for system in
+            systems.values()
+        ]
+
         labels.update({
             'xlabel': 'Nitrogen Adsorption Energy ΔG(NNH) [eV]',
             'ylabel': 'N2 Transition-State Energy ΔG(NH2) - ΔG(NH) [eV]',
             'zlabel': 'U(L) [V s. RHE]',
             'reference': ('Montoya, Joseph H., Charlie Tsai,'
-                       ' Aleksandra Vojvodic, and Jens K. Nørskov.'
-                       ' "The challenge of electrochemical ammonia'
-                       ' synthesis: A new perspective on the role of'
-                       ' nitrogen scaling relations." ChemSusChem 8,'
-                       ' no. 13 (2015): 2180-2186.'
-                       ' DOI: 10.1002/cssc.201500322'),
+                          ' Aleksandra Vojvodic, and Jens K. Nørskov.'
+                          ' "The challenge of electrochemical ammonia'
+                          ' synthesis: A new perspective on the role of'
+                          ' nitrogen scaling relations." ChemSusChem 8,'
+                          ' no. 13 (2015): 2180-2186.'
+                          ' DOI: 10.1002/cssc.201500322'),
         })
 
     elif activityMap == 'ORR':
