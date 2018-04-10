@@ -301,7 +301,7 @@ def systems(request=None):
                           ' no. 13 (2015): 2180-2186.'
                           ' DOI: 10.1002/cssc.201500322.'
                           ' Free energy corrections correspond to'
-                          ' Ru(111) surfac and N2/H2 gas phase at 300K'
+                          ' Ru(111) surface and N2/H2 gas phase at 300K'
                           ' and standard pressure.'),
         })
 
