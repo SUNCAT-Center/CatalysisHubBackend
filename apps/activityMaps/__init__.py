@@ -235,10 +235,24 @@ def systems(request=None):
             for raw_system in raw_systems[reactant]:
                 for geometry in raw_system.get('reactionSystems', {}):
                     if geometry['name'] == 'star':
-                        system = systems.setdefault(geometry['aseId'], {})
                         site = list(json.loads(
                             raw_system['sites']
                             ).values())[0]
+                        formula = raw_system['chemicalComposition']
+
+                        # skip unstable sites by now
+                        # to be removed.
+                        if (reactant, formula, site) in [
+                                ('NNH', 'Au16', 'ontop'),
+                                ('NNH', 'Au16', 'fcc'),
+                                ('NNH', 'Au16', 'hollow'),
+                                ('NNH', 'Pd16', 'ontop'),
+                                ('NNH', 'Pt16', 'ontop'),
+                                ('NNH', 'Rh16', 'ontop'),
+                                ]:
+                            continue
+
+                        system = systems.setdefault(geometry['aseId'], {})
                         energy = system.get('E', {})
                         energy.setdefault(reactant, {}) \
                               .setdefault(site, raw_system['reactionEnergy'])
