@@ -83,6 +83,10 @@ def apps():
 from apps.pourbaix.run_pourbaix import pourbaix
 app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
 
+from apps.bulkEnumerator import bulk_enumerator
+app.register_blueprint(bulk_enumerator, url_prefix='/apps/bulkEnumerator')
+
+
 # Graphql view
 app.add_url_rule('/graphql',
         view_func=flask_graphql.GraphQLView.as_view(
