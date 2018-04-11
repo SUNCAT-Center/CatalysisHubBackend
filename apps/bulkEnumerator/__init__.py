@@ -12,7 +12,7 @@ import re
 # workaround to work on both Python 2 and Python 3
 try:
     import io as StringIO
-except:
+except ImportError:
     import StringIO
 
 import numpy as np
@@ -27,7 +27,7 @@ import ase.io.formats
 
 try:
     import bulk_enumerator as be
-except:
+except ImportError:
     print("Warning: could not import bulk_enumerator, check installation.")
     be = None
 import apps.utils
@@ -38,13 +38,16 @@ bulk_enumerator = flask.Blueprint('bulk_enumerator', __name__)
 def stripb(string):
     return re.sub("^b'([^']*)'", r'\1', string)
 
+
 def mstripb(liste):
     return list(map(stripb, liste))
+
 
 @bulk_enumerator.route('/get_wyckoff_list', methods=['GET', 'POST'])
 def get_wyckoff_list(request=None):
     """
-    Return a list of possible wyckoff position belonging to a certain spacegroup.
+    Return a list of possible wyckoff position belonging
+    to a certain spacegroup.
 
     Args:
 
@@ -129,7 +132,7 @@ def get_structure(request=None):
 
     # input sanity checks
     assert len(wyckoff_positions) == len(wyckoff_species)
-    #assert len(wyckoff_positions) == len(wyckoff_params)
+    # assert len(wyckoff_positions) == len(wyckoff_params)
 
     # build results
     bulk = be.bulk.BULK()
@@ -154,12 +157,12 @@ def get_structure(request=None):
         'z': .5,
     }
     # default_cell_params.update(cell_params)
-    #cell_params = default_cell_params
+    # cell_params = default_cell_params
     for required_parameter in required_parameters:
         cell_params[required_parameter] = round(float(
-        cell_params.get(required_parameter,
-          default_cell_params.get(required_parameter,
-                                  .1 + random.random() * .8))), 5)
+            cell_params.get(required_parameter,
+                default_cell_params.get(required_parameter,
+                                      .1 + random.random() * .8))), 5)
         # i.e. a random number in [.1, .9]
 
     cell_params = {key: float(value) for key, value in cell_params.items()}
@@ -168,7 +171,7 @@ def get_structure(request=None):
     std_poscar = bulk.get_std_poscar()
     primitive_poscar = bulk.get_primitive_poscar()
 
-    synonyms =  mstripb(bulk.get_synonyms())
+    name = stripb(bulk.get_name())
 
     # reclaim memory
     bulk.delete()
@@ -177,7 +180,7 @@ def get_structure(request=None):
         'std_cif': apps.utils.ase_convert(std_poscar, 'vasp', 'cif'),
         'primitive_cif': apps.utils.ase_convert(primitive_poscar, 'vasp', 'cif'),
         'cell_params': cell_params,
-        'synonyms': synonyms,
+        'name': name,
     })
 
 
@@ -206,7 +209,6 @@ def get_wyckoff_from_structure(request=None):
         instring = request.args('cif')
         filetype = 'cif'
 
-
     atoms = apps.utils.ase_convert(instring, informat=filetype, atoms_out=True, )
     poscar = apps.utils.ase_convert(instring, informat=filetype, outformat='vasp')
     cif = apps.utils.ase_convert(instring, informat=filetype, outformat='cif')
@@ -222,7 +224,7 @@ def get_wyckoff_from_structure(request=None):
     spacegroup = bulk.get_spacegroup()
     wyckoff = bulk.get_wyckoff()
     species = bulk.get_species()
-    synonyms = bulk.get_synonyms()
+    name = bulk.get_name()
     species_permutations = bulk.get_species_permutations()
 
     poscar = bulk.get_std_poscar().decode('utf-8')
@@ -241,7 +243,7 @@ def get_wyckoff_from_structure(request=None):
         'spacegroup': spacegroup,
         'wyckoff': wyckoff,
         'species': species,
-        'synonyms': synonyms,
+        'name': name,
         'species_permutations': species_permutations,
     })
 
@@ -289,7 +291,7 @@ def get_wyckoff_from_cif(request=None):
     spacegroup = bulk.get_spacegroup()
     wyckoff = bulk.get_wyckoff()
     species = bulk.get_species()
-    synonyms = bulk.get_synonyms()
+    name = bulk.get_name()
     species_permutations = bulk.get_species_permutations()
 
     poscar = bulk.get_std_poscar().decode('utf-8')
@@ -308,6 +310,6 @@ def get_wyckoff_from_cif(request=None):
         'spacegroup': spacegroup,
         'wyckoff': mstripb(wyckoff),
         'species': mstripb(species),
-        'synonyms': mstripb(synonyms),
+        'name': stripb(name),
         'species_permutations': mstripb(species_permutations),
     })
