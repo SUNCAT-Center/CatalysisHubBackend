@@ -362,6 +362,7 @@ def systems(request=None):
         short_systems = [
             system for system in
             systems.values()
+            if system.get('x', None) and system.get('y', None)
         ]
 
         labels.update({
