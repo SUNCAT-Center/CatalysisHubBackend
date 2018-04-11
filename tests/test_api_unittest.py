@@ -121,6 +121,18 @@ class ReactionBackendTestCase(unittest.TestCase):
         assert results_reactions[0]['dftCode'] == 'Quantum ESPRESSSO', results_reactions[0]['dftCode']
         assert results_reactions[0]['dftFunctional'] == 'RPBE', results_reactions[0]['dftFunctional']
 
+    def test_order_key(self):
+        query ='{systems(last: 1, order: "energy") {edges {node { Formula energy} } }}'
+        rv_data = self.get_data(query)
+        assert False, rv_data
+
+    def test_order_key_descending(self):
+        query ='{systems(last: 1, order: "-energy") {edges {node { Formula energy} } }}'
+        rv_data = self.get_data(query)
+        assert False, rv_data
+
+
+
     #def test_graphql5(self):
         ## TEST if we can query by DOI
         #query = '{publications(doi: "10.1021/acs.jpcc.6b03375") { edges { node { title systems { Formula } } } }}'
