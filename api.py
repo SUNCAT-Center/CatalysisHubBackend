@@ -374,7 +374,7 @@ class Reaction(CustomSQLAlchemyObjectType):
 
 class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
     RELAY_ARGS = ['first', 'last', 'before', 'after']
-    SPECIAL_ARGS = ['distinct', 'op', 'jsonkey']
+    SPECIAL_ARGS = ['distinct', 'op', 'jsonkey', 'order']
 
     @classmethod
     def get_query(cls, model, info, **args):
@@ -430,6 +430,15 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                     op = value
             elif field == 'jsonkey':
                 jsonkey_input = value
+            elif field == 'order':
+                ascending = not value.startswith('-')
+                column_name = value if not value.startswith('-') else value[1:]
+                column = getattr(model, convert(column_name), None)
+
+                if ascending:
+                    query = query.order_by(column)
+                else:
+                    query = query.order_by(column.desc())
 
         for field, value in args.items():
             if field not in (cls.RELAY_ARGS + cls.SPECIAL_ARGS):
@@ -558,6 +567,7 @@ def get_filter_fields(model):
     filter_fields['op'] = graphene.String()
     filter_fields['search'] = graphene.String()
     filter_fields['jsonkey'] = graphene.String()
+    filter_fields['order'] = graphene.String()
 
     return filter_fields
 
