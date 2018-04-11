@@ -277,7 +277,7 @@ def systems(request=None):
 
             U_L = limiting_potential(dG_NNH, dG_NH2__dG_NH)
 
-            #system.pop('E')
+            # system.pop('E')
             system.update({
                 'x': dG_NNH,
                 'y': dG_NH2__dG_NH,
@@ -322,8 +322,8 @@ def systems(request=None):
         raw_systems['COstar'] = list(map(
             lambda x: x['node'],
             graphql_query(
-                products='products: "' + 'COgas' + '", ',
-                reactants='reactants: "' + 'COstar' + '", ',
+                products='products: "' + 'COstar' + '", ',
+                reactants='reactants: "' + 'COgas' + '", ',
                 facet='facet: "' + '111' + '", ',
             )['data']['reactions']['edges']
         ))
@@ -350,7 +350,7 @@ def systems(request=None):
                         })
                         if reactant == 'COstar':
                             system.update({
-                                'x': - raw_system['reactionEnergy'],
+                                'x': raw_system['reactionEnergy'],
                                 'z': 0.0,
                             })
                         elif reactant == 'OHstar':
@@ -362,7 +362,6 @@ def systems(request=None):
         short_systems = [
             system for system in
             systems.values()
-            if system.get('x', None) and system.get('y', None)
         ]
 
         labels.update({
