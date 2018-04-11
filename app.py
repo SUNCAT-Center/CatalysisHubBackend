@@ -86,6 +86,8 @@ app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
 from apps.bulkEnumerator import bulk_enumerator
 app.register_blueprint(bulk_enumerator, url_prefix='/apps/bulkEnumerator')
 
+from apps.catKitDemo import catKitDemo
+app.register_blueprint(catKitDemo, url_prefix='/apps/catKitDemo')
 
 # Graphql view
 app.add_url_rule('/graphql',
