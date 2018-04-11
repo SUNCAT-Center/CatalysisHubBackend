@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/mhoffman/CatAppBackend.svg?branch=feature_sort)](https://travis-ci.org/mhoffman/CatAppBackend)
+[![Build Status](https://travis-ci.org/mhoffman/CatAppBackend.svg?branch=feature_unit_tests)](https://travis-ci.org/mhoffman/CatAppBackend)
 
 ## Flask GraphQL ASE DB Demo
 
