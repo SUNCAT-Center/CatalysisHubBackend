@@ -50,7 +50,7 @@ Some Examples:
             reactants
             products
             reactionEnergy
-           }	
+           }
          }
         }
       }}
@@ -105,10 +105,10 @@ Some Examples:
       edges {
         node {
           systems {
-            Cifdata            
+            Cifdata
           }
         }
-      } 
+      }
     }}
 
 
@@ -139,7 +139,7 @@ Some Examples:
 """
 try:
     import io as StringIO
-except:
+except ImportError:
     # Fallback solution for python2.7
     import StringIO
 
@@ -150,11 +150,14 @@ import json
 import graphene
 import graphene.relay
 import graphene_sqlalchemy
+import promise.dataloader
+import promise
 import sqlalchemy
 import six
 
 # local imports
 import models
+
 
 class CountableConnection(graphene.relay.Connection):
     class Meta:
@@ -195,15 +198,36 @@ class CustomSQLAlchemyObjectType(graphene_sqlalchemy.SQLAlchemyObjectType):
             id,
             **options)
 
-        
+
 class Publication(CustomSQLAlchemyObjectType):
-    
+
     class Meta:
         model = models.Publication
         interfaces = (graphene.relay.Node,)
 
     reactions = graphene.List('api.Reaction')
     systems = graphene.List('api.System')
+
+    def resolve_reactions(self, info):
+        return reaction_loader.load_many(
+                [x.id for x in self.reactions]
+                )
+
+    def resolve_systems(self, info):
+        return system_loader.load_many(
+                [x.id for x in self.systems]
+                )
+
+
+class PublicationLoader(promise.dataloader.DataLoader):
+    def batch_load_fn(self, keys):
+        return promise.Promise.resolve(
+            models.db_session.query(models.Publication) \
+                    .filter(models.Publication.id.in_(keys)).all()
+            )
+
+
+publication_loader = PublicationLoader()
 
 
 class ReactionSystem(CustomSQLAlchemyObjectType):
@@ -212,10 +236,10 @@ class ReactionSystem(CustomSQLAlchemyObjectType):
         model = models.ReactionSystem
         interfaces = (graphene.relay.Node, )
 
-    #name = graphene.InputField()
-    #systems = graphene.List('api.Systems')
-        
-    
+    # name = graphene.InputField()
+    # systems = graphene.List('api.Systems')
+
+
 class System(CustomSQLAlchemyObjectType):
 
     _input_file = graphene.String(format=graphene.String())
@@ -306,22 +330,48 @@ class Species(CustomSQLAlchemyObjectType):
         interfaces = (graphene.relay.Node, )
 
 
+class SystemLoader(promise.dataloader.DataLoader):
+    def batch_load_fn(self, keys):
+        return promise.Promise.resolve(
+            models.db_session.query(models.System) \
+                    .filter(models.System.id.in_(keys)).all()
+            )
+
+
+system_loader = SystemLoader()
+
+
+class ReactionLoader(promise.dataloader.DataLoader):
+    def batch_load_fn(self, keys):
+        return promise.Promise.resolve(
+            models.db_session.query(models.Reaction) \
+                    .filter(models.Reaction.id.in_(keys)).all()
+            )
+
+
+reaction_loader = ReactionLoader()
+
+
 class Reaction(CustomSQLAlchemyObjectType):
-    
+
     class Meta:
         model = models.Reaction
         interfaces = (graphene.relay.Node, )
-        
+
     reaction_systems = graphene.List(ReactionSystem)
     systems = graphene.List(System)
 
-    
+    def resolve_systems(self, info):
+        return system_loader.load_many(
+                [x.id for x in self.systems]
+                )
 
-#class Search(CustomSQLAlchemyObjectType):
+
+# class Search(CustomSQLAlchemyObjectType):
 #    class Meta:
 #        types = (Publications, Catapp)
 #        interfaces = (graphene.relay.Node, )
-        
+
 class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
     RELAY_ARGS = ['first', 'last', 'before', 'after']
     SPECIAL_ARGS = ['distinct', 'op', 'jsonkey']
@@ -340,9 +390,10 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
 
         cont_fields = ['edges', 'node']
         skip_fields = ['totalCount']
-        fields = info.field_asts#[0].selection_set.selections
+        fields = info.field_asts# [0].selection_set.selections
         load_fields = {}
-        field_names = []    
+        field_names = []
+
         def convert(name):
             import re
             s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
@@ -361,16 +412,15 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                         field_names.append(name)
                         load_fields.update({keyname: []})
                         fields = field.selection_set.selections
-                    else:                        
+                    else:
                         load_fields[keyname].append(convert(name))
                         fields = None
-        
+
         query = query.options(load_only(*load_fields[field_names[0]]))
 
         if len(field_names) > 1:
             column = getattr(model, convert(field_names[1]), None)
             query = query.options(joinedload(column, innerjoin=True).load_only(*load_fields[field_names[1]]))
-        
 
         for field, value in args.items():
             if field == 'distinct':
@@ -395,29 +445,29 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
 
                 if str(column.type) == "TSVECTOR":
                     query = query.filter(column.match("'{}'".format(value)))
-                    
+
                 elif str(column.type) == "JSONB":
                     jsonb = True
                     if jsonkey is not None:
                         query = query.filter(column.has_key(jsonkey))
                         column = column[jsonkey].astext
                     values = value.split('+')
-                        
+
                     for value in values:
                         value = value.strip()
                         if value.startswith("~"):
                             column = cast(column, sqlalchemy.String)
-                            #if field == 'reactants' or field == 'products':
+                            # if field == 'reactants' or field == 'products':
                             #    column = func.replace(func.replace(column, 'gas', ''), 'star', '')
 
                             search_string = '%' + value[1:] + '%'
-                            
+
                             if not value == "~":
                                 query = query.filter(
                                     column.ilike(search_string))
-                            #else:
+                            # else:
                             #    query = query.group_by(column)
-                            
+
                         else:
                             if field == 'reactants' or field == 'products':
                                 if not 'star' in value and not 'gas' in value:
@@ -426,7 +476,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                                                                       'gas'),
                                                        column.has_key(value +
                                                                       'star'))
-                                                   
+
                                     query = query.filter(or_statement)
                                 else:
                                     query = query.filter(column.has_key(value))
@@ -436,9 +486,9 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                                 else:
                                     query = query.filter(column.has_key(value))
 
-                    #if distinct_filter:
-                        #TO DO: SELECT DISTINCT jsonb_object_keys(reactants) FROM reaction
-                            
+                    # if distinct_filter:
+                        # TO DO: SELECT DISTINCT jsonb_object_keys(reactants) FROM reaction
+
                 elif isinstance(value, six.string_types):
                     if value.startswith("~"):
                         search_string = '%' + value[1:] + '%'
@@ -447,7 +497,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                     else:
                         query = query.filter(column == value)
 
-                    #if distinct_filter:
+                    # if distinct_filter:
                     #     query = query.distinct(column)#.group_by(column)
 
                 else:
@@ -463,12 +513,11 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                         query = query.filter(column != value)
                     else:
                         query = query.filter(column == value)
-                    
 
                 if distinct_filter:
-                    query = query.distinct(column)#.group_by(getattr(model, field))
+                    query = query.distinct(column)  # .group_by(getattr(model, field))
 
-                    
+
         return query
 
 
@@ -479,7 +528,7 @@ def get_filter_fields(model):
     publication_keys = ['publisher', 'doi', 'title', 'journal', 'authors', 'year']
     filter_fields = {}
     for column_name in dir(model):
-        #print('FF {model} => {column_name}'.format(**locals()))
+        # print('FF {model} => {column_name}'.format(**locals()))
         if not column_name.startswith('_') \
                 and not column_name in ['metadata', 'query', 'cifdata']:
             column = getattr(model, column_name)
@@ -492,7 +541,7 @@ def get_filter_fields(model):
             elif not ('<' in repr(column_expression) and '>' in repr(column_expression)):
                 continue
 
-            #column_type = repr(column_expression).split(',')[1].strip(' ()')
+            # column_type = repr(column_expression).split(',')[1].strip(' ()')
             column_type = re.split('\W+', repr(column_expression))
 
             column_type = column_type[2]
@@ -509,8 +558,9 @@ def get_filter_fields(model):
     filter_fields['op'] = graphene.String()
     filter_fields['search'] = graphene.String()
     filter_fields['jsonkey'] = graphene.String()
-    
+
     return filter_fields
+
 
 class Query(graphene.ObjectType):
     node = graphene.relay.Node.Field()
@@ -531,6 +581,7 @@ class Query(graphene.ObjectType):
         ReactionSystem, **get_filter_fields(models.ReactionSystem))
     publications = FilteringConnectionField(
         Publication, **get_filter_fields(models.Publication))
+
 
 schema = graphene.Schema(
     query=Query, types=[System, Species, TextKeyValue, NumberKeyValue, Key, Reaction, ReactionSystem, Publication
