@@ -124,13 +124,12 @@ class ReactionBackendTestCase(unittest.TestCase):
     def test_order_key(self):
         query ='{systems(last: 1, order: "energy") {edges {node { Formula energy} } }}'
         rv_data = self.get_data(query)
-        assert False, rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['Formula'] == 'H2', rv_data
 
     def test_order_key_descending(self):
         query ='{systems(last: 1, order: "-energy") {edges {node { Formula energy} } }}'
         rv_data = self.get_data(query)
-        assert False, rv_data
-
+        assert rv_data['data']['systems']['edges'][0]['node']['Formula'] == 'Cu36Zn3', rv_data
 
 
     #def test_graphql5(self):
