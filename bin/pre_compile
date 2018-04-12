@@ -10,4 +10,4 @@ with open('requirements.template', 'r') as infile:
         outfile.write(string.Template(
             infile.read()).safe_substitute(**os.environ))
 
-os.system('wget https://www.dropbox.com/{BULK_ENUMERATOR_PATH}/BulkEnumerator-0.0.1-cp36-cp36m-linux_x86_64.whl'.format(**locals()))
+os.system('wget https://www.dropbox.com/{BULK_ENUMERATOR_PATH}/BulkEnumerator-0.0.2-cp36-cp36m-linux_x86_64.whl'.format(**locals()))
