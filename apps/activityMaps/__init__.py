@@ -391,6 +391,7 @@ def systems(request=None):
         })
 
     # sort for top systems list
+
     short_systems = sorted(
         short_systems,
         key=lambda _x: - _x.get('z', 0.0)
