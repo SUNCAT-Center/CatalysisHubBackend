@@ -95,7 +95,8 @@ def get_structure(request=None):
     Construct structure from wyckoff positions, species, and other parameters
 
     Args:
-        wyckoffPositions ([str]): List of Wyckoff positions (length one strings).
+        wyckoffPositions ([str]): List of Wyckoff positions
+                                  (length one strings).
         wyckoffSpecies ([str]): Corresponding list of elements.
 
 
@@ -160,9 +161,11 @@ def get_structure(request=None):
     # cell_params = default_cell_params
     for required_parameter in required_parameters:
         cell_params[required_parameter] = round(float(
-            cell_params.get(required_parameter,
-                default_cell_params.get(required_parameter,
-                                      .1 + random.random() * .8))), 5)
+            cell_params.get(
+                required_parameter,
+                default_cell_params.get(
+                    required_parameter,
+                    .1 + random.random() * .8))), 5)
         # i.e. a random number in [.1, .9]
 
     cell_params = {key: float(value) for key, value in cell_params.items()}
@@ -178,7 +181,8 @@ def get_structure(request=None):
 
     return flask.jsonify({
         'std_cif': apps.utils.ase_convert(std_poscar, 'vasp', 'cif'),
-        'primitive_cif': apps.utils.ase_convert(primitive_poscar, 'vasp', 'cif'),
+        'primitive_cif': apps.utils.ase_convert(
+            primitive_poscar, 'vasp', 'cif'),
         'cell_params': cell_params,
         'name': name,
     })
@@ -209,9 +213,18 @@ def get_wyckoff_from_structure(request=None):
         instring = request.args('cif')
         filetype = 'cif'
 
-    atoms = apps.utils.ase_convert(instring, informat=filetype, atoms_out=True, )
-    poscar = apps.utils.ase_convert(instring, informat=filetype, outformat='vasp')
-    cif = apps.utils.ase_convert(instring, informat=filetype, outformat='cif')
+    atoms = apps.utils.ase_convert(
+        instring,
+        informat=filetype,
+        atoms_out=True, )
+    poscar = apps.utils.ase_convert(
+        instring,
+        informat=filetype,
+        outformat='vasp')
+    cif = apps.utils.ase_convert(
+        instring,
+        informat=filetype,
+        outformat='cif')
 
     bulk = be.bulk.BULK()
     bulk.set_structure_from_file(poscar)
@@ -251,7 +264,8 @@ def get_wyckoff_from_structure(request=None):
 @bulk_enumerator.route('/get_wyckoff_from_cif', methods=['GET', 'POST'])
 def get_wyckoff_from_cif(request=None):
     """
-    Function clone of get_wyckoff_from_structure, except working w/ string input
+    Function clone of get_wyckoff_from_structure,
+    except working w/ string input
     instead of file upload.
     """
 
@@ -262,9 +276,18 @@ def get_wyckoff_from_cif(request=None):
     instring = request.args.get('cif')
     filetype = 'cif'
 
-    atoms = apps.utils.ase_convert(instring, informat=filetype, atoms_out=True, )
-    poscar = apps.utils.ase_convert(instring, informat=filetype, outformat='vasp')
-    cif = apps.utils.ase_convert(instring, informat=filetype, outformat='cif')
+    atoms = apps.utils.ase_convert(
+         instring,
+         informat=filetype,
+         atoms_out=True, )
+    poscar = apps.utils.ase_convert(
+        instring,
+        informat=filetype,
+        outformat='vasp')
+    cif = apps.utils.ase_convert(
+        instring,
+        informat=filetype,
+        outformat='cif')
 
     bulk = be.bulk.BULK()
     bulk.set_structure_from_file(poscar)
@@ -313,3 +336,90 @@ def get_wyckoff_from_cif(request=None):
         'name': stripb(name),
         'species_permutations': mstripb(species_permutations),
     })
+
+
+@bulk_enumerator.route('/get_bulk_enumerations', methods=['GET', 'POST'])
+def get_bulk_enumerations(request=None):
+    """
+    Return a list of prototypes names
+
+    Args:
+
+        stoichiometry (str, optional): Stoichiometry separated by '_'.
+                                       Defaults to '1'.
+        num_type (str, optional): Limit by number of 'atoms'
+                                  or number of 'wyckoff' sites. Possible
+                                  values are 'atoms' or 'wyckoff'. Defaults
+                                  to 'atoms'.
+        num_start (int, optional): Mininum number of sites. Defaults to 1.
+        num_end (int, optional): Maximum number of sites. Defaults to 1.
+        SG_start (int, optional): Lowest spacegroup to consider. Can be
+                                between 1 and 230. Defaults to 1.
+        SG_end (int, optional): Hightest spacegroup to consider. Can be
+                                between 1 and 230. Defaults to 10.
+
+
+    Return:
+
+        dict {input, enumerations }: Dictionary of input and corresponding
+            enumerations.
+        dict {input }: Input parameters.
+        list [enumerations]: List of possible enumeations.
+        dict {enumerations}: {
+            name: (str) Prototype Name,
+            natom: (int) Number of Atoms,
+            parameters: [str] Free parameters,
+            spaceGroupNumber: (int) The number of the spacegroup (1-230),
+            specie_permutations: [str] Equivalent permutations,
+            species: [str] The possible occupations,
+            wyckoffs [str] The Wyckoff sites,
+
+            }
+
+    """
+
+    request = flask.request if request is None else request
+    print(request)
+    if type(request.args) is str:
+        request.args = json.loads(request.args)
+
+    stoichiometry = str(request.args.get('stoichiometry', '1'))
+    # stoichiometry A2B5C7 -> 2_5_7
+    num_start = int(request.args.get('num_start', 3))
+    num_end = int(request.args.get('num_end', 3))
+
+    # INT: 0 < num_start < num_end < 6
+
+    SG_start = int(request.args.get('SG_start', 1))
+    SG_end = int(request.args.get('SG_end', 10))
+
+    # INT: 0 < SG_start < SG_END < 231
+
+    num_type = str(request.args.get('num_type', 'atom'))
+    # 'atom' or 'wyckoff'
+
+    params = {
+        'stoichiometry': stoichiometry,
+        'num_start': num_start,
+        'num_end': num_end,
+        'SG_start': SG_start,
+        'SG_end': SG_end,
+        'num_type': num_type,
+            }
+
+    enumerator = be.enumerator.ENUMERATOR()
+
+    bulk_enumerations = enumerator.get_bulk_enumerations(**params)
+    for e in bulk_enumerations:
+        e.update({
+            'name': stripb(e['name']),
+            'parameters': mstripb(e['parameters']),
+            'specie_permutations': mstripb(e['specie_permutations']),
+            'species': mstripb(e['species']),
+            'wyckoffs': mstripb(e['wyckoffs']),
+            })
+
+    return flask.jsonify({
+            'input': params,
+            'enumerations': list(bulk_enumerations)
+            })
