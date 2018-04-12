@@ -155,7 +155,7 @@ class ReactionBackendTestCase(unittest.TestCase):
     def test_resolve_reaction_systems(self):
         query ='{reactions(first:1, order:"reactionEnergy") { edges { node { reactionEnergy systems { id Formula } } } }}'
         rv_data = self.get_data(query)
-        assert False, rv_data
+        assert len(rv_data['data']['reactions']['edges'][0]['node']['system']) == 3, rv_data
 
 
     #def test_graphql5(self):
