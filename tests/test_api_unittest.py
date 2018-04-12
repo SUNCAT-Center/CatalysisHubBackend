@@ -152,6 +152,12 @@ class ReactionBackendTestCase(unittest.TestCase):
         rv_data = self.get_data(query)
         assert rv_data['data']['systems']['edges'][0]['node']['InputFile'].strip().startswith('Unsupported'), rv_data
 
+    def test_resolve_reaction_systems(self):
+        query ='{reactions(first:1, order:"reactionEnergy") { edges { node { reactionEnergy systems { id Formula } } } }}'
+        rv_data = self.get_data(query)
+        assert False, rv_data
+
+
     #def test_graphql5(self):
         ## TEST if we can query by DOI
         #query = '{publications(doi: "10.1021/acs.jpcc.6b03375") { edges { node { title systems { Formula } } } }}'
