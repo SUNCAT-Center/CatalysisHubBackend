@@ -136,6 +136,17 @@ class ReactionBackendTestCase(unittest.TestCase):
         rv_data = self.get_data(query)
         assert rv_data['data']['systems']['totalCount'] == 3316, rv_data
 
+
+    def test_resolve_publication_systems(self):
+        query ='{publications(year: 2017, last: 1) { totalCount edges {node { systems { uniqueId } } } }}'
+        rv_data = self.get_data(query)
+        assert False, rv_data
+
+    def test_resolve_input_file(self):
+        query ='{systems(last: 1, order: "-energy") {edges {node { Formula energy InputFile(format: "vasp")} } }}'
+        rv_data = self.get_data(query)
+        assert False, rv_data
+
     #def test_graphql5(self):
         ## TEST if we can query by DOI
         #query = '{publications(doi: "10.1021/acs.jpcc.6b03375") { edges { node { title systems { Formula } } } }}'
