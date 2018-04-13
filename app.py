@@ -124,10 +124,16 @@ if __name__ == '__main__':
 
     options, args = parser.parse_args()
 
+
+    import logging
+    logging.basicConfig()
+    
     if options.debug_sql:
-        import logging
-        logging.basicConfig()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
+    else:
+        logging.getLogger('sqlalchemy.engine')#.setLevel(logging.WARN)
+        from raven.contrib.flask import Sentry
+        sentry = Sentry(app, logging=True, level=logging.WARN)
 
     app.run()
