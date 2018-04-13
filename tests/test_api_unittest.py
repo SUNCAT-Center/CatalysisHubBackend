@@ -217,12 +217,5 @@ class ReactionBackendTestCase(unittest.TestCase):
         rv = self.app.get('/')
         assert rv.status_code == 302 , rv
 
-    def test_graphiql_website(self):
-        rv = self.app.get('/graphql')
-        assert rv.status_code == 200 , rv
-
-
-
-
 if __name__ == '__main__':
     unittest.main()
