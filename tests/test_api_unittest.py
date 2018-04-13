@@ -213,6 +213,9 @@ class ReactionBackendTestCase(unittest.TestCase):
         assert rv_data['data']['reactions']['totalCount'] == 756, rv_data
 
 
+    def test_root_website(self):
+        rv = self.app.get('/')
+        assert False, rv
 
 
 
