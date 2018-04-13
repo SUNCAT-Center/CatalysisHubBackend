@@ -197,6 +197,23 @@ class ReactionBackendTestCase(unittest.TestCase):
         rv_data = self.get_data(query)
         assert rv_data['data']['systems']['totalCount'] == 3314, rv_data
 
+    def test_reactants_expansion(self):
+        query = '{reactions(first:0, reactants: "CO") { totalCount edges { node { id } } }}'
+        rv_data = self.get_data(query)
+        assert False, rv_data
+
+    def test_reactants_star(self):
+        query = '{reactions(first:0, reactants: "COstar") { totalCount edges { node { id } } }}'
+        rv_data = self.get_data(query)
+        assert False, rv_data
+
+    def test_products_star(self):
+        query = '{reactions(first:0, products: "COstar") { totalCount edges { node { id } } }}'
+        rv_data = self.get_data(query)
+        assert False, rv_data
+
+
+
 
 
 
