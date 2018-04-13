@@ -132,7 +132,6 @@ if __name__ == '__main__':
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
     else:
-        logging.getLogger('sqlalchemy.engine')#.setLevel(logging.WARN)
         from raven.contrib.flask import Sentry
         sentry = Sentry(app, logging=True, level=logging.WARN)
 
