@@ -267,7 +267,7 @@ class ReactionBackendTestCase(unittest.TestCase):
 
     def test_forces_property(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Forces } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Forces'] == None, rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['Forces'] == '[[ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [-0.01465996 -0.01466158  0.03802024]\n [-0.0006968   0.00742852  0.00773271]\n [ 0.0104296  -0.00075254  0.03104007]\n [-0.02258781 -0.00894088  0.00446159]\n [-0.02590547  0.01889229 -0.0289584 ]\n [-0.0004256   0.0044127  -0.0189839 ]\n [ 0.00803226  0.01834773 -0.02640747]]', rv_data
 
     def test_momenta_property(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Momenta } } }}')
