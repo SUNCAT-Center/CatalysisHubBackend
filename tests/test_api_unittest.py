@@ -275,7 +275,7 @@ class ReactionBackendTestCase(unittest.TestCase):
 
     def test_tags_property(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Tags } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Tags'] == None, rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['Tags'] == '[9 9 9 9 8 8 8 8 7 7 7 7 5 6 1 6 0 0 0]', rv_data
 
     def test_masses_property(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Masses } } }}')
@@ -287,19 +287,19 @@ class ReactionBackendTestCase(unittest.TestCase):
 
     def test_initial_magmom_sproperty(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId InitialMagmoms } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['InitialMagmoms'] == None, rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['InitialMagmoms'] == '[ 0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.\n  0.]', rv_data
 
     def test_pbc_sproperty(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Pbc } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Pbc'] == None, rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['Pbc'] == '[True, True, True]', rv_data
 
     def test_cell_sproperty(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Cell } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Cell'] == None, rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['Cell'] == '[[5.96175869354, 0.0, 0.0], [2.98087934677, 5.163034479838, 0.0], [0.0, 0.0, 31.301633384387]]', rv_data
 
     def test_positions_sproperty(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Positions } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Positions'] == None, rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['Positions'] == '[[1.0616137722102194e-05, 1.00430434533884e-05, 11.997829572739208], [2.9808667726514777, 4.5044227636223694e-06, 11.997834568811298], [1.49044206705398, 2.5815063385957604, 11.997838654842296], [4.471321767989074, 2.5815186754290025, 11.99782671393662], [1.4904505244993935, 0.8605114997454405, 14.449299006975322], [4.471314559369811, 0.8605074109181713, 14.4493119968848], [2.980875560937021, 3.4420108959380986, 14.449308866590593], [5.961757027072016, 3.4420189051324397, 14.449297102230025], [-4.483034685198158e-06, 1.7210181370421362, 16.8523039699823], [2.9808834348220747, 1.7210143925544918, 16.852307976625248], [1.4904397636199378, 4.302526395841851, 16.852306775315245], [4.471321269220247, 4.302522230598007, 16.85229912711207], [-0.03628027904941261, -0.05829102066632311, 19.329837847258815], [3.012819028302268, -0.025529687587881517, 19.226533590440482], [1.5168413560108742, 2.6232655688289497, 19.340919951038273], [4.451264393456487, 2.590945454445438, 19.2295508630318], [0.8738825829127541, 1.1621072044721459, 21.101176889774322], [0.8679584479779054, 1.0380807857407832, 22.30254059936361], [1.3589593016170325, 1.807364331890099, 22.816141687235255]]', rv_data
 
 if __name__ == '__main__':
     unittest.main()
