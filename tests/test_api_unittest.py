@@ -217,5 +217,10 @@ class ReactionBackendTestCase(unittest.TestCase):
         rv = self.app.get('/')
         assert rv.status_code == 302 , rv
 
+
+    def test_root_website(self):
+        rv = self.app.get('/apps/')
+        assert rv.status_code == 200 , rv
+
 if __name__ == '__main__':
     unittest.main()
