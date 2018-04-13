@@ -222,7 +222,27 @@ class ReactionBackendTestCase(unittest.TestCase):
         assert rv.status_code == 200 , rv
 
     def test_dft_code_property(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId DftCode } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['DftCode'] == '', rv_data
+
+    def test_dft_functional_property(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId DftFunctional } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['DftFunctional'] == '', rv_data
+
+    def test_facet_property(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Facet } } }}')
+        assert False, rv_data
+
+    def test_username_property(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Username } } }}')
+        assert False, rv_data
+
+    def test_adsorbate_property(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Adsorbate } } }}')
+        assert False, rv_data
+
+    def test_reaction_property(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Reaction } } }}')
         assert False, rv_data
 
 if __name__ == '__main__':
