@@ -5,4 +5,3 @@ exclude_lines =
 
 [run]
 omit = *manage.py*
-branch = True
