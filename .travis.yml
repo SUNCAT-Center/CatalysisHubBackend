@@ -34,6 +34,7 @@ before_script:
 script:
     - nosetests --with-coverage --cover-inclusive --cover-package=. --cover-erase
     - coverage report --omit 'lib/*,tests/*' --show-missing
+    - coverage report --omit 'lib/*,apps/*' --show-missing
 
 after_success:
     - coveralls
