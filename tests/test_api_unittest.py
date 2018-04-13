@@ -251,15 +251,15 @@ class ReactionBackendTestCase(unittest.TestCase):
 
     def test_charges_property(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Charges } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Charges'] == '', rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['Charges'] == None, rv_data
 
     def test_magmoms_property(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Magmoms } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Magmoms'] == '', rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['Magmoms'] == '[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]', rv_data
 
     def test_stress_property(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Stress } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Stress'] == '', rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['Stress'] == None, rv_data
 
 if __name__ == '__main__':
     unittest.main()
