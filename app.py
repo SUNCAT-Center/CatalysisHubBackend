@@ -52,7 +52,7 @@ class NumpyEncoder(json.JSONEncoder):
         else:
             return super(NumpyEncoder, self).default(obj)
 
-app.json_encoder = NumpyEncoder            
+app.json_encoder = NumpyEncoder
 
 
 cors = CORS(app)
@@ -109,6 +109,10 @@ app.add_url_rule('/graphql',
 
 from apps.activityMaps import activityMaps
 app.register_blueprint(activityMaps,  url_prefix='/apps/activityMaps')
+
+# AtoML blueprint
+if atoml_blueprint is not None:
+    app.register_blueprint(atoml_blueprint, url_prefix='/apps/atoml')
 
 
 if __name__ == '__main__':
