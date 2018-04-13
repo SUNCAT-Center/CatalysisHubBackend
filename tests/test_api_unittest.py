@@ -157,7 +157,6 @@ class ReactionBackendTestCase(unittest.TestCase):
         rv_data = self.get_data(query)
         assert len(rv_data['data']['reactions']['edges'][0]['node']['systems']) == 3, rv_data
 
-
     def test_distinct_filter_on(self):
         query = '{reactions(first: 0, reactants:"~H", distinct: true) { totalCount edges { node { id } } }}'
         rv_data = self.get_data(query)
@@ -168,38 +167,35 @@ class ReactionBackendTestCase(unittest.TestCase):
         rv_data = self.get_data(query)
         assert rv_data['data']['reactions']['totalCount'] == 3297, rv_data
 
-
     def test_operation_eq(self):
         query = '{systems(natoms:70, op:"eq" first: 3) { totalCount edges { node { id natoms Formula } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['systems']['totalCount'] == 3297, rv_data
-
+        assert rv_data['data']['systems']['totalCount'] == 2, rv_data
 
     def test_operation_gt(self):
         query = '{systems(natoms:70, op:"gt" first: 3) { totalCount edges { node { id natoms Formula } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['systems']['totalCount'] == 3297, rv_data
+        assert rv_data['data']['systems']['totalCount'] == 52, rv_data
 
     def test_operation_ge(self):
         query = '{systems(natoms:70, op:"ge" first: 3) { totalCount edges { node { id natoms Formula } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['systems']['totalCount'] == 3297, rv_data
+        assert rv_data['data']['systems']['totalCount'] == 54, rv_data
 
     def test_operation_le(self):
         query = '{systems(natoms:70, op:"le" first: 3) { totalCount edges { node { id natoms Formula } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['systems']['totalCount'] == 3297, rv_data
-
+        assert rv_data['data']['systems']['totalCount'] == 3264, rv_data
 
     def test_operation_lt(self):
         query = '{systems(natoms:70, op:"lt" first: 3) { totalCount edges { node { id natoms Formula } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['systems']['totalCount'] == 3297, rv_data
+        assert rv_data['data']['systems']['totalCount'] == 3262, rv_data
 
     def test_operation_ne(self):
         query = '{systems(natoms:70, op:"ne" first: 3) { totalCount edges { node { id natoms Formula } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['systems']['totalCount'] == 3297, rv_data
+        assert rv_data['data']['systems']['totalCount'] == 3314, rv_data
 
 
 
