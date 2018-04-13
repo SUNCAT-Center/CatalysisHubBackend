@@ -25,6 +25,7 @@ env:
 
 install:
     - pip install -r requirements.txt
+    - pip install coveralls
 
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
@@ -33,3 +34,7 @@ before_script:
 script:
     - nosetests --with-coverage --cover-inclusive --cover-package=. --cover-erase
     - coverage report --omit 'lib/*,tests/*' --show-missing
+    - coverage report --omit 'lib/*,tests/*,apps/*' --show-missing
+
+after_success:
+    - coveralls

@@ -30,8 +30,6 @@ class ReactionBackendTestCase(unittest.TestCase):
                 self.app.get('/apps/activityMaps/systems/?activityMap=blank')
                 .data.decode('utf-8')
                 )
-
-
         
         test_data = {'reference': '',
                         'systems': [],
@@ -39,3 +37,73 @@ class ReactionBackendTestCase(unittest.TestCase):
                         'ylabel': '',
                         'zlabel': ''}
         assert data == test_data, (data, test_data)
+
+
+    #def test_NRR_reaction_query(self):
+        #data = json.loads(
+                #self.app.get('/apps/activityMaps/systems/?activityMap=NRR')
+                #.data.decode('utf-8')
+                #)
+        
+        #test_data = {'reference': '',
+                        #'systems': [],
+                        #'xlabel': '',
+                        #'ylabel': '',
+                        #'zlabel': ''}
+        #assert data == test_data, (data, test_data)
+
+
+    #def test_OER_reaction_query(self):
+        #data = json.loads(
+                #self.app.get('/apps/activityMaps/systems/?activityMap=OER')
+                #.data.decode('utf-8')
+                #)
+        
+        #test_data = {'reference': '',
+                        #'systems': [],
+                        #'xlabel': '',
+                        #'ylabel': '',
+                        #'zlabel': ''}
+        #assert data == test_data, (data, test_data)
+
+
+    #def test_ORR_reaction_query(self):
+        #data = json.loads(
+                #self.app.get('/apps/activityMaps/systems/?activityMap=ORR')
+                #.data.decode('utf-8')
+                #)
+        
+        #test_data = {'reference': '',
+                        #'systems': [],
+                        #'xlabel': '',
+                        #'ylabel': '',
+                        #'zlabel': ''}
+        #assert data == test_data, (data, test_data)
+
+
+    #def test_CO2RR_reaction_query(self):
+        #data = json.loads(
+                #self.app.get('/apps/activityMaps/systems/?activityMap=CO2RR')
+                #.data.decode('utf-8')
+                #)
+        
+        #test_data = {'reference': '',
+                        #'systems': [],
+                        #'xlabel': '',
+                        #'ylabel': '',
+                        #'zlabel': ''}
+        #assert data == test_data, (data, test_data)
+
+
+    #def test_CO_Hydro_reaction_query(self):
+        #data = json.loads(
+                #self.app.get('/apps/activityMaps/systems/?activityMap=CO_Hydrogenation_111')
+                #.data.decode('utf-8')
+                #)
+        
+        #test_data = {'reference': '',
+                        #'systems': [],
+                        #'xlabel': '',
+                        #'ylabel': '',
+                        #'zlabel': ''}
+        #assert data == test_data, (data, test_data)
