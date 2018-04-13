@@ -261,5 +261,17 @@ class ReactionBackendTestCase(unittest.TestCase):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Stress } } }}')
         assert rv_data['data']['systems']['edges'][0]['node']['Stress'] == None, rv_data
 
+    def test_dipole_property(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Dipole } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['Dipole'] == None, rv_data
+
+    def test_forces_property(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Forces } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['Forces'] == None, rv_data
+
+    def test_momenta_property(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Momenta } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['Momenta'] == None, rv_data
+
 if __name__ == '__main__':
     unittest.main()
