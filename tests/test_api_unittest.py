@@ -212,7 +212,6 @@ class ReactionBackendTestCase(unittest.TestCase):
         rv_data = self.get_data(query)
         assert rv_data['data']['reactions']['totalCount'] == 756, rv_data
 
-
     def test_root_website(self):
         rv = self.app.get('/')
         assert rv.status_code == 302 , rv
@@ -221,6 +220,10 @@ class ReactionBackendTestCase(unittest.TestCase):
     def test_root_website(self):
         rv = self.app.get('/apps/')
         assert rv.status_code == 200 , rv
+
+    def test_dft_code_property(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId DftFunctional } } }}')
+        assert False, rv_data
 
 if __name__ == '__main__':
     unittest.main()
