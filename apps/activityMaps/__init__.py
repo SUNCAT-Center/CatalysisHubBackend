@@ -15,8 +15,6 @@ try:
 except ImportError:
     import StringIO
 
-import os
-
 import numpy as np
 
 import requests
@@ -28,13 +26,8 @@ import ase.build
 
 activityMaps = flask.Blueprint('activityMaps', __name__)
 
-# Run again local host, when in Travis CI
-if os.environ.get('TRAVIS', 'false') == 'false':
-    GRAPHQL_ROOT = 'http://api.catalysis-hub.org/graphql'
-    ROOT = 'http://api.catalysis-hub.org/'
-else:
-    GRAPHQL_ROOT = 'http://localhost:5000/graphql'
-    ROOT = 'http://localhost:5000/'
+GRAPHQL_ROOT = 'http://api.catalysis-hub.org/graphql'
+ROOT = 'http://api.catalysis-hub.org/'
 
 
 class ReactionModel(object):
