@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/{GITHUB_USER}/{REPO}.svg?branch={BRANCH})](https://travis-ci.org/{GITHUB_USER}/{REPO})
+[![Coverage Status](https://coveralls.io/repos/github/{GITHUB_USER}/{REPO}/badge.svg?branch={BRANCH})](https://coveralls.io/github/{GITHUB_USER}/{REPO}?branch={BRANCH})
 
 ## Flask GraphQL ASE DB Demo
 

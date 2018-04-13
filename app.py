@@ -15,7 +15,7 @@ import api
 #import qmdb_api
 try:
     from apps.AtoML.run_atoml import atoml_blueprint
-except:
+except ImportError:
     print('Warning: import atoml_blueprint failed. It may not be available.')
     atoml_blueprint = None
 
@@ -36,24 +36,6 @@ class NumpyEncoder(json.JSONEncoder):
 app = flask.Flask(__name__)
 app.debug = True
 app.json_encoder = NumpyEncoder
-
-# NumpyEncoder: useful for JSON serializing
-# Dictionaries that contain Numpy Arrays
-import json
-import numpy as np
-class NumpyEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        else:
-            return super(NumpyEncoder, self).default(obj)
-
-app.json_encoder = NumpyEncoder
-
 
 cors = CORS(app)
 

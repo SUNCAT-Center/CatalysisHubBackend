@@ -9,7 +9,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 import graphene.types.json
 try:
     import io as StringIO
-except:
+except ImportError:
     # Fallback solution for python2.7
     import StringIO
 
