@@ -15,7 +15,7 @@ import api
 #import qmdb_api
 try:
     from apps.AtoML.run_atoml import atoml_blueprint
-except:
+except ImportError:
     print('Warning: import atoml_blueprint failed. It may not be available.')
     atoml_blueprint = None
 
