@@ -37,6 +37,7 @@ pymatgen==2018.3.23
 pyparsing==2.2.0
 python-dateutil==2.6.1
 pytz==2017.2
+raven>=3
 scikit-learn==0.19.1
 scipy==0.19.1
 seaborn==0.8.1

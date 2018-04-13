@@ -15,7 +15,7 @@ import api
 #import qmdb_api
 try:
     from apps.AtoML.run_atoml import atoml_blueprint
-except:
+except ImportError:
     print('Warning: import atoml_blueprint failed. It may not be available.')
     atoml_blueprint = None
 
@@ -36,24 +36,6 @@ class NumpyEncoder(json.JSONEncoder):
 app = flask.Flask(__name__)
 app.debug = True
 app.json_encoder = NumpyEncoder
-
-# NumpyEncoder: useful for JSON serializing
-# Dictionaries that contain Numpy Arrays
-import json
-import numpy as np
-class NumpyEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        else:
-            return super(NumpyEncoder, self).default(obj)
-
-app.json_encoder = NumpyEncoder            
-
 
 cors = CORS(app)
 
@@ -116,6 +98,10 @@ app.add_url_rule('/graphql',
 from apps.activityMaps import activityMaps
 app.register_blueprint(activityMaps,  url_prefix='/apps/activityMaps')
 
+# AtoML blueprint
+if atoml_blueprint is not None:
+    app.register_blueprint(atoml_blueprint, url_prefix='/apps/atoml')
+
 
 if __name__ == '__main__':
     import optparse
@@ -130,10 +116,15 @@ if __name__ == '__main__':
 
     options, args = parser.parse_args()
 
+
+    import logging
+    logging.basicConfig()
+    
     if options.debug_sql:
-        import logging
-        logging.basicConfig()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
+    else:
+        from raven.contrib.flask import Sentry
+        sentry = Sentry(app, logging=True, level=logging.WARN)
 
     app.run()
