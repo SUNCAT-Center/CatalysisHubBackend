@@ -309,5 +309,9 @@ class ReactionBackendTestCase(unittest.TestCase):
         rv_data = self.get_data('{reactions(first: 1, reactants:"~H", distinct: false) { totalCount edges { node { id Equation } } }}')
         assert rv_data['data']['reactions']['edges'][0]['node']['Equation'] == 'CH2O* + * -> CHO* + H*', rv_data
 
+    def test_equation_property_gas(self):
+        rv_data = self.get_data('{reactions(first: 1, reactants:"~Ogas", distinct: false) { totalCount edges { node { id Equation } } }}')
+        assert rv_data['data']['reactions']['edges'][0]['node']['Equation'] == 'CH2O* + * -> CHO* + H*', rv_data
+
 if __name__ == '__main__':
     unittest.main()
