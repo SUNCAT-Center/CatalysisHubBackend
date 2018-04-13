@@ -4,12 +4,12 @@ import flask
 import numpy as np
 from flask import Blueprint
 
-from featurize.catapp_user import return_features
+from apps.AtoML.featurize.catapp_user import return_features
 
 atoml_blueprint = Blueprint('atoml', __name__)
 
 
-@atoml_blueprint.route('/apps/atoml/', methods=['GET', 'POST'])
+@atoml_blueprint.route('/', methods=['GET', 'POST'])
 def run_atoml_app():
     """The actual app to predict and generate output."""
     data = flask.request.json
