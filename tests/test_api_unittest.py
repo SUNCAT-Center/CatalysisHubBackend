@@ -200,17 +200,17 @@ class ReactionBackendTestCase(unittest.TestCase):
     def test_reactants_expansion(self):
         query = '{reactions(first:0, reactants: "CO") { totalCount edges { node { id } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['systems']['totalCount'] == 428, rv_data
+        assert rv_data['data']['reactions']['totalCount'] == 428, rv_data
 
     def test_reactants_star(self):
         query = '{reactions(first:0, reactants: "COstar") { totalCount edges { node { id } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['systems']['totalCount'] == 27, rv_data
+        assert rv_data['data']['reactions']['totalCount'] == 27, rv_data
 
     def test_products_star(self):
         query = '{reactions(first:0, products: "COstar") { totalCount edges { node { id } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['systems']['totalCount'] == 756, rv_data
+        assert rv_data['data']['reactions']['totalCount'] == 756, rv_data
 
 
 
