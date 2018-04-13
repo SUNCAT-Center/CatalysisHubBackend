@@ -37,7 +37,7 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 app = flask.Flask(__name__)
-sentry = Sentry(app, logging=True, level=logging.WARN)
+sentry = Sentry(app, logging=True, level=logging.DEBUG)
 
 #app.debug = True
 app.json_encoder = NumpyEncoder
