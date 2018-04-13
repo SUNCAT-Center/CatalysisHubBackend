@@ -8,6 +8,9 @@ import flask
 import flask_graphql
 from flask_cors import CORS
 from flask import Blueprint
+import logging
+from raven.contrib.flask import Sentry
+
 
 # local imports
 import models
@@ -34,7 +37,9 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 app = flask.Flask(__name__)
-app.debug = True
+#sentry = Sentry(app, logging=True, level=logging.WARN)
+
+#app.debug = True
 app.json_encoder = NumpyEncoder
 
 # NumpyEncoder: useful for JSON serializing
@@ -127,16 +132,10 @@ if __name__ == '__main__':
                       default=False)
 
     options, args = parser.parse_args()
-
-
-    import logging
-    logging.basicConfig()
     
     if options.debug_sql:
+        import logging
+        logging.basicConfig()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
-
-    else:
-        from raven.contrib.flask import Sentry
-        sentry = Sentry(app, logging=True, level=logging.WARN)
 
     app.run()
