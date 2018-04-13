@@ -303,10 +303,10 @@ class ReactionBackendTestCase(unittest.TestCase):
 
     def test_numbers_sproperty(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Numbers } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Numbers'] == '[True, True, True]', rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['Numbers'] == '[47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 7, 7, 1]', rv_data
 
     def test_equation_property(self):
-        rv_data = self.get_data('{reactions(first: 0, reactants:"~H", distinct: false) { totalCount edges { node { id Equation } } }}')
+        rv_data = self.get_data('{reactions(first: 1, reactants:"~H", distinct: false) { totalCount edges { node { id Equation } } }}')
         assert False, rv_data
 
 if __name__ == '__main__':
