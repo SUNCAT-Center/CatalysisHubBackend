@@ -273,5 +273,33 @@ class ReactionBackendTestCase(unittest.TestCase):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Momenta } } }}')
         assert rv_data['data']['systems']['edges'][0]['node']['Momenta'] == None, rv_data
 
+    def test_tags_property(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Tags } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['Tags'] == None, rv_data
+
+    def test_masses_property(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Masses } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['Masses'] == None, rv_data
+
+    def test_initial_charges_property(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId InitialCharges } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['InitialCharges'] == None, rv_data
+
+    def test_initial_magmom_sproperty(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId InitialMagmoms } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['InitialMagmoms'] == None, rv_data
+
+    def test_pbc_sproperty(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Pbc } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['Pbc'] == None, rv_data
+
+    def test_cell_sproperty(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Cell } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['Cell'] == None, rv_data
+
+    def test_positions_sproperty(self):
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Positions } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['Positions'] == None, rv_data
+
 if __name__ == '__main__':
     unittest.main()
