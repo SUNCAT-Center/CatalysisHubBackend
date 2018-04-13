@@ -158,6 +158,19 @@ class ReactionBackendTestCase(unittest.TestCase):
         assert len(rv_data['data']['reactions']['edges'][0]['node']['systems']) == 3, rv_data
 
 
+    def test_distinct_filter_on(self):
+        query = '{reactions(first: 0, reactants:"~H", distinct: false) { totalCount edges { node { id } } }}'
+        rv_data = self.get_data(query)
+        assert False, rv_data
+
+    def test_distinct_filter_off(self):
+        query = '{reactions(first: 0, reactants:"~H", distinct: true) { totalCount edges { node { id } } }}'
+        rv_data = self.get_data(query)
+        assert False, rv_data
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
