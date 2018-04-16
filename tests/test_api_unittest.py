@@ -315,11 +315,11 @@ class ReactionBackendTestCase(unittest.TestCase):
 
     def test_timestamp_mtime(self):
         rv_data = self.get_data('{systems(first:10, order:"mtime") { edges { node { id Mtime } } }}')
-        assert False, rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['Mtime'] == 'Mon Feb 12 23:02:48 2018', rv_data
 
     def test_timestamp_ctime(self):
         rv_data = self.get_data('{systems(first:10, order:"ctime") { edges { node { id Ctime } } }}')
-        assert False, rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['Ctime'] == 'Fri Feb  2 07:09:45 2018', rv_data
 
 
 if __name__ == '__main__':
