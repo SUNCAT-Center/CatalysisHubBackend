@@ -1,5 +1,6 @@
 # global imports
 import os
+import datetime
 import sqlalchemy
 import sqlalchemy.types
 import sqlalchemy.ext.declarative
@@ -23,6 +24,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 # more unstable imports
 import ase.atoms
 import ase.db.sqlite
+import ase.db.core
 import ase.io
 
 
@@ -343,6 +345,24 @@ class System(Base):
     @hybrid_property
     def _charges(self):
         return (ase.db.sqlite.deblob(self.charges).tolist())
+
+    @hybrid_property
+    def _ctime(self):
+        return (
+                datetime.datetime(2000, 1, 1, 0, 0)
+                + datetime.timedelta(
+                    seconds=int(round(self.ctime * ase.db.core.seconds['y'], 0))
+                    )
+                ).strftime('%c')
+
+    @hybrid_property
+    def _mtime(self):
+        return (
+                datetime.datetime(2000, 1, 1, 0, 0)
+                + datetime.timedelta(
+                    seconds=int(round(self.mtime * ase.db.core.seconds['y'], 0))
+                    )
+                ).strftime('%c')
 
 
     ###################################

@@ -313,5 +313,14 @@ class ReactionBackendTestCase(unittest.TestCase):
         rv_data = self.get_data('{reactions(first: 1, reactants:"~Ogas", distinct: false) { totalCount edges { node { id Equation } } }}')
         assert rv_data['data']['reactions']['edges'][0]['node']['Equation'] == 'H2O(g) -> hfH2(g) + OH*', rv_data
 
+    def test_timestamp_mtime(self):
+        rv_data = self.get_data('{systems(first:10, order:"mtime") { edges { node { id Mtime } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['Mtime'] == 'Mon Feb 12 23:02:48 2018', rv_data
+
+    def test_timestamp_ctime(self):
+        rv_data = self.get_data('{systems(first:10, order:"ctime") { edges { node { id Ctime } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['Ctime'] == 'Fri Feb  2 07:09:45 2018', rv_data
+
+
 if __name__ == '__main__':
     unittest.main()
