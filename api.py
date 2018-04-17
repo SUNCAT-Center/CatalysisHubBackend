@@ -389,7 +389,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                        '=',  '>',  '<',  '>=', '<=', '!=']
 
         cont_fields = ['edges', 'node']
-        skip_fields = ['totalCount']
+        skip_fields = ['totalCount', 'pageInfo']
         fields = info.field_asts# [0].selection_set.selections
         load_fields = {}
         field_names = []

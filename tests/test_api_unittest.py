@@ -321,6 +321,9 @@ class ReactionBackendTestCase(unittest.TestCase):
         rv_data = self.get_data('{systems(first:10, order:"ctime") { edges { node { id Ctime } } }}')
         assert rv_data['data']['systems']['edges'][0]['node']['Ctime'] == 'Fri Feb  2 07:09:45 2018', rv_data
 
+    def test_page_info(self):
+        rv_data = self.get_data('{systems(first: 2, after:"") { totalCount pageInfo { hasNextPage hasPreviousPage startCursor endCursor } edges { node { Formula energy mtime } } }}')
+        assert rv_data['data']['systems']['pageInfo']['startCursor'] == 'YXJyYXljb25uZWN0aW9uOjA=', rv_data
 
 if __name__ == '__main__':
     unittest.main()
