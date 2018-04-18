@@ -83,8 +83,16 @@ def pourbaix_plot_data(element1,element2,mat_co_1,limits=None):
 
     unstable_entries_list = [entry for entry in pd.all_entries
                              if entry not in pd.stable_entries]
+    stable_entries_aq = []
+    stable_entries_solid = []
+    for entry in entries:
+    	entry_kj_per_mol = entry.energy * 96.4853
+    	if entry.phase_type == "Ion":
+    		stable_entries_aq.append([entry.name,entry_kj_per_mol])
+    	else:
+    		stable_entries_solid.append([entry.name,entry_kj_per_mol])
 
-    return stable_entries_list, unstable_entries_list
+    return stable_entries_list, unstable_entries_list, stable_entries_aq, stable_entries_solid
 
 def pourbaix_data(element1,element2,mat_co_1,limits):
 	"""
@@ -98,8 +106,9 @@ def pourbaix_data(element1,element2,mat_co_1,limits):
 
 	"""
    
-	(stable_pb, unstable_pb) = pourbaix_plot_data(element1,element2,
-	                                              mat_co_1,limits)
+	(stable_pb, unstable_pb,
+	 stable_entries_aq, stable_entries_solid) = pourbaix_plot_data(element1,element2,
+	                                                               mat_co_1,limits)
 
 	if limits:
 	    xlim = limits[0]
