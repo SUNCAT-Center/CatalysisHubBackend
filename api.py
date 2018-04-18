@@ -71,6 +71,7 @@ Some Examples:
   }}
 
 - Full text search in publications (title, authors, year)::
+
     {publications(pubtextsearch: "oxygen evolution bajdich 2017") {
       edges {
         node {
@@ -526,7 +527,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                 if distinct_filter:
                     query = query.distinct(column)  # .group_by(getattr(model, field))
 
-
+        query = query.limit(200)
         return query
 
 
