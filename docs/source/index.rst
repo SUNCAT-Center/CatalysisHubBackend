@@ -9,8 +9,8 @@ Welcome to catalysis-hub.org's documentation!
 .. toctree::
    
    :maxdepth: 2
+   topics/index	      
    tutorials/index
-   topics/index
    reference/index
    troubleshooting/index
 
