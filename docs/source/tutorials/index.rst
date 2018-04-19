@@ -110,7 +110,7 @@ Combining tables
      
      reactions(pubId: "")}
 
-2) Using the :code::(`pubID: )` solution above, list all the distinct
+2) Using the :code:(`pubID: )` solution above, list all the distinct
    a) reactions
    b) surfaces
    from Julias publication.
