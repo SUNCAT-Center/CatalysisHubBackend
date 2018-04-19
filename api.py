@@ -527,7 +527,6 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                 if distinct_filter:
                     query = query.distinct(column)  # .group_by(getattr(model, field))
 
-        query = query.limit(200)
         return query
 
 
