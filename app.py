@@ -53,7 +53,7 @@ cors = CORS(app)
 @app.route('/')
 
 def index():
-        return flask.redirect("/graphql", code=302)
+        return flask.redirect("/graphql?query=%7B%0A%20%20reactions(first%3A%2010)%20%7B%0A%20%20%20%20edges%20%7B%0A%20%20%20%20%20%20node%20%7B%0A%20%20%20%20%20%20%20%20Equation%0A%20%20%20%20%20%20%20%20chemicalComposition%0A%20%20%20%20%20%20%20%20reactionEnergy%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%0A", code=302)
 
 @app.route('/apps/')
 
