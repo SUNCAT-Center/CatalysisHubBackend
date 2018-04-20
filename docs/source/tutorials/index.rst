@@ -1,5 +1,18 @@
 Tutorials
 =========
+
+Searching for reaction energies
+--------------------------------
+
+Here you will learn how to use the webpage to search for chemical reactions. Go to http://www.catalysis-hub.org/energies to use the build in search function. This feature corresponds to `CatApp v2.0` where you can access reaction energies and barries for different surfaces.  
+
+1) Type something in the reactants field and press the search button (for example CH3CH2OH*). How much is returned? Try to decrease the number of reactions by filling out the :code:`Products`, :code:`Surface` and :code:`Facet` fields.
+
+2) Look at the atomic structures associated with a reaction of choice. Hint: press the cube icon to the left of the reaction. (Note: a few of the reactions doesn't have structures associated with them).
+
+3) Interested in knowing how the data is pulled from the database backend? Click the :code:`GRAPHQL QUERY` button below the list of reactions, and see how you search looks from the backend interface.
+   
+   
 GraphQL
 -------
 
@@ -8,7 +21,7 @@ These tutorials will focus on how to use the GraphQL interface to the database. 
 
 Go to http://api.catalysis-hub.org/graphql to get started.
 
-Getting started
+A simple query
 ...............
 
 Type your query in the left panel. In order to perform queries on the `reactions` table try this::
@@ -110,7 +123,7 @@ Combining tables
      
      reactions(pubId: "")}
 
-2) Using the :code::(`pubID: )` solution above, list all the distinct
+2) Using the :code:`(pubID:)` solution suggested above, list all the distinct
    a) reactions
    b) surfaces
    from Julias publication.
@@ -120,8 +133,73 @@ Combining tables
 
    
 
-   
+Calling the backend from a python script
+----------------------------------------
 
+Write a short python script with a GraphQL query of your choice. The script should look something like this::
   
+     import requests
+     import pprint
 
-	      
+     root = 'http://api.catalysis-hub.org/graphql'
+
+     query = \
+     """
+     {}
+     """
+     
+     data = requests.post(root, {'query': query}).json()
+     pprint.pprint(data)
+
+
+And see the result printed in the terminal. How would you like to save the data? 
+
+
+Connecting to the database server with psql
+---------------------------------------------
+
+This exercise requires that you have postgreSQL installed, so you can use the `psql` terminal client.
+Also you need the password for the `catvisitor` user, or optionally your own user account. Contact Kirsten Winther at winther@stanford.edu for question.
+
+Type into the terminal::
+
+  psql --host=catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com
+  --port=5432 --username=catvisitor --dbname=catalysishub
+
+And write the password when promted.
+
+Now you can start writing SQL statments directly against the database server. Try for example::
+
+  SELECT title, year from publication LIMIT 10;
+
+and see the output. Please use the :code:`LIMIT` clause to limit the number of results, or specify :code:`id=int`. See https://www.postgresql.org/docs/9.6/static/index.html for documentation on the SQL language and postgres.
+
+
+Connecting to the database with ASE db
+--------------------------------------
+For this exercise you need to have a recent version of ASE installed. See https://wiki.fysik.dtu.dk/ase/install.html .
+
+1) Now use the ASE cli to connect. Type this in the terminal (with an updated DB_PASSWORD)::
+
+     ase db postgresql://catvisitor:$DB_PASSWORD@catalysishub.
+     c8gwuc8jwb7l.us-west-2.rds.amazonaws.com:5432/catalysishub Pt3Co 
+
+
+(Note: this query is probably going to take some time. We're still working on optimizing the ASE database part.)
+
+
+2) Write a python script to connect via ase.db.connect. Hint: the connect() function will take the same server url as used in the previous exercise. 
+
+   You can now use the select() function to make queries against the database. See https://wiki.fysik.dtu.dk/ase/ase/db/db.html for documentation.  
+
+
+
+Using the CatHub cli
+--------------------
+
+This CLI will be used for collecting data from remote sources.
+
+.. toctree::
+
+   :maxdepth: 1
+   cathubcli.md

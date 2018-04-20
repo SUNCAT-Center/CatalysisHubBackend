@@ -12,9 +12,10 @@ An overview of the database schema is given in the figure below.
 .. image:: catalysishub_schema.png
 
 
-The database structure builds upon the ASE-database, which corresponds to the tables: `systems`, `species`, `keys`, `text_key_values`, `number_key_values`, `information`. These are used for storing atomic structures and calculational information.
+The database structure builds upon the ASE-database (https://wiki.fysik.dtu.dk/ase/ase/db/db.html
+) that uses the tables: `systems`, `species`, `keys`, `text_key_values`, `number_key_values`, `information`. These are used for storing atomic structures and calculational information.
 
-On top of that is the tables `reaction` and `publication` which are used to store reaction energies and publication info for CatApp2.0.
+On top is the tables `reaction` and `publication` which are used to store reaction energies and publication info for CatApp v2.0.
 
 The tables `reaction_system` and `publication_system` links the ASE and CatApp parts together. 
 
@@ -30,7 +31,7 @@ Type your query in the left panel. In order to perform queries on the `reactions
 
 And type `command + return` to see the result on the right hand. This should return the `id` of the first two reactions in the database. Notice that the left hand side is updated as well.
 
-See also the tutorials at http://catalysis-hub.readthedocs.io/en/latest/tutorials .
+See the tutorials at http://catalysis-hub.readthedocs.io/en/latest/tutorials to learn more.
 
 GraphQL Cheat Sheet
 -------------------
