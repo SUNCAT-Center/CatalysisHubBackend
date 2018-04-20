@@ -419,10 +419,9 @@ def get_structure(request=None):
         print("C")
         bulk.set_species(species)
         print("D")
-        bulk.set_parameter_values(*list(zip(
-            parameter_names,
-            parameters
-            )))
+        for name, value in zip( parameter_names, parameters):
+            bulk.set_parameter_values(name, value)
+
         print("E")
 
         structure = bulk.get_std_poscar()
