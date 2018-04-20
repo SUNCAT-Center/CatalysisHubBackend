@@ -7,6 +7,7 @@ import pprint
 import zipfile
 import time
 import datetime
+import codecs
 
 try:
     import bulk_enumerator as be
@@ -32,6 +33,13 @@ app = flask.Blueprint('prototypeSearch', __name__)
 # app = flask.Flask(__name__)
 # cors = CORS(app)
 
+
+def encode(s, name, *args, **kwargs):
+    codec = codecs.lookup(name)
+    rv, length = codec.encode(s, *args, **kwargs)
+    if not isinstance(rv, (str, bytes, bytearray)):
+        raise TypeError('Not a string or byte codec')
+    return rv
 
 def is_int(s):
     try:
@@ -431,7 +439,7 @@ def get_structure(request=None):
 
     return flask.jsonify({
         'time': time.time() - time0,
-        'structure': structure.encode('utf8'),
+        'structure': encode(structure, 'utf8'),
         'input': input_params,
         })
 
