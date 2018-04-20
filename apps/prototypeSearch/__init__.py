@@ -424,7 +424,7 @@ def get_structure(request=None):
 
         structure = bulk.get_std_poscar()
         print("F")
-        pprint(structure)
+        pprint.pprint(structure)
         print("BEFORE DELETE")
         bulk.delete()
         print("AFTER DELETE")
