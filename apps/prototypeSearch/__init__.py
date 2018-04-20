@@ -7,6 +7,11 @@ import zipfile
 import time
 import datetime
 
+try:
+    import bulk_enumerator as be
+except ImportError:
+    print("Warning: could not import bulk_enumerator, check installation.")
+    be = None
 
 # workaround to work on both Python 2 and Python 3
 try:
@@ -373,6 +378,46 @@ def facet_search(request=None):
         'n_wyckoffs': n_wyckoffs,
         'stoichiometries': stoichiometries,
     })
+
+@app.route('/get_structure/', methods=['GET', 'POST'])
+def get_structure(request=None):
+    time0 = time.time()
+    request = flask.request if request is None else request
+    if isinstance(request.args, str):
+        request.args = json.loads(request.args)
+
+    spacegroup = request.args.get('spacegroup', 225)
+    wyckoffs = request.args.get('wyckoffs', ['a'])
+    species = request.args.get('species', ['Pt'])
+    parameter_names = request.args.get('parameter_names', ['a'])
+    parameters = request.args.get('parameters', [2.7])
+
+    input_params = {
+            'spacegroup': spacegroup,
+            'wyckoffs': wyckoffs,
+            'species': species,
+            'parameter_names': parameter_names,
+            'parameters': parameters,
+            }
+
+    structure = ''
+    if be is not None:
+        bulk = be.bulk.BULK()
+        bulk.set_spacegroup(spacegroup)
+        bulk.set_wyckoff(wyckoffs)
+        bulk.set_species(species)
+        bulk.set_parameter_values(*list(zip(
+            parameter_names,
+            parameters
+            )))
+
+        structure = bulk.get_std_poscar()
+
+    return flask.jsonify({
+        'time': time() - time0,
+        'structure': structure,
+        'input': input_params,
+        })
 
 
 if __name__ == '__main__':
