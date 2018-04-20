@@ -32,7 +32,7 @@ before_script:
   - psql travis_ci_test	< tests/pg_dump
   
 script:
-    - nosetests --with-coverage --cover-inclusive --cover-package=. --cover-erase
+    - nosetests --with-coverage
     - coverage report --omit 'lib/*,tests/*' --show-missing
     - coverage report --omit 'lib/*,tests/*,apps/*' --show-missing
 

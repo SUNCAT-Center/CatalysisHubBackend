@@ -70,6 +70,12 @@ def apps():
 from apps.pourbaix.run_pourbaix import pourbaix
 app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
 
+from apps.bulkEnumerator import bulk_enumerator
+app.register_blueprint(bulk_enumerator, url_prefix='/apps/bulkEnumerator')
+
+from apps.catKitDemo import catKitDemo
+app.register_blueprint(catKitDemo, url_prefix='/apps/catKitDemo')
+
 # Graphql view
 app.add_url_rule('/graphql',
         view_func=flask_graphql.GraphQLView.as_view(
@@ -96,6 +102,9 @@ app.add_url_rule('/graphql',
 
 from apps.activityMaps import activityMaps
 app.register_blueprint(activityMaps,  url_prefix='/apps/activityMaps')
+
+from apps.prototypeSearch import app as prototypeSearch
+app.register_blueprint(prototypeSearch, url_prefix='/apps/prototypeSearch')
 
 # AtoML blueprint
 if atoml_blueprint is not None:

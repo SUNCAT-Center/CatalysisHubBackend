@@ -57,18 +57,18 @@ Some Examples:
 
 - Full text search in reactions (reactants, products, chemical composition, facet)::
 
-  {reactions(textsearch: "CO CH 111") {
-    edges {
-      node {
-        reactants
-        products
-        publication {
-          title
-          authors
+      {reactions(textsearch: "CO CH 111") {
+        edges {
+          node {
+            reactants
+            products
+            publication {
+              title
+              authors
+            }
+          }
         }
-      }
-    }
-  }}
+      }}
 
 - Full text search in publications (title, authors, year)::
 
