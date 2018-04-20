@@ -10,11 +10,9 @@ import datetime
 
 try:
     import bulk_enumerator as be
-    bulk = be.bulk.BULK()
 except ImportError:
     print("Warning: could not import bulk_enumerator, check installation.")
     be = None
-    bulk = None
 
 # workaround to work on both Python 2 and Python 3
 try:
@@ -411,7 +409,8 @@ def get_structure(request=None):
     structure = ''
     print("STRUCTURE {structure}".format(**locals()))
     print("BE " + str(be))
-    if bulk is not None:
+    if be is not None:
+        bulk = be.bulk.BULK()
         print("0")
         print("A")
         bulk.set_spacegroup(spacegroup)
@@ -429,6 +428,9 @@ def get_structure(request=None):
         structure = bulk.get_std_poscar()
         print("F")
         pprint(structure)
+        print("BEFORE DELETE")
+        bulk.delete()
+        print("AFTER DELETE")
 
     return flask.jsonify({
         'time': time() - time0,
