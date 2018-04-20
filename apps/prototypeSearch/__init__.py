@@ -408,7 +408,7 @@ def get_structure(request=None):
 
     structure = ''
     print("STRUCTURE {structure}".format(**locals()))
-    print("BE {be}".format(**locals()))
+    print("BE " + str(be))
     if be is not None:
         print("0")
         bulk = be.bulk.BULK()
