@@ -10,9 +10,11 @@ import datetime
 
 try:
     import bulk_enumerator as be
+    bulk = be.bulk.BULK()
 except ImportError:
     print("Warning: could not import bulk_enumerator, check installation.")
     be = None
+    bulk = None
 
 # workaround to work on both Python 2 and Python 3
 try:
@@ -409,9 +411,8 @@ def get_structure(request=None):
     structure = ''
     print("STRUCTURE {structure}".format(**locals()))
     print("BE " + str(be))
-    if be is not None:
+    if bulk is not None:
         print("0")
-        bulk = be.bulk.BULK()
         print("A")
         bulk.set_spacegroup(spacegroup)
         print("B")
