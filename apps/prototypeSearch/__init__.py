@@ -407,7 +407,10 @@ def get_structure(request=None):
     pprint.pprint(input_params)
 
     structure = ''
+    print("STRUCTURE {structure}".format(**locals()))
+    print("BE {be}".format(**locals()))
     if be is not None:
+        print("0")
         bulk = be.bulk.BULK()
         print("A")
         bulk.set_spacegroup(spacegroup)
