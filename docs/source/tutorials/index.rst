@@ -192,5 +192,14 @@ For this exercise you need to have a recent version of ASE installed. See https:
 
    You can now use the select() function to make queries against the database. See https://wiki.fysik.dtu.dk/ase/ase/db/db.html for documentation.  
 
-   
 
+
+Using the CatHub cli
+--------------------
+
+This CLI will be used for collecting data from remote sources.
+
+.. toctree::
+
+   :maxdepth: 1
+   cathubcli.md
