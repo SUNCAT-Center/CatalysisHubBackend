@@ -430,7 +430,7 @@ def get_structure(request=None):
         print("AFTER DELETE")
 
     return flask.jsonify({
-        'time': time() - time0,
+        'time': time.time() - time0,
         'structure': structure,
         'input': input_params,
         })
