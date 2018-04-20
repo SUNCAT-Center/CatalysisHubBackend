@@ -1,4 +1,5 @@
 import copy
+import pprint
 import json
 import os
 import os.path
@@ -386,6 +387,9 @@ def get_structure(request=None):
     if isinstance(request.args, str):
         request.args = json.loads(request.args)
 
+
+    pprint.pprint(request.args)
+
     spacegroup = request.args.get('spacegroup', 225)
     wyckoffs = request.args.get('wyckoffs', ['a'])
     species = request.args.get('species', ['Pt'])
@@ -400,6 +404,8 @@ def get_structure(request=None):
             'parameters': parameters,
             }
 
+    pprint.pprint(input_params)
+
     structure = ''
     if be is not None:
         bulk = be.bulk.BULK()
@@ -412,6 +418,7 @@ def get_structure(request=None):
             )))
 
         structure = bulk.get_std_poscar()
+        pprint(structure)
 
     return flask.jsonify({
         'time': time() - time0,
