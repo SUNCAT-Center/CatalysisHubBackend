@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/mhoffman/CatAppBackend.svg?branch=master)](https://travis-ci.org/mhoffman/CatAppBackend)
-[![Coverage Status](https://coveralls.io/repos/github/mhoffman/CatAppBackend/badge.svg?branch=master)](https://coveralls.io/github/mhoffman/CatAppBackend?branch=master)
+[![Build Status](https://travis-ci.org/mhoffman/CatAppBackend.svg?branch=feature_timestamp)](https://travis-ci.org/mhoffman/CatAppBackend)
+[![Coverage Status](https://coveralls.io/repos/github/mhoffman/CatAppBackend/badge.svg?branch=feature_timestamp)](https://coveralls.io/github/mhoffman/CatAppBackend?branch=feature_timestamp)
 
 ## Flask GraphQL ASE DB Demo
 

@@ -8,6 +8,9 @@ import flask
 import flask_graphql
 from flask_cors import CORS
 from flask import Blueprint
+import logging
+from raven.contrib.flask import Sentry
+
 
 # local imports
 import models
@@ -34,7 +37,9 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 app = flask.Flask(__name__)
-app.debug = True
+sentry = Sentry(app, logging=True, level=logging.DEBUG)
+
+#app.debug = True
 app.json_encoder = NumpyEncoder
 
 cors = CORS(app)
@@ -53,7 +58,7 @@ cors = CORS(app)
 @app.route('/')
 
 def index():
-        return flask.redirect("/graphql", code=302)
+        return flask.redirect("/graphql?query=%7B%0A%20%20reactions(first%3A%2010)%20%7B%0A%20%20%20%20edges%20%7B%0A%20%20%20%20%20%20node%20%7B%0A%20%20%20%20%20%20%20%20Equation%0A%20%20%20%20%20%20%20%20chemicalComposition%0A%20%20%20%20%20%20%20%20reactionEnergy%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%0A", code=302)
 
 @app.route('/apps/')
 
@@ -115,16 +120,10 @@ if __name__ == '__main__':
                       default=False)
 
     options, args = parser.parse_args()
-
-
-    import logging
-    logging.basicConfig()
     
     if options.debug_sql:
+        import logging
+        logging.basicConfig()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
-
-    else:
-        from raven.contrib.flask import Sentry
-        sentry = Sentry(app, logging=True, level=logging.WARN)
 
     app.run()

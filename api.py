@@ -57,20 +57,21 @@ Some Examples:
 
 - Full text search in reactions (reactants, products, chemical composition, facet)::
 
-  {reactions(textsearch: "CO CH 111") {
-    edges {
-      node {
-        reactants
-        products
-        publication {
-          title
-          authors
+      {reactions(textsearch: "CO CH 111") {
+        edges {
+          node {
+            reactants
+            products
+            publication {
+              title
+              authors
+            }
+          }
         }
-      }
-    }
-  }}
+      }}
 
 - Full text search in publications (title, authors, year)::
+
     {publications(pubtextsearch: "oxygen evolution bajdich 2017") {
       edges {
         node {
@@ -389,7 +390,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                        '=',  '>',  '<',  '>=', '<=', '!=']
 
         cont_fields = ['edges', 'node']
-        skip_fields = ['totalCount']
+        skip_fields = ['totalCount', 'pageInfo']
         fields = info.field_asts# [0].selection_set.selections
         load_fields = {}
         field_names = []
@@ -525,7 +526,6 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
 
                 if distinct_filter:
                     query = query.distinct(column)  # .group_by(getattr(model, field))
-
 
         return query
 

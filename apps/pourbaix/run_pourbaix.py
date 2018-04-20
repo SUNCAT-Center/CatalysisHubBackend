@@ -27,8 +27,8 @@ from .pourbaix_pymatgen import pd_generator_data
 import sys
 
 pourbaix = Blueprint('pourbaix', __name__)
-@pourbaix.route('/', methods=['GET', 'POST'])
 
+@pourbaix.route('/species_ase', methods=['GET', 'POST'])
 def get_spacies_ase():
     responses = []
 
@@ -49,7 +49,42 @@ def get_spacies_ase():
         ion_list = list(set(ion_list_temp))
         solid_list = solid_Lange(element1,T) + solid_Lange(element2,T)
     else:
-        print ('ASE database is not checked!!')
+        raise ValueError('ase database is not checked!!')
+
+    responses.append({
+    "ion_list": ion_list,
+    "solid_list":solid_list,
+    })
+
+    return jsonify(responses)
+
+@pourbaix.route('/species_pymatgen', methods=['GET', 'POST'])
+def get_spacies_pymatgen():
+    responses = []
+
+    data = flask.request.get_json()
+    
+    element1 = str(data.get('element1'))     
+    element2 = str(data.get('element2'))
+    mat_co_1 = float(data.get('mat_co_1'))
+
+    if element2 is None:
+        element2 = element1
+
+    limits = [[-2, 14], [-3, 3]]
+    checked_ase = data.get('checkedASE')
+    checked_Lange = data.get('checkedLange')
+    checked_ML = data.get('checkedML')
+    checked_pymatgen = data.get('checkedPymatgen')
+    
+    if checked_pymatgen == True and checked_Lange == False and checked_ML == False and checked_ase == False:
+        (stable_pb, unstable_pb, 
+         ion_list, solid_list) = pd_generator_data.pourbaix_plot_data(element1,
+                                                                      element2,
+                                                                      mat_co_1,
+                                                                      limits) 
+    else:
+        raise ValueError('pymatgen database is not checked!!')
 
     responses.append({
     "ion_list": ion_list,
@@ -127,6 +162,7 @@ def pourbaix_gen_pymatgen():
     element1 = str(data.get('element1'))     
     element2 = str(data.get('element2'))
     mat_co_1 = float(data.get('mat_co_1'))
+ 
 
     if element2 is None:
         element2 = element1

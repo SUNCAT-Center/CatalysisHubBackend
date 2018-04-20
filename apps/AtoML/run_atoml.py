@@ -13,6 +13,18 @@ atoml_blueprint = Blueprint('atoml', __name__)
 def run_atoml_app():
     """The actual app to predict and generate output."""
     data = flask.request.json
+    # Add some default values in case no data is provided.
+    if data is None:
+        data = {
+            "m1": "Pt",
+            "m2": "Pd",
+            "facet": "111",
+            "a": "hfO2",
+            "conc": "0.5",
+            "site": "AA"
+        }
+
+    # Compile the features for the tests data and generate output.
     features, output = _get_output(data)
     return_dict = {'input': data, 'features': features, 'output': output}
     return_dict = flask.jsonify(**return_dict)

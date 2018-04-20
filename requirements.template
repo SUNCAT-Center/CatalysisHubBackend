@@ -6,6 +6,7 @@ backports.functools-lru-cache==1.4
 git+https://github.com/SUNCAT-Center/CatKit.git#egg=catkit
 git+https://catapp_admin:${GITLAB_PW}@gitlab.com/atoML/AtoML.git#egg=atoml
 BulkEnumerator-0.0.2-cp36-cp36m-linux_x86_64.whl
+blinker==1.4
 click==6.7
 coverage==4.4.2
 cycler==0.10.0
