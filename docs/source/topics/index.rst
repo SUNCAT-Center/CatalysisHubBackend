@@ -12,7 +12,8 @@ An overview of the database schema is given in the figure below.
 .. image:: catalysishub_schema.png
 
 
-The database structure builds upon the ASE-database, which corresponds to the tables: `systems`, `species`, `keys`, `text_key_values`, `number_key_values`, `information`. These are used for storing atomic structures and calculational information.
+The database structure builds upon the ASE-database (https://wiki.fysik.dtu.dk/ase/ase/db/db.html
+), which resides in the tables: `systems`, `species`, `keys`, `text_key_values`, `number_key_values`, `information`. These are used for storing atomic structures and calculational information.
 
 On top of that is the tables `reaction` and `publication` which are used to store reaction energies and publication info for CatApp2.0.
 
