@@ -409,15 +409,21 @@ def get_structure(request=None):
     structure = ''
     if be is not None:
         bulk = be.bulk.BULK()
+        print("A")
         bulk.set_spacegroup(spacegroup)
+        print("B")
         bulk.set_wyckoff(wyckoffs)
+        print("C")
         bulk.set_species(species)
+        print("D")
         bulk.set_parameter_values(*list(zip(
             parameter_names,
             parameters
             )))
+        print("E")
 
         structure = bulk.get_std_poscar()
+        print("F")
         pprint(structure)
 
     return flask.jsonify({
