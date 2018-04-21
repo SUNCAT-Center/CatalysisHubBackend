@@ -439,7 +439,7 @@ def get_structure(request=None):
 
     return flask.jsonify({
         'time': time.time() - time0,
-        'structure': encode(structure, 'utf8'),
+        'structure': structure.decode('utf8'),
         'input': input_params,
         })
 
