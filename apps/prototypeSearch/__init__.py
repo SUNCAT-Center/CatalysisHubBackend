@@ -28,6 +28,7 @@ from flask_cors import CORS
 
 
 from apps.prototypeSearch import models
+import apps.utils
 
 app = flask.Blueprint('prototypeSearch', __name__)
 # app = flask.Flask(__name__)
@@ -395,9 +396,6 @@ def get_structure(request=None):
     if isinstance(request.args, str):
         request.args = json.loads(request.args)
 
-
-    pprint.pprint(request.args)
-
     spacegroup = request.args.get('spacegroup', 225)
     wyckoffs = request.args.get('wyckoffs', ['a'])
     species = request.args.get('species', ['Pt'])
@@ -412,34 +410,22 @@ def get_structure(request=None):
             'parameters': parameters,
             }
 
-    pprint.pprint(input_params)
-
     structure = ''
-    print("STRUCTURE {structure}".format(**locals()))
-    print("BE " + str(be))
     if be is not None:
         bulk = be.bulk.BULK()
-        print("0")
-        print("A")
         bulk.set_spacegroup(spacegroup)
-        print("B")
         bulk.set_wyckoff(wyckoffs)
-        print("C")
         bulk.set_species(species)
-        print("D")
         bulk.set_parameter_values(parameter_names, parameters)
-        print("E")
-
         structure = bulk.get_std_poscar()
-        print("F")
-        pprint.pprint(structure)
-        print("BEFORE DELETE")
         bulk.delete()
-        print("AFTER DELETE")
 
     return flask.jsonify({
         'time': time.time() - time0,
-        'structure': structure.decode('utf8'),
+        'structure': apps.utils.ase_convert(
+            structure,
+            'vasp',
+            'cif'),
         'input': input_params,
         })
 
