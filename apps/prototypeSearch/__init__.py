@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import copy
 import pprint
 import json
@@ -41,6 +42,7 @@ def encode(s, name, *args, **kwargs):
     if not isinstance(rv, (str, bytes, bytearray)):
         raise TypeError('Not a string or byte codec')
     return rv
+
 
 def is_int(s):
     try:
@@ -389,18 +391,48 @@ def facet_search(request=None):
         'stoichiometries': stoichiometries,
     })
 
-@app.route('/get_structure/', methods=['GET', 'POST'])
+
+@app.route('/get_structure/', methods=['POST'])
 def get_structure(request=None):
+    """
+    Return structure as POSCAR string from Spacegroup and Wyckoff parameters.
+
+    Args:
+        spacegroup(int): Spacegroup [1-230] as int. Defaults to 225.
+        species ([str]): Atomic symbols as list of strings. Defaults to ["Pt"].
+        wyckoffs ([str]): List of Wyckoff sites. Defaults to ["a"].
+        parameter_names ([str]): List Wyckoff cell parameters.
+                                 Defaults to ["a"].
+        parameters ([float]): List of Wyckoff cell parameters.
+                              Defaults to [2.7].
+
+
+
+    Return:
+        structure (str): String of POSCAR.
+        time (float): Time in seconds required to generate structure.
+
+    Example:
+
+
+
+
+
+    """
     time0 = time.time()
     request = flask.request if request is None else request
     if isinstance(request.args, str):
         request.args = json.loads(request.args)
 
-    spacegroup = request.args.get('spacegroup', 225)
-    wyckoffs = request.args.get('wyckoffs', ['a'])
-    species = request.args.get('species', ['Pt'])
-    parameter_names = request.args.get('parameter_names', ['a'])
-    parameters = request.args.get('parameters', [2.7])
+    args = request.get_json() or {}
+
+    spacegroup = int(args.get('spacegroup', 225))
+    wyckoffs = json.loads(args.get('wyckoffs', '["a"]').replace("'", '"'))
+    species = json.loads(args.get('species', '["Pt"]').replace("'", '"'))
+    parameter_names = json.loads(
+            args.get('parameter_names', '["a"]').replace("'", '"')
+            )
+    parameters = json.loads(args.get('parameters', '[2.7]').replace("'", '"'))
 
     input_params = {
             'spacegroup': spacegroup,
