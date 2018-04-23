@@ -414,7 +414,9 @@ def get_structure(request=None):
 
     Example:
 
-
+        curl -XPOST   -H "Content-type: application/json"  \
+                --data '{}' \ 
+                http://api.catalysis-hub.org/apps/prototypeSearch/get_structure/
 
 
 
