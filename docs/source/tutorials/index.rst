@@ -4,15 +4,15 @@ Tutorials
 Searching for reaction energies
 --------------------------------
 
-Here you will learn how to use the webpage to search for chemical reactions. Go to http://www.catalysis-hub.org/energies to use the build in search function. This feature corresponds to `CatApp v2.0` where you can access reaction energies and barries for different surfaces.  
+Here you will learn how to use the webpage to search for chemical reactions. Go to http://www.catalysis-hub.org/energies to use the build in search function. This feature corresponds to `CatApp v2.0` where you can access reaction energies and barries for different surfaces.
 
 1) Type something in the reactants field and press the search button (for example CH3CH2OH*). How much is returned? Try to decrease the number of reactions by filling out the :code:`Products`, :code:`Surface` and :code:`Facet` fields.
 
 2) Look at the atomic structures associated with a reaction of choice. Hint: press the cube icon to the left of the reaction. (Note: a few of the reactions doesn't have structures associated with them).
 
 3) Interested in knowing how the data is pulled from the database backend? Click the :code:`GRAPHQL QUERY` button below the list of reactions, and see how you search looks from the backend interface.
-   
-   
+
+
 GraphQL
 -------
 
@@ -25,7 +25,7 @@ A simple query
 ...............
 
 Type your query in the left panel. In order to perform queries on the `reactions` table try this::
-  
+
    {reactions(first:2)}
 
 And type `command + return` to see the result in the right panel. This should return the `id` of the first two reactions in the database. Notice that the left hand side is updated as well.
@@ -34,26 +34,26 @@ A general note: Always include one of the 'first' or 'last' field in your query 
 
 
 Now try to add more columns after `id` and see what happens. For example::
-  
+
   {reactions(first:2) {
     edges {
       node {
         id
 	Equation
         chemicalComposition
-     	reactionEnergy	
+     	reactionEnergy
       }
     }
   }}
 
- 
+
 For a complete list of all the tables in the database, and the asociated columns, see the `Docs` tab on the top right of the GraphiQL page. There is also a schema overview posted at  http://docs.catalysis-hub.org/reference/schema.html .
 
 In order to make selections on the result, add more fields after :code:`(first:2)`. For example::
-  
+
    {reactions(first:2, reactants: "CO", chemicalComposition: "Pt")}
 
-Notice that it's possible to contruct queries for all the existing columns in a table. 
+Notice that it's possible to contruct queries for all the existing columns in a table.
 
 
 Searching for publications
@@ -65,7 +65,7 @@ Searching for publications
 
 3) How many publications are authored by Thomas Bligaard? Hint: use the pubtexsearch field.
    You can list the total number of results using the `totalCount` field::
-     
+
      {publications {
        totalCount
        edges {
@@ -85,9 +85,9 @@ Searching for publications
 
 Using the reactions table
 .........................
-1) Order all the reactions with respect to increasing reaction energy and print out the first 100 results. 
+1) Order all the reactions with respect to increasing reaction energy and print out the first 100 results.
 
-2) Find the reactions with the lowest activation energy. Hint: take care of 'null' results by requesting that the activation energy should be > 0.  
+2) Find the reactions with the lowest activation energy. Hint: take care of 'null' results by requesting that the activation energy should be > 0.
 
 
 3) Find the number of reactions with H2O on the left hand side and OH on the right hand side.
@@ -97,16 +97,16 @@ Using the reactions table
 
 
 4) Chose a few of the reactions from the query before, and get all the chemical formula of the atomic structures beloning to them
-   Hint: you can call the 'systems' table inside the 'reactions' table. 
+   Hint: you can call the 'systems' table inside the 'reactions' table.
 
 
-5) Find the publication year for the first 10 reactions in exercise 1) 
+5) Find the publication year for the first 10 reactions in exercise 1)
 
 
 Combining tables
 ....................
 1) Find Julia Schuman's recent paper, and list all the reactions belonging to the paper. Hint: you can either go through the publication table::
-     
+
      {publications(first:10) {
        edges {
          node {
@@ -120,7 +120,7 @@ Combining tables
      }}
 
    or use the `pubId` field to query directly on the reactions table to make additional queries::
-     
+
      reactions(pubId: "")}
 
 2) Using the :code:`(pubID:)` solution suggested above, list all the distinct
@@ -131,13 +131,13 @@ Combining tables
 3) Chose one of Julias reactions and find the `aseId` of the empty slab. Hint: It has :code:`"name"="star"` in the `reactionSystems` table.
    Copy the aseId and use it to find all the reactions that are linked to that particular empty slab.
 
-   
 
-Calling the backend from a python script
+
+Calling the Backend from a Python Script
 ----------------------------------------
 
 Write a short python script with a GraphQL query of your choice. The script should look something like this::
-  
+
      import requests
      import pprint
 
@@ -147,12 +147,102 @@ Write a short python script with a GraphQL query of your choice. The script shou
      """
      {}
      """
-     
+
      data = requests.post(root, {'query': query}).json()
      pprint.pprint(data)
 
 
-And see the result printed in the terminal. How would you like to save the data? 
+And see the result printed in the terminal. How would you like to save the data?
+
+Calling the Backend from a Perl Script
+--------------------------------------
+
+Write a short Perl script with a GraphQL query of your choice. This result could look something like this
+
+.. code-block:: perl
+
+   #!/usr/bin/env perl
+
+   require LWP::UserAgent;
+
+   my $uri = 'http://api.catalysis-hub.org/graphql';
+   my $json = <<'EOF';
+   {"query": "{
+     reactions(first: 10) {
+       edges {
+         node {
+           Equation
+           chemicalComposition
+           reactionEnergy
+         }
+       }
+     }
+   } "}
+   EOF
+
+   # remove newlines
+   $json =~ s/(\n|\r)//g;
+
+   my $req = HTTP::Request->new( 'POST', $uri );
+   $req->header( 'Content-Type' => 'application/json' );
+   $req->content( $json );
+
+   my $lwp = LWP::UserAgent->new;
+   my $res = $lwp->request( $req );
+
+   print $res->content . "\n";
+
+Calling the Backend from JavaScript
+-----------------------------------
+
+.. code-block:: js
+
+   #!/usr/bin/env node
+
+   var axios = require('axios');
+
+   axios.post('http://api.catalysis-hub.org/graphql',
+     {query:`
+     {
+     reactions(first: 10) {
+       edges {
+         node {
+           Equation
+           chemicalComposition
+           reactionEnergy
+         }
+       }
+     }
+   }
+       `}
+   ).then(function(response){
+     console.log(JSON.stringify(response.data))
+   })
+
+
+Calling the Backend from Coffee Script
+--------------------------------------
+
+.. code-block:: coffee
+
+    #!/usr/bin/env coffee
+
+    axios = require 'axios'
+
+    axios.post 'http://api.catalysis-hub.org/graphql', {query:"{
+      reactions(first: 10) {
+        edges {
+          node {
+            Equation
+            chemicalComposition
+            reactionEnergy
+          }
+        }
+      }
+    }
+        "}
+    .then (response) ->
+      console.log JSON.stringify response.data
 
 
 Connecting to the database server with psql
@@ -182,15 +272,15 @@ For this exercise you need to have a recent version of ASE installed. See https:
 1) Now use the ASE cli to connect. Type this in the terminal (with an updated DB_PASSWORD)::
 
      ase db postgresql://catvisitor:$DB_PASSWORD@catalysishub.
-     c8gwuc8jwb7l.us-west-2.rds.amazonaws.com:5432/catalysishub Pt3Co 
+     c8gwuc8jwb7l.us-west-2.rds.amazonaws.com:5432/catalysishub Pt3Co
 
 
 (Note: this query is probably going to take some time. We're still working on optimizing the ASE database part.)
 
 
-2) Write a python script to connect via ase.db.connect. Hint: the connect() function will take the same server url as used in the previous exercise. 
+2) Write a python script to connect via ase.db.connect. Hint: the connect() function will take the same server url as used in the previous exercise.
 
-   You can now use the select() function to make queries against the database. See https://wiki.fysik.dtu.dk/ase/ase/db/db.html for documentation.  
+   You can now use the select() function to make queries against the database. See https://wiki.fysik.dtu.dk/ase/ase/db/db.html for documentation.
 
 
 

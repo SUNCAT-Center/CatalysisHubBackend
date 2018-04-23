@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import copy
 import pprint
 import json
@@ -7,6 +8,7 @@ import pprint
 import zipfile
 import time
 import datetime
+import codecs
 
 try:
     import bulk_enumerator as be
@@ -27,10 +29,19 @@ from flask_cors import CORS
 
 
 from apps.prototypeSearch import models
+import apps.utils
 
 app = flask.Blueprint('prototypeSearch', __name__)
 # app = flask.Flask(__name__)
 # cors = CORS(app)
+
+
+def encode(s, name, *args, **kwargs):
+    codec = codecs.lookup(name)
+    rv, length = codec.encode(s, *args, **kwargs)
+    if not isinstance(rv, (str, bytes, bytearray)):
+        raise TypeError('Not a string or byte codec')
+    return rv
 
 
 def is_int(s):
@@ -87,7 +98,7 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                 )
             elif field == 'tag':
                 query = query.filter(
-                    models.Geometry.tags.contains('{' + value + '}'),
+                    models.Geometry.tags.contains('{' + value.lower() + '}'),
                 )
             elif field == 'prototype':
                 query = query.filter(
@@ -380,21 +391,50 @@ def facet_search(request=None):
         'stoichiometries': stoichiometries,
     })
 
-@app.route('/get_structure/', methods=['GET', 'POST'])
+
+@app.route('/get_structure/', methods=['POST'])
 def get_structure(request=None):
+    """
+    Return structure as POSCAR string from Spacegroup and Wyckoff parameters.
+
+    Args:
+        spacegroup(int): Spacegroup [1-230] as int. Defaults to 225.
+        species ([str]): Atomic symbols as list of strings. Defaults to ["Pt"].
+        wyckoffs ([str]): List of Wyckoff sites. Defaults to ["a"].
+        parameter_names ([str]): List Wyckoff cell parameters.
+                                 Defaults to ["a"].
+        parameters ([float]): List of Wyckoff cell parameters.
+                              Defaults to [2.7].
+
+
+
+    Return:
+        structure (str): String of POSCAR.
+        time (float): Time in seconds required to generate structure.
+
+    Example:
+
+        curl -XPOST   -H "Content-type: application/json"  \
+                --data '{}' \ 
+                http://api.catalysis-hub.org/apps/prototypeSearch/get_structure/
+
+
+
+    """
     time0 = time.time()
     request = flask.request if request is None else request
     if isinstance(request.args, str):
         request.args = json.loads(request.args)
 
+    args = request.get_json() or {}
 
-    pprint.pprint(request.args)
-
-    spacegroup = request.args.get('spacegroup', 225)
-    wyckoffs = request.args.get('wyckoffs', ['a'])
-    species = request.args.get('species', ['Pt'])
-    parameter_names = request.args.get('parameter_names', ['a'])
-    parameters = request.args.get('parameters', [2.7])
+    spacegroup = int(args.get('spacegroup', 225))
+    wyckoffs = json.loads(args.get('wyckoffs', '["a"]').replace("'", '"'))
+    species = json.loads(args.get('species', '["Pt"]').replace("'", '"'))
+    parameter_names = json.loads(
+            args.get('parameter_names', '["a"]').replace("'", '"')
+            )
+    parameters = json.loads(args.get('parameters', '[2.7]').replace("'", '"'))
 
     input_params = {
             'spacegroup': spacegroup,
@@ -404,37 +444,22 @@ def get_structure(request=None):
             'parameters': parameters,
             }
 
-    pprint.pprint(input_params)
-
     structure = ''
-    print("STRUCTURE {structure}".format(**locals()))
-    print("BE " + str(be))
     if be is not None:
         bulk = be.bulk.BULK()
-        print("0")
-        print("A")
         bulk.set_spacegroup(spacegroup)
-        print("B")
         bulk.set_wyckoff(wyckoffs)
-        print("C")
         bulk.set_species(species)
-        print("D")
-        bulk.set_parameter_values(*list(zip(
-            parameter_names,
-            parameters
-            )))
-        print("E")
-
+        bulk.set_parameter_values(parameter_names, parameters)
         structure = bulk.get_std_poscar()
-        print("F")
-        pprint(structure)
-        print("BEFORE DELETE")
         bulk.delete()
-        print("AFTER DELETE")
 
     return flask.jsonify({
-        'time': time() - time0,
-        'structure': structure,
+        'time': time.time() - time0,
+        'structure': apps.utils.ase_convert(
+            structure,
+            'vasp',
+            'cif'),
         'input': input_params,
         })
 
