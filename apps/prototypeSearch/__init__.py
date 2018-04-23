@@ -96,7 +96,7 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                 )
             elif field == 'tag':
                 query = query.filter(
-                    models.Geometry.tags.contains('{' + value + '}'),
+                    models.Geometry.tags.contains('{' + value.lower() + '}'),
                 )
             elif field == 'prototype':
                 query = query.filter(
