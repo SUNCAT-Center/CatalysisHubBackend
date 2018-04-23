@@ -1,6 +1,24 @@
 Apps
 =====
 
+HTTP Request to the Apps backend can be made in Python using e.g.
+the `requests` library, like so::
+
+    #!/usr/bin/env python
+
+    import requests
+
+    r = requests.get('http://api.catalysis-hub.org/apps/activityMaps/systems/',
+            data={
+                "activityMap": "OER",
+                }
+            )
+    print(r.content)
+
+
+Please refer to the following API documentation for details.
+
+
 AtoMl
 -----
 .. automodule:: apps.AtoML
@@ -34,6 +52,9 @@ Pourbaix diagrams
     :members:
     :undoc-members:
     :show-inheritance:
+
+Prototype Search
+-----------------
 
 .. automodule:: apps.prototypeSearch
     :members:
