@@ -211,7 +211,7 @@ def facet_search(request=None):
     Facet search bulk prototypes
 
     Args:
-        Search term (str)
+        Search terms (str)
         Filters (list): List of tuples (field, value).
         Filters are applied against search with an
         OR within field and and
@@ -242,6 +242,8 @@ def facet_search(request=None):
     request = flask.request if request is None else request
     if isinstance(request.args, str):
         request.args = json.loads(request.args)
+
+    print(request.args)
 
     search_terms = request.args.get('search_terms', '').split()
     facet_filters = json.loads(request.args.get('facet_filters', '[]'))
