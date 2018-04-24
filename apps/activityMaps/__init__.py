@@ -74,13 +74,45 @@ def systems(request=None):
     """
     GET: Get systems for given reactions
 
-    Examples:
-        {ROOT}/apps/activityMaps/systems/?activitMap=OER
-        {ROOT}/apps/activityMaps/systems/?activitMap=CO_Hydrogenation_111
+    Args:
+        activityMap(str): request Map like OER, NRR, HER.
+                          Defaults to CO_Hydrogenation_111.
 
-    """.format(
-        ROOT=ROOT,
-    )
+    Returns:
+        dict: The corresponding systems in the database.
+            * reference(str): Reference for activity map.
+            * systems(list): Corresponding systems.
+
+    Examples:
+        .. code-block:: bash
+
+            curl {ROOT}/apps/activityMaps/systems/?activityMap=OER
+            curl {ROOT}/apps/activityMaps/systems/?activityMap=CO_Hydrogenation_111
+
+        .. code-block:: json
+
+            {
+          "reference": "[1] Friebel, Daniel, Mary W. Louie, Michal Bajdich, Kai E. Sanwald, Yun Cai, Anna M. Wise, Mu-Jeng Cheng et al. \"Identification of highly active Fe sites in (Ni, Fe) OOH for electrocatalytic water splitting.\" Journal of the American Chemical Society 137, no. 3 (2015): 1305-1313. DOI: 10.1021/ja511559d [2] Man, Isabela C., Hai\u2010Yan Su, Federico Calle\u2010Vallejo, Heine A. Hansen, Jos\u00e9 I. Mart\u00ednez, Nilay G. Inoglu, John Kitchin, Thomas F. Jaramillo, Jens K. N\u00f8rskov, and Jan Rossmeisl. \"Universality in oxygen evolution electrocatalysis on oxide surfaces.\" ChemCatChem 3, no. 7 (2011): 1159-1165. DOI: 10.1002/cctc.201000397",
+          "systems": [
+            {
+              "facet": "3ML",
+              "formula": "Ir16Sr4O51",
+              "uid": "5b0b436e4d3d07c3fb7a4cee6d5975f1",
+              "x": 1.5028540934200003,
+              "y": 1.3901226701799998,
+              "z": -0.3208143060400004
+            },
+            {
+              "facet": "100",
+              "formula": "Ir24O53",
+              "uid": "b33747e9868b9514639752f1b58e2f03",
+              "x": 1.4204331210799999,
+              "y": 0.44616836241,
+              "z": -0.4164322559
+            }, ] }
+
+    """
+
     request = flask.request if request is None else request
     if isinstance(request.args, str):
         request.args = json.loads(request.args)
