@@ -59,6 +59,27 @@ def row2dict(row):
     return d
 
 
+def expand_str_values(values):
+    return values.split(',')
+
+
+def expand_int_values(values, limit=100):
+    values = values.split(',')
+    expanded_values = []
+    for value in values:
+        if value.count('-') == 0:
+            expanded_values.append(value)
+        elif value.count('-') == 1:
+            try:
+                start, end = value.split('-')
+                start, end = int(start), int(end)
+            except ValueError:
+                pass
+            if end > start and (end - start) <= limit:
+                expanded_values.extend(list(range(start, end + 1)))
+    return expanded_values
+
+
 def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
     # FIRST
     # apply each search terms against
@@ -81,6 +102,8 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                 'prototype',
                 'repository',
                 'stoichiometry',
+                'n_atoms',
+                'n_species',
                 ]
 
         if field_search:
@@ -90,7 +113,7 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                 )
             elif field == 'spacegroup' and is_int(value):
                 query = query.filter(
-                    models.Geometry.spacegroup == int(value),
+                    models.Geometry.spacegroup.in_(expand_int_values(value)),
                 )
             elif field == 'species':
                 query = query.filter(
@@ -102,15 +125,25 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                 )
             elif field == 'prototype':
                 query = query.filter(
-                    models.Geometry.prototype == value,
+                    models.Geometry.prototype.in_(expand_str_values(value)),
                 )
             elif field == 'repository':
                 query = query.filter(
-                    models.Geometry.repository == value,
+                    models.Geometry.repository.in_(expand_str_values(value)),
                 )
+                print(expand_str_values(value))
             elif field == 'stoichiometry':
                 query = query.filter(
-                    models.Geometry.stoichiometry == value,
+                    models.Geometry.stoichiometry.in_(
+                        expand_str_values(value)),
+                )
+            elif field == 'n_species':
+                query = query.filter(
+                    models.Geometry.n_species.in_(expand_int_values(value)),
+                )
+            elif field == 'n_atoms':
+                query = query.filter(
+                    models.Geometry.n_atoms.in_(expand_int_values(value)),
                 )
         else:
             or_filters = [
@@ -417,7 +450,7 @@ def get_structure(request=None):
     Example:
 
         curl -XPOST   -H "Content-type: application/json"  \
-                --data '{}' \ 
+                --data '{}' \
                 http://api.catalysis-hub.org/apps/prototypeSearch/get_structure/
 
 
