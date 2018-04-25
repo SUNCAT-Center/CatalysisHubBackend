@@ -75,7 +75,7 @@ def expand_int_values(values, limit=100):
                 start, end = int(start), int(end)
             except ValueError:
                 pass
-            if end > start and (end - start) >= limit:
+            if end > start and (end - start) <= limit:
                 expanded_values.extend(list(range(start, end + 1)))
     return expanded_values
 
