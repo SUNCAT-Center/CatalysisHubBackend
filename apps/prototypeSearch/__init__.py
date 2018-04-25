@@ -23,6 +23,7 @@ except ImportError:
     import StringIO
 
 import numpy as np
+from ase.atoms import string2symbols
 
 import flask
 from flask_cors import CORS
@@ -81,6 +82,40 @@ def expand_int_values(values, limit=100):
 
 
 def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
+    """
+    Apply filters against query. Terms are separated by a space (' ') and
+    results have to match each term (AND).
+    If search terms specify a column ("column:value") they are applied only
+    against the respective column. The value can consist of one or more values
+    separated by a comma. Numerical ranges can be abbreviated
+    with a dash ('-').
+
+    Values within on column are applied with an OR filter. One example is
+    "spacegroup:160,170-190". This would match any structure with spacegroup
+    160 or any spacegroup larger or equal to 170 and less or equal to 190.
+
+    Possible column names are crystal crystal_system, handle, n_atoms,
+    n_species, prototype, repository, spacegroup, species,
+    stoichiometry, tag.
+
+    crystal_system takes values triclinic, monoclinic, orthorhombic,
+    tetragonal, trigonal, hexagonal, or cubic and is a short to the
+    corresponding range of spacegroups as listed here:
+    https://en.wikipedia.org/wiki/List_of_space_groups.
+
+    species is a special column in that is allows filtering with
+    AND and OR. The term species:AuPd will filter for structures
+    containsing Gold AND Palladium, whereas species:Au,Pd will filter for
+    structures containing Au OR Pd.
+
+    Some examples:
+
+        spacegroup:160-222
+        species:AuZn n_species:2
+        species:GaGe n_atoms:3
+        species:SrTi stoichiometry:ABC2
+
+    """
     # FIRST
     # apply each search terms against
     # - handle
@@ -95,30 +130,61 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
             field, value = search_term.split(':')[:2]
             field = field.lower()
             field_search = search_term.split(':')[0] in [
-                'id',
-                'tag',
-                'spacegroup',
-                'species',
-                'prototype',
-                'repository',
-                'stoichiometry',
+                'crystal_system',
+                'handle',
                 'n_atoms',
                 'n_species',
+                'prototype',
+                'repository',
+                'spacegroup',
+                'species',
+                'stoichiometry',
+                'tag',
                 ]
 
         if field_search:
-            if field == 'id':
+            if field == 'handle':
                 query = query.filter(
                     models.Geometry.handle == value,
                 )
+            elif field == 'crystal_system':
+                if value == 'triclinic':
+                    spacegroups = list(range(1, 3))
+                elif value == 'monoclinic':
+                    spacegroups = list(range(3, 16))
+                elif value == 'orthorhombic':
+                    spacegroups = list(range(16, 75))
+                elif value == 'tetragonal':
+                    spacegroups = list(range(75, 143))
+                elif value == 'trigonal':
+                    spacegroups = list(range(143, 168))
+                elif value == 'hexagonal':
+                    spacegroups = list(range(168, 194))
+                elif value == 'cubic':
+                    spacegroups = list(range(195, 231))
+                else:
+                    spacegroups = []
+
+                query = query.filter(
+                    models.Geometry.spacegroup.in_(spacegroups),
+                )
+
             elif field == 'spacegroup' and is_int(value):
                 query = query.filter(
                     models.Geometry.spacegroup.in_(expand_int_values(value)),
                 )
             elif field == 'species':
-                query = query.filter(
-                    models.Geometry.species.contains('{' + value + '}'),
-                )
+                if ',' in value:
+                    query = query.filter(models.or_(
+                        models.Geometry.species.any(v)
+                        for v in expand_str_values(value)
+                        )
+                    )
+                else:
+                    value = ','.join(string2symbols(value))
+                    query = query.filter(
+                        models.Geometry.species.contains('{' + value + '}'),
+                    )
             elif field == 'tag':
                 query = query.filter(
                     models.Geometry.tags.contains('{' + value.lower() + '}'),
