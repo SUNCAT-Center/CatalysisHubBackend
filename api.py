@@ -151,13 +151,14 @@ import json
 import graphene
 import graphene.relay
 import graphene_sqlalchemy
-import promise.dataloader
+#import promise.dataloader
 import promise
 import sqlalchemy
 import six
 
 # local imports
 import models
+from models import hybrid_prop_parameters
 
 
 class CountableConnection(graphene.relay.Connection):
@@ -209,26 +210,26 @@ class Publication(CustomSQLAlchemyObjectType):
     reactions = graphene.List('api.Reaction')
     systems = graphene.List('api.System')
 
-    def resolve_reactions(self, info):
-        return reaction_loader.load_many(
-                [x.id for x in self.reactions]
-                )
+    #def resolve_reactions(self, info):
+    #    return reaction_loader.load_many(
+    #            [x.id for x in self.reactions]
+    #            )
 
-    def resolve_systems(self, info):
-        return system_loader.load_many(
-                [x.id for x in self.systems]
-                )
-
-
-class PublicationLoader(promise.dataloader.DataLoader):
-    def batch_load_fn(self, keys):
-        return promise.Promise.resolve(
-            models.db_session.query(models.Publication) \
-                    .filter(models.Publication.id.in_(keys)).all()
-            )
+    #def resolve_systems(self, info):
+    #    return system_loader.load_many(
+    #            [x.id for x in self.systems]
+    #            )
 
 
-publication_loader = PublicationLoader()
+#class PublicationLoader(promise.dataloader.DataLoader):
+#    def batch_load_fn(self, keys):
+#        return promise.Promise.resolve(
+#            models.db_session.query(models.Publication) \
+#                    .filter(models.Publication.id.in_(keys)).all()
+#            )
+
+
+#publication_loader = PublicationLoader()
 
 
 class ReactionSystem(CustomSQLAlchemyObjectType):
@@ -331,26 +332,26 @@ class Species(CustomSQLAlchemyObjectType):
         interfaces = (graphene.relay.Node, )
 
 
-class SystemLoader(promise.dataloader.DataLoader):
-    def batch_load_fn(self, keys):
-        return promise.Promise.resolve(
-            models.db_session.query(models.System) \
-                    .filter(models.System.id.in_(keys)).all()
-            )
+#class SystemLoader(promise.dataloader.DataLoader):
+#    def batch_load_fn(self, keys):
+#        return promise.Promise.resolve(
+#            models.db_session.query(models.System) \
+#                    .filter(models.System.id.in_(keys)).all()
+#            )
 
 
-system_loader = SystemLoader()
+#system_loader = SystemLoader()
 
 
-class ReactionLoader(promise.dataloader.DataLoader):
-    def batch_load_fn(self, keys):
-        return promise.Promise.resolve(
-            models.db_session.query(models.Reaction) \
-                    .filter(models.Reaction.id.in_(keys)).all()
-            )
+#class ReactionLoader(promise.dataloader.DataLoader):
+#    def batch_load_fn(self, keys):
+#        return promise.Promise.resolve(
+#            models.db_session.query(models.Reaction) \
+#                    .filter(models.Reaction.id.in_(keys)).all()
+#            )
 
 
-reaction_loader = ReactionLoader()
+#reaction_loader = ReactionLoader()
 
 
 class Reaction(CustomSQLAlchemyObjectType):
@@ -362,10 +363,10 @@ class Reaction(CustomSQLAlchemyObjectType):
     reaction_systems = graphene.List(ReactionSystem)
     systems = graphene.List(System)
 
-    def resolve_systems(self, info):
-        return system_loader.load_many(
-                [x.id for x in self.systems]
-                )
+    #def resolve_systems(self, info):
+    #    return system_loader.load_many(
+    #            [x.id for x in self.systems]
+    #            )
 
 
 # class Search(CustomSQLAlchemyObjectType):
@@ -405,17 +406,22 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                 name = field.name.value
                 if name in cont_fields:
                     fields = field.selection_set.selections
-                elif name in skip_fields or name[0].isupper():
+                elif name in skip_fields:# or name[0].isupper():
                     continue
                 else:
-                    if field.selection_set is not None:
-                        keyname = name
-                        field_names.append(name)
-                        load_fields.update({keyname: []})
-                        fields = field.selection_set.selections
+                    if name[0].isupper():  # hybrid property
+                        names = hybrid_prop_parameters(name)
                     else:
-                        load_fields[keyname].append(convert(name))
-                        fields = None
+                        names = [name]
+                    for name in names:
+                        if field.selection_set is not None:
+                            keyname = name
+                            field_names.append(name)
+                            load_fields.update({keyname: []})
+                            fields = field.selection_set.selections
+                        else:
+                            load_fields[keyname].append(convert(name))
+                            fields = None
 
         query = query.options(load_only(*load_fields[field_names[0]]))
 
@@ -448,6 +454,8 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                 jsonkey = None
                 if '__' in field:
                     field, jsonkey = field.split('__')
+                elif '->' in value:
+                    jsonkey, value = value.split('->')
                 if jsonkey is None:
                     jsonkey = jsonkey_input
 
@@ -458,6 +466,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
 
                 elif str(column.type) == "JSONB":
                     jsonb = True
+
                     if jsonkey is not None:
                         query = query.filter(column.has_key(jsonkey))
                         column = column[jsonkey].astext
@@ -560,6 +569,11 @@ def get_filter_fields(model):
                 filter_fields[column_name] = getattr(graphene, 'String')()
             elif column_type == 'JSONB':
                 filter_fields[column_name] = getattr(graphene, 'String')()
+            elif column_type == 'ARRAY':
+                if column_name == 'numbers':
+                    filter_fields[column_name] = getattr(graphene, 'Int')()
+                else:
+                    filter_fields[column_name] = getattr(graphene, 'Float')()
             else:
                 filter_fields[column_name] = getattr(graphene, column_type)()
     # always add a distinct filter
