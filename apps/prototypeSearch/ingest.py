@@ -4,6 +4,7 @@ import os
 import pprint
 import sys
 import time
+import statistics
 
 from sqlalchemy.sql.expression import Tuple
 
@@ -14,6 +15,9 @@ import mendeleev
 models.metadata.create_all(models.engine)
 models.session.commit()
 
+scarcity_data = {}
+for element in mendeleev.get_all_elements():
+    scarcity_data[element.symbol] = 1./(element.abundance_crust or 1e-9)
 
 
 #@profile
@@ -87,6 +91,12 @@ def main(filename, options):
                 # let's skip those for now
                 if len(data['species']) >= 60:
                     continue
+
+                #scarcity = statistics.mean([scarcity_data[x]
+                    #for x in (data['species'])])
+                #print(f"Scarcity: {scarcity}, {data['species']}")
+                #data['scarcity'] = scarcity
+
             except:
                 print("Error in line {i}".format(**locals()))
                 print("Fields")
