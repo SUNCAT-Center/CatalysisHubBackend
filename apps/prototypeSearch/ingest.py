@@ -79,7 +79,7 @@ def main(filename, options):
                 data['n_permutations'] = int(fields[9])
                 #data['permutations'] = fields[10]
                 if len(fields) == 14:
-                    data['tags'] = fields[13].lower().split()
+                    data['tags'] = fields[13].lower()
                     data['parameters'] = list(map(lambda x: float(x), fields[12].split()))
                     data['handle'] = fields[11]
                 else:
@@ -89,23 +89,24 @@ def main(filename, options):
                 # usually affects only protein crystals
                 # gives trouble in indexs
                 # let's skip those for now
-                if len(data['species']) >= 60:
+                if len(data['species']) >= 70:
                     continue
 
-                #scarcity = statistics.mean([scarcity_data[x]
-                    #for x in (data['species'])])
+                scarcity = statistics.mean([scarcity_data[x]
+                    for x in (data['species'])])
+                data['scarcity'] = scarcity
                 #print(f"Scarcity: {scarcity}, {data['species']}")
-                #data['scarcity'] = scarcity
 
-            except:
-                print("Error in line {i}".format(**locals()))
+            except Exception as e:
+                print("Error in line {i}: {e}".format(**locals()))
                 print("Fields")
                 print(fields)
                 n_errors += 1
                 
                 error_lines.append(fields)
                 error_lines_nr.append(i + 1)
-                continue
+                if not options.test:
+                    continue
                 #raise
 
             #data['a_param'] = fields[7].split()[0]
