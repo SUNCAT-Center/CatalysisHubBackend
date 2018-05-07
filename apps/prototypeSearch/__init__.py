@@ -64,7 +64,7 @@ def expand_str_values(values):
     return values.split(',')
 
 
-def expand_int_values(values, limit=100):
+def expand_int_values(values, limit=230):
     values = values.split(',')
     expanded_values = []
     for value in values:
@@ -74,7 +74,8 @@ def expand_int_values(values, limit=100):
             try:
                 start, end = value.split('-')
                 start, end = int(start), int(end)
-            except ValueError:
+            except ValueError as e:
+                print(e)
                 pass
             if end > start and (end - start) <= limit:
                 expanded_values.extend(list(range(start, end + 1)))
@@ -146,6 +147,7 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
     # - repository
     for search_term in search_terms:
         field_search = False
+        tag_search = False
         if ':' in search_term:
             field, value = search_term.split(':')[:2]
             field = field.lower()
@@ -160,7 +162,10 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                 'species',
                 'stoichiometry',
                 'tag',
-                ]
+            ]
+        elif '*' in search_term:
+            search_term = '%' + search_term.replace('*', '%') + '%'
+            tag_search = True
 
         if field_search:
             if field == 'handle':
@@ -184,12 +189,14 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                         spacegroups.extend(list(range(168, 195)))
                     elif v == 'cubic':
                         spacegroups.extend(list(range(195, 231)))
+                    else:
+                        spacegroups.extend(expand_int_values(v))
 
                 query = query.filter(
                     models.Geometry.spacegroup.in_(spacegroups),
                 )
 
-            elif field == 'spacegroup' and is_int(value):
+            elif field == 'spacegroup':
                 query = query.filter(
                     models.Geometry.spacegroup.in_(expand_int_values(value)),
                 )
@@ -198,7 +205,7 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                     query = query.filter(models.or_(
                         models.Geometry.species.any(v)
                         for v in expand_str_values(value)
-                        )
+                    )
                     )
                 else:
                     value = ','.join(string2symbols(value))
@@ -207,7 +214,8 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                     )
             elif field == 'tag':
                 query = query.filter(
-                    models.Geometry.tags.contains('{' + value.lower() + '}'),
+                    models.Geometry.tags.like(
+                        '%' + value.lower().replace('*', '%') + '%'),
                 )
             elif field == 'prototype':
                 query = query.filter(
@@ -231,12 +239,14 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                 query = query.filter(
                     models.Geometry.n_atoms.in_(expand_int_values(value)),
                 )
+        elif tag_search:
+            query = query.filter(models.Geometry.tags.like(search_term))
         else:
             or_filters = [
                 models.Geometry.handle == search_term,
                 models.Geometry.species.contains('{' + search_term + '}'),
-                models.Geometry.tags.contains('{' + search_term + '}'),
-                # models.Geometry.wyckoffs.contains('{' + search_term + '}'),
+                models.Geometry.tags.like(
+                    '%' + search_term.lower().replace('*', '%') + '%'),
                 models.Geometry.repository == search_term,
                 models.Geometry.stoichiometry == search_term,
                 models.Geometry.prototype == search_term,
@@ -398,7 +408,7 @@ def facet_search(request=None):
     ) \
         .group_by(models.Geometry.spacegroup) \
         .order_by(models.desc(models.func.count())) \
-        .limit(100) \
+        .limit(230) \
         .all()
 
     print(time.time() - time0, "AFTER SPACEGROUPS")
@@ -553,17 +563,17 @@ def get_structure(request=None):
     wyckoffs = json.loads(args.get('wyckoffs', '["a"]').replace("'", '"'))
     species = json.loads(args.get('species', '["Pt"]').replace("'", '"'))
     parameter_names = json.loads(
-            args.get('parameter_names', '["a"]').replace("'", '"')
-            )
+        args.get('parameter_names', '["a"]').replace("'", '"')
+    )
     parameters = json.loads(args.get('parameters', '[2.7]').replace("'", '"'))
 
     input_params = {
-            'spacegroup': spacegroup,
-            'wyckoffs': wyckoffs,
-            'species': species,
-            'parameter_names': parameter_names,
-            'parameters': parameters,
-            }
+        'spacegroup': spacegroup,
+        'wyckoffs': wyckoffs,
+        'species': species,
+        'parameter_names': parameter_names,
+        'parameters': parameters,
+    }
 
     structure = ''
     if be is not None:
@@ -582,7 +592,7 @@ def get_structure(request=None):
             'vasp',
             'cif'),
         'input': input_params,
-        })
+    })
 
 
 if __name__ == '__main__':
