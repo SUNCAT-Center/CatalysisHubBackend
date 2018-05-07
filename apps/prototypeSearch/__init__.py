@@ -53,11 +53,32 @@ def is_int(s):
         return False
 
 
+def is_float(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
 def row2dict(row):
     d = {}
     for column in row.__table__.columns:
         d[column.name] = str(getattr(row, column.name))
     return d
+
+
+def apply_range(query, column, value):
+    if not value.count('-') == 1:
+        return query
+    minimum, maximum = value.split('-')
+    if is_float(minimum):
+        query = query.filter(
+            getattr(models.Geometry, column) >= float(minimum))
+    if is_float(maximum):
+        query = query.filter(
+            getattr(models.Geometry, column) <= float(maximum))
+    return query
 
 
 def expand_str_values(values):
@@ -162,6 +183,9 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                 'species',
                 'stoichiometry',
                 'tag',
+                'scarcity',
+                'volume',
+                'density',
             ]
         elif '*' in search_term:
             search_term = '%' + search_term.replace('*', '%') + '%'
@@ -172,6 +196,12 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                 query = query.filter(
                     models.Geometry.handle == value,
                 )
+            elif field == 'volume':
+                query = apply_range(query, field, value)
+            elif field == 'density':
+                query = apply_range(query, field, value)
+            elif field == 'scarcity':
+                query = apply_range(query, field, value)
             elif field == 'crystal_system':
                 spacegroups = []
                 for v in value.split(','):
