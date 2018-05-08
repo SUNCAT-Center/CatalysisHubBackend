@@ -4,6 +4,7 @@
 ase==3.15.0
 backports.functools-lru-cache==1.4
 git+https://github.com/SUNCAT-Center/CatKit.git#egg=catkit
+git+https://github.com/SUNCAT-Center/CatKit.git#egg=catgen
 blinker==1.4
 click==6.7
 coverage==4.4.2
