@@ -3,8 +3,7 @@
 # Add new packages in requirements.template instead.
 ase==3.15.0
 backports.functools-lru-cache==1.4
-git+https://github.com/SUNCAT-Center/CatKit.git#egg=catkit
-git+https://github.com/SUNCAT-Center/CatKit.git#egg=catgen
+git+https://github.com/SUNCAT-Center/CatKit.git@v0.3.0#egg=catkit
 git+https://catapp_admin:${GITLAB_PW}@gitlab.com/atoML/AtoML.git#egg=atoml
 BulkEnumerator-0.0.2-cp36-cp36m-linux_x86_64.whl
 blinker==1.4
