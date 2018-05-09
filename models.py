@@ -44,10 +44,10 @@ class JsonEncodedDict(sqla.TypeDecorator):
 # set to local database path
 
 
-if os.environ.get('DB_PASSWORD0', ''):
+if os.environ.get('DB_PASSWORDNO', ''):
     url = sqlalchemy.engine.url.URL('postgres',
                                     username='aseroot',
-                                    password=os.environ['DB_PASSWORD0'],
+                                    password=os.environ['DB_PASSWORD'],
                                     host='catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com',
                                     port=5432,
                                     database='catalysishub')
@@ -90,11 +90,11 @@ association_pubsys = \
     sqlalchemy.Table('publication_system',
                      Base.metadata,
                      sqlalchemy.Column('ase_id', sqlalchemy.String,
-                                       sqlalchemy.ForeignKey('newase.systems.unique_id'),
+                                       sqlalchemy.ForeignKey('public.systems.unique_id'),
                                        # if PRODUCTION# else 'main.systems.pub_id'),
                                        primary_key=True),
                      sqlalchemy.Column('pub_id', sqlalchemy.String,
-                                       sqlalchemy.ForeignKey('newase.publication.pub_id'),
+                                       sqlalchemy.ForeignKey('public.publication.pub_id'),
                                        # if PRODUCTION else 'main.publication.pub_id'),
                                        primary_key=True)
     )
@@ -102,7 +102,7 @@ association_pubsys = \
 
 class Publication(Base):
     __tablename__ = 'publication'
-    __table_args__ = ({'schema': 'newase'})# if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     pub_id = sqlalchemy.Column(sqlalchemy.String, unique=True)
     title = sqlalchemy.Column(sqlalchemy.String, )
@@ -114,7 +114,7 @@ class Publication(Base):
     publisher = sqlalchemy.Column(sqlalchemy.String, )
     doi = sqlalchemy.Column(sqlalchemy.String, )
     tags = sqlalchemy.Column(JSONB, )
-    pubtextsearch = sqlalchemy.Column(TSVECTOR, ) 
+    pubtextsearch = sqlalchemy.Column(TSVECTOR, )
     reactions = sqlalchemy.orm.relationship("Reaction", backref="publication")#, uselist=True)
     systems = sqlalchemy.orm.relationship("System",
                                           secondary=association_pubsys)#, uselist=True)
@@ -122,20 +122,20 @@ class Publication(Base):
 
 class ReactionSystem(Base):
     __tablename__ = 'reaction_system'
-    __table_args__ = ({'schema': 'newase'})# if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
 
     name = sqlalchemy.Column(sqlalchemy.String, )
     energy_correction = sqlalchemy.Column(sqlalchemy.Float, )
     ase_id = sqlalchemy.Column(sqlalchemy.String,
-                               sqlalchemy.ForeignKey('newase.systems.unique_id'), # if PRODUCTION else 'main.publication.pub_id'),
+                               sqlalchemy.ForeignKey('public.systems.unique_id'), # if PRODUCTION else 'main.publication.pub_id'),
                                primary_key=True)
     id = sqlalchemy.Column(sqlalchemy.Integer,  sqlalchemy.ForeignKey(
-        'newase.reaction.id'), # if PRODUCTION else 'main.reaction.id'),
+        'public.reaction.id'), # if PRODUCTION else 'main.reaction.id'),
                            primary_key=True)
     
 class Reaction(Base):
     __tablename__ = 'reaction'
-    __table_args__ = ({'schema': 'newase'})# if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     #rowid = sqlalchemy.sqlalchemy.Column(sqlalchemy.Integer)
     chemical_composition = sqlalchemy.Column(sqlalchemy.String, )
@@ -151,7 +151,7 @@ class Reaction(Base):
     dft_functional = sqlalchemy.Column(sqlalchemy.String, )
     username = sqlalchemy.Column(sqlalchemy.String, )
     pub_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
-        'newase.publication.pub_id'))# if PRODUCTION else 'main.publication.pub_id'))
+        'public.publication.pub_id'))# if PRODUCTION else 'main.publication.pub_id'))
     textsearch = sqlalchemy.Column(TSVECTOR, )
 
     reaction_systems = sqlalchemy.orm.relationship("ReactionSystem",
@@ -200,14 +200,14 @@ class Reaction(Base):
     
 class Information(Base):
     __tablename__ = 'information'
-    __table_args__ = ({'schema': 'newase'})# if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
     name = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.String, )
 
 
 class System(Base):
     __tablename__ = 'systems'
-    __table_args__ = ({'schema': 'newase'})# if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     unique_id = sqlalchemy.Column(sqlalchemy.String, )
@@ -287,6 +287,10 @@ class System(Base):
         return mem_file.getvalue()
 
     @hybrid_property
+    def _pbc(self):
+        return (self.pbc & np.array([1, 2, 4])).astype(bool).tolist()
+
+    @hybrid_property
     def _ctime(self):
         return (
                 datetime.datetime(2000, 1, 1, 0, 0)
@@ -304,11 +308,39 @@ class System(Base):
                     )
                 ).strftime('%c')
 
+    @hybrid_property
+    def _adsorbate(self):
+        return self.key_value_pairs.get('adsorbate', '')
+
+    @hybrid_property
+    def _reaction(self):
+        return self.key_value_pairs.get('reaction', '')
+
+    @hybrid_property
+    def _username(self):
+        return self.key_value_pairs.get('username', '')
+
+    @hybrid_property
+    def _substrate(self):
+        return self.key_value_pairs.get('substrate', '')
+
+    @hybrid_property
+    def _facet(self):
+        return self.key_value_pairs.get('facet', '').strip("()")
+
+    @hybrid_property
+    def _dft_code(self):
+        return self.key_value_pairs.get('dft_code', '')
+
+    @hybrid_property
+    def _dft_functional(self):
+        return self.key_value_pairs.get('dft_functional', '')
+
 class Species(Base):
     __tablename__ = 'species'
-    __table_args__ = ({'schema': 'newase'})# if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'newase.systems.id'),# if PRODUCTION else 'main.systems.id'),
+        'public.systems.id'),# if PRODUCTION else 'main.systems.id'),
                            primary_key=True)
     z = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
     n = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
@@ -316,18 +348,18 @@ class Species(Base):
 
 class Key(Base):
     __tablename__ = 'keys'
-    __table_args__ = ({'schema': 'newase'})# if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'newase.systems.id'),# if PRODUCTION else 'main.systems.id'),
+        'public.systems.id'),# if PRODUCTION else 'main.systems.id'),
                            primary_key=True)
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
 
 
 class NumberKeyValue(Base):
     __tablename__ = 'number_key_values'
-    __table_args__ = ({'schema': 'newase'})# if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'newase.systems.id'),# if PRODUCTION else 'main.systems.id'),
+        'public.systems.id'),# if PRODUCTION else 'main.systems.id'),
                            primary_key=True)
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.Float,)
@@ -335,9 +367,9 @@ class NumberKeyValue(Base):
 
 class TextKeyValue(Base):
     __tablename__ = 'text_key_values'
-    __table_args__ = ({'schema': 'newase'})# if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
     id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'newase.systems.id'),# if PRODUCTION else 'main.systems.id'),
+        'public.systems.id'),# if PRODUCTION else 'main.systems.id'),
                            primary_key=True)
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.String,)
@@ -346,9 +378,11 @@ def hybrid_prop_parameters(key):
     h_parameters = {'Formula': ['id', 'numbers'],
                     'Equation': ['id', 'reactants', 'products'],
                     'Cifdata': ['id', 'numbers', 'positions', 'cell', 'pbc'],
-                    'Ctime': ['ctime'],
-                    'Mtime': ['mtime']}
+                    'Ctime': ['id', 'ctime'],
+                    'Mtime': ['id', 'mtime'],
+                    'Pbc': ['id', 'pbc']}
 
-    assert key in h_parameters
+    if key not in h_parameters:
+        return ['id', 'key_value_pairs']
 
     return h_parameters[key]
