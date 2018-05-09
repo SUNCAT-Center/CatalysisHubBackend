@@ -53,6 +53,14 @@ def is_int(s):
         return False
 
 
+def is_float(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
 def row2dict(row):
     d = {}
     for column in row.__table__.columns:
@@ -60,11 +68,24 @@ def row2dict(row):
     return d
 
 
+def apply_range(query, column, value):
+    if not value.count('-') == 1:
+        return query
+    minimum, maximum = value.split('-')
+    if is_float(minimum):
+        query = query.filter(
+            getattr(models.Geometry, column) >= float(minimum))
+    if is_float(maximum):
+        query = query.filter(
+            getattr(models.Geometry, column) <= float(maximum))
+    return query
+
+
 def expand_str_values(values):
     return values.split(',')
 
 
-def expand_int_values(values, limit=100):
+def expand_int_values(values, limit=230):
     values = values.split(',')
     expanded_values = []
     for value in values:
@@ -74,7 +95,8 @@ def expand_int_values(values, limit=100):
             try:
                 start, end = value.split('-')
                 start, end = int(start), int(end)
-            except ValueError:
+            except ValueError as e:
+                print(e)
                 pass
             if end > start and (end - start) <= limit:
                 expanded_values.extend(list(range(start, end + 1)))
@@ -83,37 +105,57 @@ def expand_int_values(values, limit=100):
 
 def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
     """
-    Apply filters against query. Terms are separated by a space (' ') and
+    **Apply filters against query.**
+
+    Terms are separated by a space (`` ``) and
     results have to match each term (AND).
-    If search terms specify a column ("column:value") they are applied only
+    If search terms specify a column (``column:value``) they are applied only
     against the respective column. The value can consist of one or more values
     separated by a comma. Numerical ranges can be abbreviated
-    with a dash ('-').
+    with a dash (``-``).
 
-    Values within on column are applied with an OR filter. One example is
-    "spacegroup:160,170-190". This would match any structure with spacegroup
+    Values within one column are applied with an OR filter. One example is
+    ``spacegroup:160,170-190``. This would match any structure with spacegroup
     160 or any spacegroup larger or equal to 170 and less or equal to 190.
 
-    Possible column names are crystal crystal_system, handle, n_atoms,
-    n_species, prototype, repository, spacegroup, species,
-    stoichiometry, tag.
+    Possible column names are ``crystal_system``, ``handle``, ``n_atoms``,
+    ``n_species``, ``prototype``, ``repository``, ``spacegroup``, ``species``,
+    ``stoichiometry``, ``tag``.
 
-    crystal_system takes values triclinic, monoclinic, orthorhombic,
-    tetragonal, trigonal, hexagonal, or cubic and is a short to the
+    ``crystal_system`` takes values ``triclinic``, ``monoclinic``,
+    ``orthorhombic``, ``tetragonal``, ``trigonal``, ``hexagonal``,
+    or ``cubic`` and is a short to the
     corresponding range of spacegroups as listed here:
     https://en.wikipedia.org/wiki/List_of_space_groups.
 
-    species is a special column in that is allows filtering with
-    AND and OR. The term species:AuPd will filter for structures
-    containsing Gold AND Palladium, whereas species:Au,Pd will filter for
+         ``triclinic``
+             1 - 2
+         ``monoclinic``
+             3 - 15
+         ``orthorhombic``
+             16 - 74
+         ``tetragonal``
+             75 - 142
+         ``trigonal``
+             143 - 167
+         ``hexagonal``
+             168 - 194
+         ``cubic``
+             195 - 230
+
+    species is a special column in that it allows filtering with
+    AND and OR. The term ``species:AuPd`` will filter for structures
+    containing Gold AND Palladium, whereas ``species:Au,Pd`` will filter for
     structures containing Au OR Pd.
 
     Some examples:
 
-        spacegroup:160-222
-        species:AuZn n_species:2
-        species:GaGe n_atoms:3
-        species:SrTi stoichiometry:ABC2
+        - ``spacegroup:160-222,230``
+        - ``species:AuZn n_species:2``
+        - ``species:GaGe n_atoms:3``
+        - ``species:SrTi stoichiometry:ABC2``
+        - ``repository:AMCSD,OCMD``
+        - ``crystal_system:tetragonal species:AuPd``
 
     """
     # FIRST
@@ -126,6 +168,7 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
     # - repository
     for search_term in search_terms:
         field_search = False
+        tag_search = False
         if ':' in search_term:
             field, value = search_term.split(':')[:2]
             field = field.lower()
@@ -140,36 +183,50 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                 'species',
                 'stoichiometry',
                 'tag',
-                ]
+                'scarcity',
+                'volume',
+                'density',
+            ]
+        elif '*' in search_term:
+            search_term = '%' + search_term.replace('*', '%') + '%'
+            tag_search = True
 
         if field_search:
             if field == 'handle':
                 query = query.filter(
                     models.Geometry.handle == value,
                 )
+            elif field == 'volume':
+                query = apply_range(query, field, value)
+            elif field == 'density':
+                query = apply_range(query, field, value)
+            elif field == 'scarcity':
+                query = apply_range(query, field, value)
             elif field == 'crystal_system':
-                if value == 'triclinic':
-                    spacegroups = list(range(1, 3))
-                elif value == 'monoclinic':
-                    spacegroups = list(range(3, 16))
-                elif value == 'orthorhombic':
-                    spacegroups = list(range(16, 75))
-                elif value == 'tetragonal':
-                    spacegroups = list(range(75, 143))
-                elif value == 'trigonal':
-                    spacegroups = list(range(143, 168))
-                elif value == 'hexagonal':
-                    spacegroups = list(range(168, 194))
-                elif value == 'cubic':
-                    spacegroups = list(range(195, 231))
-                else:
-                    spacegroups = []
+                spacegroups = []
+                for v in value.split(','):
+                    if v == 'triclinic':
+                        spacegroups.extend(list(range(1, 3)))
+                    elif v == 'monoclinic':
+                        spacegroups.extend(list(range(3, 16)))
+                    elif v == 'orthorhombic':
+                        spacegroups.extend(list(range(16, 75)))
+                    elif v == 'tetragonal':
+                        spacegroups.extend(list(range(75, 143)))
+                    elif v == 'trigonal':
+                        spacegroups.extend(list(range(143, 168)))
+                    elif v == 'hexagonal':
+                        spacegroups.extend(list(range(168, 195)))
+                    elif v == 'cubic':
+                        spacegroups.extend(list(range(195, 231)))
+                    else:
+                        spacegroups.extend(expand_int_values(v))
 
                 query = query.filter(
                     models.Geometry.spacegroup.in_(spacegroups),
                 )
 
-            elif field == 'spacegroup' and is_int(value):
+            elif field == 'spacegroup':
                 query = query.filter(
                     models.Geometry.spacegroup.in_(expand_int_values(value)),
                 )
@@ -178,7 +235,7 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                     query = query.filter(models.or_(
                         models.Geometry.species.any(v)
                         for v in expand_str_values(value)
-                        )
+                    )
                     )
                 else:
                     value = ','.join(string2symbols(value))
@@ -187,7 +244,8 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                     )
             elif field == 'tag':
                 query = query.filter(
-                    models.Geometry.tags.contains('{' + value.lower() + '}'),
+                    models.Geometry.tags.like(
+                        '%' + value.lower().replace('*', '%') + '%'),
                 )
             elif field == 'prototype':
                 query = query.filter(
@@ -211,12 +269,14 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                 query = query.filter(
                     models.Geometry.n_atoms.in_(expand_int_values(value)),
                 )
+        elif tag_search:
+            query = query.filter(models.Geometry.tags.like(search_term))
         else:
             or_filters = [
                 models.Geometry.handle == search_term,
                 models.Geometry.species.contains('{' + search_term + '}'),
-                models.Geometry.tags.contains('{' + search_term + '}'),
-                # models.Geometry.wyckoffs.contains('{' + search_term + '}'),
+                models.Geometry.tags.like(
+                    '%' + search_term.lower().replace('*', '%') + '%'),
                 models.Geometry.repository == search_term,
                 models.Geometry.stoichiometry == search_term,
                 models.Geometry.prototype == search_term,
@@ -378,7 +438,7 @@ def facet_search(request=None):
     ) \
         .group_by(models.Geometry.spacegroup) \
         .order_by(models.desc(models.func.count())) \
-        .limit(100) \
+        .limit(230) \
         .all()
 
     print(time.time() - time0, "AFTER SPACEGROUPS")
@@ -533,17 +593,17 @@ def get_structure(request=None):
     wyckoffs = json.loads(args.get('wyckoffs', '["a"]').replace("'", '"'))
     species = json.loads(args.get('species', '["Pt"]').replace("'", '"'))
     parameter_names = json.loads(
-            args.get('parameter_names', '["a"]').replace("'", '"')
-            )
+        args.get('parameter_names', '["a"]').replace("'", '"')
+    )
     parameters = json.loads(args.get('parameters', '[2.7]').replace("'", '"'))
 
     input_params = {
-            'spacegroup': spacegroup,
-            'wyckoffs': wyckoffs,
-            'species': species,
-            'parameter_names': parameter_names,
-            'parameters': parameters,
-            }
+        'spacegroup': spacegroup,
+        'wyckoffs': wyckoffs,
+        'species': species,
+        'parameter_names': parameter_names,
+        'parameters': parameters,
+    }
 
     structure = ''
     if be is not None:
@@ -562,7 +622,7 @@ def get_structure(request=None):
             'vasp',
             'cif'),
         'input': input_params,
-        })
+    })
 
 
 if __name__ == '__main__':

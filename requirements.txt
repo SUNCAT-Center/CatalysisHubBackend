@@ -3,7 +3,7 @@
 # Add new packages in requirements.template instead.
 ase==3.15.0
 backports.functools-lru-cache==1.4
-git+https://github.com/SUNCAT-Center/CatKit.git@6086d96e5d52527a28777575c5de4ea97bcd474e#egg=catkit
+git+https://github.com/SUNCAT-Center/CatKit.git@2f26a49af15689763c39f84b7a8ac4044e51b1d5#egg=catkit
 blinker==1.4
 click==6.7
 coverage==4.4.2
@@ -24,7 +24,7 @@ itsdangerous==0.24
 Jinja2==2.9.6
 MarkupSafe==1.0
 matplotlib==2.1.0
-mendeleev==0.3.6
+mendeleev==0.4.2
 nose==1.3.7
 numpy==1.13.3
 pandas==0.20.3

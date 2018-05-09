@@ -7,7 +7,7 @@ import sqlalchemy.ext.declarative
 from sqlalchemy import or_, func, and_, desc
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, ARRAY
 from sqlalchemy.dialects import postgresql
-from sqlalchemy import Integer, String, Column, Float
+from sqlalchemy import Integer, String, Column, Float, Index
 
 SCHEMA = os.environ.get('DB_SCHEMA_FIREWORKS', 'fireworks')
 
@@ -44,7 +44,7 @@ metadata = Base.metadata
 
 class Geometry(Base):
     __tablename__ = 'geometry'
-    __table_args__ = {'schema': SCHEMA}
+    __table_args__ = ({'schema': SCHEMA},)
 
     repository = Column(String, primary_key=True, index=True)
     spacegroup = Column(Integer, index=True)
@@ -54,14 +54,17 @@ class Geometry(Base):
     n_species = Column(Integer, index=True, nullable=False)
     species = Column(ARRAY(String), index=True, nullable=False)
     n_parameters = Column(Integer, index=True, nullable=False)
-    parameter_names = Column(ARRAY(String), index=True, nullable=False)
+    parameter_names = Column(ARRAY(String), nullable=False)
     prototype = Column(String, index=True, nullable=False)
     stoichiometry = Column(String, index=True, nullable=False)
     n_permutations = Column(Integer, index=True, nullable=False)
     # permutations -- skipped for now
-    tags = Column(ARRAY(String), index=True)
     parameters = Column(ARRAY(Float), nullable=False)
     handle = Column(String, index=True, primary_key=True, nullable=False)
+    tags = Column(String, index=True)
+    scarcity = Column(Float, index=True)
+    density = Column(Float, index=True)
+    volume = Column(Float, index=True)
 
     # prototype = sqlalchemy.ForeignKey(SCHEMA + '.prototype.name', index=True)
     permutations = sqlalchemy.Column(sqlalchemy.String, index=True)
