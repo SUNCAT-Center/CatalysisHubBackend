@@ -454,7 +454,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                 jsonkey = None
                 if '__' in field:
                     field, jsonkey = field.split('__')
-                elif '->' in value:
+                elif '->' in str(value):
                     jsonkey, value = value.split('->')
                 if jsonkey is None:
                     jsonkey = jsonkey_input
