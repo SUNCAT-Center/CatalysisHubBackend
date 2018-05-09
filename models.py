@@ -44,10 +44,10 @@ class JsonEncodedDict(sqla.TypeDecorator):
 # set to local database path
 
 
-if os.environ.get('DB_PASSWORDNO', ''):
+if os.environ.get('DB_PASSWORD0', ''):
     url = sqlalchemy.engine.url.URL('postgres',
                                     username='aseroot',
-                                    password=os.environ['DB_PASSWORD'],
+                                    password=os.environ['DB_PASSWORD0'],
                                     host='catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com',
                                     port=5432,
                                     database='catalysishub')
@@ -63,6 +63,12 @@ else:
     PRODUCTION = False
 
 
+if PRODUCTION:
+    SCHEMA = 'newase'
+else:
+    SCHEMA = 'public'
+
+print(SCHEMA)
 engine = sqlalchemy.create_engine(
     url,
     convert_unicode=True)
@@ -90,11 +96,11 @@ association_pubsys = \
     sqlalchemy.Table('publication_system',
                      Base.metadata,
                      sqlalchemy.Column('ase_id', sqlalchemy.String,
-                                       sqlalchemy.ForeignKey('public.systems.unique_id'),
+                                       sqlalchemy.ForeignKey('{}.systems.unique_id'.format(SCHEMA)),
                                        # if PRODUCTION# else 'main.systems.pub_id'),
                                        primary_key=True),
                      sqlalchemy.Column('pub_id', sqlalchemy.String,
-                                       sqlalchemy.ForeignKey('public.publication.pub_id'),
+                                       sqlalchemy.ForeignKey('{}.publication.pub_id'.format(SCHEMA)),
                                        # if PRODUCTION else 'main.publication.pub_id'),
                                        primary_key=True)
     )
@@ -102,7 +108,7 @@ association_pubsys = \
 
 class Publication(Base):
     __tablename__ = 'publication'
-    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': SCHEMA})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     pub_id = sqlalchemy.Column(sqlalchemy.String, unique=True)
     title = sqlalchemy.Column(sqlalchemy.String, )
@@ -115,27 +121,28 @@ class Publication(Base):
     doi = sqlalchemy.Column(sqlalchemy.String, )
     tags = sqlalchemy.Column(JSONB, )
     pubtextsearch = sqlalchemy.Column(TSVECTOR, )
-    reactions = sqlalchemy.orm.relationship("Reaction", backref="publication")#, uselist=True)
+    reactions = sqlalchemy.orm.relationship("Reaction", backref="publication", uselist=True)
+    
     systems = sqlalchemy.orm.relationship("System",
-                                          secondary=association_pubsys)#, uselist=True)
+                                          secondary=association_pubsys, uselist=True)
     
 
 class ReactionSystem(Base):
     __tablename__ = 'reaction_system'
-    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': SCHEMA})
 
     name = sqlalchemy.Column(sqlalchemy.String, )
     energy_correction = sqlalchemy.Column(sqlalchemy.Float, )
     ase_id = sqlalchemy.Column(sqlalchemy.String,
-                               sqlalchemy.ForeignKey('public.systems.unique_id'), # if PRODUCTION else 'main.publication.pub_id'),
+                               sqlalchemy.ForeignKey('{}.systems.unique_id'.format(SCHEMA)),
                                primary_key=True)
-    id = sqlalchemy.Column(sqlalchemy.Integer,  sqlalchemy.ForeignKey(
-        'public.reaction.id'), # if PRODUCTION else 'main.reaction.id'),
+    id = sqlalchemy.Column(sqlalchemy.Integer,
+                           sqlalchemy.ForeignKey('{}.reaction.id'.format(SCHEMA)),
                            primary_key=True)
     
 class Reaction(Base):
     __tablename__ = 'reaction'
-    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': SCHEMA})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     #rowid = sqlalchemy.sqlalchemy.Column(sqlalchemy.Integer)
     chemical_composition = sqlalchemy.Column(sqlalchemy.String, )
@@ -151,7 +158,7 @@ class Reaction(Base):
     dft_functional = sqlalchemy.Column(sqlalchemy.String, )
     username = sqlalchemy.Column(sqlalchemy.String, )
     pub_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
-        'public.publication.pub_id'))# if PRODUCTION else 'main.publication.pub_id'))
+        '{}.publication.pub_id'.format(SCHEMA)))
     textsearch = sqlalchemy.Column(TSVECTOR, )
 
     reaction_systems = sqlalchemy.orm.relationship("ReactionSystem",
@@ -200,14 +207,14 @@ class Reaction(Base):
     
 class Information(Base):
     __tablename__ = 'information'
-    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': SCHEMA})
     name = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.String, )
 
 
 class System(Base):
     __tablename__ = 'systems'
-    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
+    __table_args__ = ({'schema': SCHEMA})
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
     unique_id = sqlalchemy.Column(sqlalchemy.String, )
@@ -338,9 +345,9 @@ class System(Base):
 
 class Species(Base):
     __tablename__ = 'species'
-    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
-    id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id'),# if PRODUCTION else 'main.systems.id'),
+    __table_args__ = ({'schema': SCHEMA})
+    id = sqlalchemy.Column(sqlalchemy.Integer,
+                           sqlalchemy.ForeignKey('{}.systems.id'.format(SCHEMA)),
                            primary_key=True)
     z = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
     n = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
@@ -348,18 +355,18 @@ class Species(Base):
 
 class Key(Base):
     __tablename__ = 'keys'
-    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
-    id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id'),# if PRODUCTION else 'main.systems.id'),
+    __table_args__ = ({'schema': SCHEMA})
+    id = sqlalchemy.Column(sqlalchemy.Integer,
+                           sqlalchemy.ForeignKey('{}.systems.id'.format(SCHEMA)),
                            primary_key=True)
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
 
 
 class NumberKeyValue(Base):
     __tablename__ = 'number_key_values'
-    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
-    id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id'),# if PRODUCTION else 'main.systems.id'),
+    __table_args__ = ({'schema': SCHEMA})
+    id = sqlalchemy.Column(sqlalchemy.Integer,
+                           sqlalchemy.ForeignKey('{}.systems.id'.format(SCHEMA)),
                            primary_key=True)
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.Float,)
@@ -367,9 +374,9 @@ class NumberKeyValue(Base):
 
 class TextKeyValue(Base):
     __tablename__ = 'text_key_values'
-    __table_args__ = ({'schema': 'public'})# if PRODUCTION else 'main'})
-    id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey(
-        'public.systems.id'),# if PRODUCTION else 'main.systems.id'),
+    __table_args__ = ({'schema': SCHEMA})
+    id = sqlalchemy.Column(sqlalchemy.Integer,
+                           sqlalchemy.ForeignKey('{}.systems.id'.format(SCHEMA)),
                            primary_key=True)
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.String,)
