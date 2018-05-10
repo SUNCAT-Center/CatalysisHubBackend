@@ -36,6 +36,9 @@ session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(
     bind=engine,
 ))
 
+inspector = sqlalchemy.engine.reflection.Inspector.from_engine(
+        engine
+        )
 
 Base = sqlalchemy.ext.declarative.declarative_base()
 Base.query = session.query_property()
