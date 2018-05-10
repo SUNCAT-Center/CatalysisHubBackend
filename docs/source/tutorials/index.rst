@@ -4,7 +4,7 @@ Tutorials
 Searching for reaction energies
 --------------------------------
 
-Here you will learn how to use the webpage to search for chemical reactions. Go to http://www.catalysis-hub.org/energies to use the build in search function. This feature corresponds to `CatApp v2.0` where you can access reaction energies and barries for different surfaces.
+Here you will learn how to use the webpage to search for chemical reactions. Go to http://www.catalysis-hub.org/energies to use the build in search function. This feature corresponds to `CatApp v2.0` where you can access reaction energies and barriers for different surfaces.
 
 1) Type something in the reactants field and press the search button (for example CH3CH2OH*). How much is returned? Try to decrease the number of reactions by filling out the :code:`Products`, :code:`Surface` and :code:`Facet` fields.
 
@@ -47,19 +47,19 @@ Now try to add more columns after `id` and see what happens. For example::
   }}
 
 
-For a complete list of all the tables in the database, and the asociated columns, see the `Docs` tab on the top right of the GraphiQL page. There is also a schema overview posted at  http://docs.catalysis-hub.org/reference/schema.html .
+For a complete list of all the tables in the database, and the associated columns, see the `Docs` tab on the top right of the GraphiQL page. There is also a schema overview posted at  http://docs.catalysis-hub.org/reference/schema.html .
 
 In order to make selections on the result, add more fields after :code:`(first:2)`. For example::
 
    {reactions(first:2, reactants: "CO", chemicalComposition: "Pt")}
 
-Notice that it's possible to contruct queries for all the existing columns in a table.
+Notice that it's possible to construct queries for all the existing columns in a table.
 
 
 Searching for publications
 ..........................
 
-1) Find all titles and doi's from publications with year=2017.
+1) Find all titles and DOI's from publications with year=2017.
 
 2) How many publications are there with year>2015?
 
@@ -126,11 +126,56 @@ Combining tables
 2) Using the :code:`(pubID:)` solution suggested above, list all the distinct
    a) reactions
    b) surfaces
-   from Julias publication.
+   from Julia's publication.
 
-3) Chose one of Julias reactions and find the `aseId` of the empty slab. Hint: It has :code:`"name"="star"` in the `reactionSystems` table.
+3) Chose one of Julia's reactions and find the `aseId` of the empty slab. Hint: It has :code:`"name"="star"` in the `reactionSystems` table.
    Copy the aseId and use it to find all the reactions that are linked to that particular empty slab.
 
+
+Calling the Backend from the Command Line
+-----------------------------------------
+
+
+This is easy using `curl` or `wget`::
+
+    curl -XPOST https://api.catalysis-hub.org/graphql --data 'query={systems(last: 10 ) {
+      edges {
+        node {
+          energy Cifdata
+              }
+      }
+    }}'
+
+Check out `jq <https://stedolan.github.io/jq/manual/>`_, `yaml2json <https://www.npmjs.com/package/yaml2json>`_, `json2yaml <https://www.npmjs.com/package/json2yaml>`_, or `glom <http://glom.readthedocs.io/en/latest/tutorial.html>`_ for terse json processing on the command-line. Try this::
+
+    curl -XPOST https://api.catalysis-hub.org/graphql --data 'query={systems(last: 10 ) {
+      edges {
+        node {
+          energy Cifdata
+              }
+      }
+    }}' | jq '.data.systems.edges[].node.Cifdata' | sed -e 's/"//g' | split - -l 1 structure_ -d 
+
+    sed -i 's/\\n/\n/g' structure_*
+
+to write structures into many files. Or try this::
+
+    curl -XPOST https://api.catalysis-hub.org/graphql --data 'query={
+      reactions( reactants:"CO") {
+        totalCount
+        edges {
+          node {
+            chemicalComposition
+            reactionEnergy
+            sites
+          }
+        }
+      }
+    }
+    ' | jq -r '.data.reactions.edges[].node | [.reactionEnergy,.chemicalComposition, .sites ] | @csv' 
+
+
+for creating a CSV output.
 
 
 Calling the Backend from a Python Script
@@ -256,9 +301,9 @@ Type into the terminal::
   psql --host=catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com
   --port=5432 --username=catvisitor --dbname=catalysishub
 
-And write the password when promted.
+And write the password when prompted.
 
-Now you can start writing SQL statments directly against the database server. Try for example::
+Now you can start writing SQL statements directly against the database server. Try for example::
 
   SELECT title, year from publication LIMIT 10;
 
@@ -278,7 +323,7 @@ For this exercise you need to have a recent version of ASE installed. See https:
 (Note: this query is probably going to take some time. We're still working on optimizing the ASE database part.)
 
 
-2) Write a python script to connect via ase.db.connect. Hint: the connect() function will take the same server url as used in the previous exercise.
+2) Write a python script to connect via ase.db.connect. Hint: the connect() function will take the same server URL as used in the previous exercise.
 
    You can now use the select() function to make queries against the database. See https://wiki.fysik.dtu.dk/ase/ase/db/db.html for documentation.
 
