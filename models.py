@@ -275,13 +275,53 @@ class System(Base):
     ###################################
     # GENERAL ATOMS FORMATS
     ###################################
-    def _toatoms(self):
-        return ase.atoms.Atoms(
-            self.numbers,
-            self.positions,
-            cell=self.cell,
-            pbc=(self.pbc & np.array([1, 2, 4])).astype(bool),
-        )
+    def _toatoms(self, include_results=False):
+        if not include_results:
+            return ase.atoms.Atoms(
+                 self.numbers,
+                 self.positions,
+                 cell=self.cell,
+                 pbc=(self.pbc & np.array([1, 2, 4])).astype(bool),
+             )
+        
+        from ase.calculators.singlepoint import SinglePointCalculator
+        atoms = ase.atoms.Atoms(self.numbers,
+                                self.positions,
+                                cell=self.cell,
+                                pbc=(self.pbc & np.array([1, 2, 4])).astype(bool),
+                                magmoms=self.magmoms,
+                                charges=self.charges,
+                                tags=self.tags,
+                                masses=self.masses,
+                                momenta=self.momenta,
+                                constraint=self.constraints)
+
+        if not self.calculator == "unknown":
+            params = self.get('calculator_parameters', {})
+            atoms.calc = get_calculator(self.calculator)(**params)
+        else:
+            all_properties = ['energy', 'forces', 'stress', 'dipole',
+                              'charges', 'magmom', 'magmoms', 'free_energy']
+            results = {}
+            #print(getattr(self, 'energy'))
+            for prop in all_properties:
+                result = getattr(self, prop, None)
+                if result is not None:
+                    results[prop] = result
+               # print(results)
+            if results:
+                atoms.calc = SinglePointCalculator(atoms, **results)
+                atoms.calc.name = getattr(self, 'calculator', 'unknown')
+
+        atoms.info = {}
+        atoms.info['unique_id'] = self.unique_id
+        atoms.info['key_value_pairs'] = self.key_value_pairs
+
+        data = self.data
+        if data:
+            atoms.info['data'] = data
+        
+        return atoms
 
     @hybrid_property
     def _formula(self):
@@ -291,6 +331,12 @@ class System(Base):
     def _cifdata(self):
         mem_file = StringIO.StringIO()
         ase.io.write(mem_file, self._toatoms(), 'cif')
+        return mem_file.getvalue()
+
+    @hybrid_property
+    def _trajdata(self):
+        mem_file = StringIO.StringIO()
+        ase.io.write(mem_file, self._toatoms(include_results=True))
         return mem_file.getvalue()
 
     @hybrid_property
@@ -387,7 +433,8 @@ def hybrid_prop_parameters(key):
                     'Cifdata': ['id', 'numbers', 'positions', 'cell', 'pbc'],
                     'Ctime': ['id', 'ctime'],
                     'Mtime': ['id', 'mtime'],
-                    'Pbc': ['id', 'pbc']}
+                    'Pbc': ['id', 'pbc'],
+                    'Trajdata': ['all']}
 
     if key not in h_parameters:
         return ['id', 'key_value_pairs']
