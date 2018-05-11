@@ -401,6 +401,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
             s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
             return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
+        include_all = False
         while isinstance(fields, list):
             for field in fields:
                 name = field.name.value
@@ -411,6 +412,10 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                 else:
                     if name[0].isupper():  # hybrid property
                         names = hybrid_prop_parameters(name)
+                        if 'all' in names:
+                            print('all')
+                            include_all = True
+                            continue
                     else:
                         names = [name]
                     for name in names:
@@ -423,11 +428,12 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                             load_fields[keyname].append(convert(name))
                             fields = None
 
-        query = query.options(load_only(*load_fields[field_names[0]]))
+        if not include_all:
+            query = query.options(load_only(*load_fields[field_names[0]]))
 
-        if len(field_names) > 1:
-            column = getattr(model, convert(field_names[1]), None)
-            query = query.options(joinedload(column, innerjoin=True).load_only(*load_fields[field_names[1]]))
+            if len(field_names) > 1:
+                column = getattr(model, convert(field_names[1]), None)
+                query = query.options(joinedload(column, innerjoin=True).load_only(*load_fields[field_names[1]]))
 
         for field, value in args.items():
             if field == 'distinct':
