@@ -32,9 +32,11 @@ from flask_cors import CORS
 from apps.prototypeSearch import models
 import apps.utils
 
+
 app = flask.Blueprint('prototypeSearch', __name__)
 # app = flask.Flask(__name__)
 # cors = CORS(app)
+VIEW_NAMES = models.inspector.get_view_names()
 
 
 def encode(s, name, *args, **kwargs):
@@ -269,24 +271,11 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
                 query = query.filter(
                     models.Geometry.n_atoms.in_(expand_int_values(value)),
                 )
-        elif tag_search:
-            query = query.filter(models.Geometry.tags.like(search_term))
         else:
-            or_filters = [
-                models.Geometry.handle == search_term,
-                models.Geometry.species.contains('{' + search_term + '}'),
+            query = query.filter(
                 models.Geometry.tags.like(
                     '%' + search_term.lower().replace('*', '%') + '%'),
-                models.Geometry.repository == search_term,
-                models.Geometry.stoichiometry == search_term,
-                models.Geometry.prototype == search_term,
-
-            ]
-            if is_int(search_term):
-                or_filters.extend([
-                    models.Geometry.spacegroup == int(search_term),
-                ])
-            query = query.filter(models.or_(*or_filters))
+            )
 
     # SECOND Apply facet filters
     merged_facet_filters = {}
@@ -334,6 +323,47 @@ def apply_filters(query, search_terms=[], facet_filters=[], ignored_facets=[]):
     # pprint.pprint(merged_facet_filters)
 
     return query
+
+
+def get_facet(
+        facet,
+        limit=100,
+        offset=0,
+        search_terms=[],
+        facet_filters=[],
+        return_all=True):
+    """
+    Build facet responses
+    Don't apply facet filters here
+    because that would defeat the purpose
+    """
+    if not search_terms \
+       and not facet_filters \
+       and f'{facet}_facet' in VIEW_NAMES:
+        return list(map(tuple,
+                        models.engine.execute(
+                            f'select * from {facet}_facet '
+                            f' limit {limit} offset {offset}'
+                        )))
+    else:
+        query = apply_filters(
+            models.session.query(
+                getattr(models.Geometry, facet),
+                models.func.count(),
+            ), search_terms=search_terms,
+            facet_filters=facet_filters,
+            ignored_facets=[facet]
+        ) \
+            .group_by(getattr(models.Geometry, facet)) \
+            .order_by(models.desc(models.func.count()))
+
+        if return_all:
+            return query \
+                .offset(offset) \
+                .limit(limit) \
+                .all()
+        else:
+            return query
 
 
 @app.route('/prototype/', methods=['GET', 'POST'])
@@ -409,127 +439,87 @@ def facet_search(request=None):
     offset = int(request.args.get('offset', 0))
     limit = int(request.args.get('limit', 10))
 
-    n_compounds = apply_filters(models.session.query(models.Geometry),
-                                search_terms, facet_filters).count()
-
     # Build prototype response
-    query = models.session.query(
-        models.Geometry.prototype, models.func.count())
-    query = apply_filters(query, search_terms, facet_filters)
-    query = query \
-        .group_by(models.Geometry.prototype) \
-        .order_by(models.desc(models.func.count())) \
-        .offset(offset)
-    n_prototypes = query.count()
-    prototypes = query.limit(limit).all()
+    prototypes = get_facet(
+        'prototype',
+        search_terms=search_terms,
+        facet_filters=facet_filters,
+        limit=limit,
+        offset=offset,
+    )
+    if not search_terms \
+            and not facet_filters \
+            and 'total_count' in VIEW_NAMES \
+            and 'prototype_count' in VIEW_NAMES:
+        n_compounds = list(
+            models.engine.execute(
+                'select * from total_count'
+            )
+        )[0][0]
+
+        n_prototypes = list(
+            models.engine.execute(
+                'select * from prototype_count'
+            )
+        )[0][0]
+    else:
+        n_compounds = apply_filters(
+            models.session.query(models.Geometry),
+            search_terms, facet_filters,
+        ).count()
+        n_prototypes = sum(
+            x[1] for x in
+            get_facet(
+                'prototype',
+                limit=limit,
+                offset=offset,
+                search_terms=search_terms,
+                facet_filters=facet_filters,
+            ))
     print(time.time() - time0, "AFTER RESULT COUNT")
 
-    # Build facet responses
-    # Don't apply facet filters here
-    # because that would defeat the purpose
-
     # - spacegroup
-    spacegroups = apply_filters(
-        models.session.query(
-            models.Geometry.spacegroup, models.func.count()
-        ), search_terms=search_terms,
+    spacegroups = get_facet(
+        'spacegroup',
+        search_terms=search_terms,
         facet_filters=facet_filters,
-        ignored_facets=['spacegroup']
-    ) \
-        .group_by(models.Geometry.spacegroup) \
-        .order_by(models.desc(models.func.count())) \
-        .limit(230) \
-        .all()
-
+        limit=230)
     print(time.time() - time0, "AFTER SPACEGROUPS")
 
     # - n_wyckoffs
-    n_wyckoffs = apply_filters(
-        models.session.query(
-            models.Geometry.n_wyckoffs, models.func.count()
-        ), search_terms=search_terms,
-        facet_filters=facet_filters,
-        ignored_facets=['n_wyckoffs']) \
-        .group_by(models.Geometry.n_wyckoffs) \
-        .order_by((models.Geometry.n_wyckoffs)) \
-        .limit(100) \
-        .all()
-
+    n_wyckoffs = get_facet(
+        'n_wyckoffs',
+        search_terms=search_terms,
+        facet_filters=facet_filters)
     print(time.time() - time0, "AFTER NWYCKOFFS")
 
     # - n_species
-    n_species = apply_filters(
-        models.session.query(
-            models.Geometry.n_species, models.func.count()
-        ), search_terms=search_terms,
-        facet_filters=facet_filters,
-        ignored_facets=['n_species'],
-    ) \
-        .group_by(models.Geometry.n_species) \
-        .order_by((models.Geometry.n_species)) \
-        .limit(100) \
-        .all()
-
+    n_species = get_facet(
+        'n_species',
+        search_terms=search_terms,
+        facet_filters=facet_filters)
     print(time.time() - time0, "AFTER SPECIES")
-    # - n_atoms
-    n_atoms = apply_filters(
-        models.session.query(
-            models.Geometry.n_atoms, models.func.count()
-        ), search_terms=search_terms,
-        facet_filters=facet_filters,
-        ignored_facets=['n_atoms'],
-    ) \
-        .group_by(models.Geometry.n_atoms) \
-        .order_by(models.Geometry.n_atoms) \
-        .limit(100) \
-        .all()
 
+    # - n_atoms
+    n_atoms = get_facet(
+        'n_atoms',
+        search_terms=search_terms,
+        facet_filters=facet_filters)
     print(time.time() - time0, "AFTER NSPECIES")
 
     # - stoichiometries
-    stoichiometries = apply_filters(
-        models.session.query(
-            models.Geometry.stoichiometry, models.func.count()
-        ), search_terms=search_terms,
-        facet_filters=facet_filters,
-        ignored_facets=['stoichiometry'],
-    ) \
-        .group_by(models.Geometry.stoichiometry) \
-        .order_by(models.desc(models.func.count())) \
-        .limit(100) \
-        .all()
-
+    stoichiometries = get_facet(
+        'stoichiometry',
+        search_terms=search_terms,
+        facet_filters=facet_filters)
     print(time.time() - time0, "AFTER STOICHIOMETRY")
 
-    # - species
-    species = []
-    # species = apply_filters(
-    # models.session.query(
-    # models.Geometry.species, models.func.count()
-    # ), search_terms=search_terms,
-    #  facet_filters=facet_filters,
-    #  ignored_facets=['species'],
-    # ) \
-    # .group_by(models.Geometry.species) \
-    # .order_by(models.desc(models.func.count())) \
-    # .limit(100) \
-    # .all()
-
-    print(time.time() - time0, "AFTER SPECIES")
     # - repositories
-    query = apply_filters(
-        models.session.query(
-            models.Geometry.repository, models.func.count()
-        ), search_terms=search_terms,
-        facet_filters=facet_filters,
-        ignored_facets=['repository']
-    ) \
-        .group_by(models.Geometry.repository) \
-        .order_by(models.desc(models.func.count()))
-    repositories = query.limit(100) \
-        .all()
-
-    print(time.time() - time0, "AFTER REPOSITIRIES")
+    repositories = get_facet(
+        'repository',
+        search_terms=search_terms,
+        facet_filters=facet_filters)
+    print(time.time() - time0, "AFTER REPOSITORIES - DONE")
 
     # JSONIFY and response
     return flask.jsonify({
@@ -544,7 +534,6 @@ def facet_search(request=None):
         'n_prototypes': n_prototypes,
         'n_compounds': n_compounds,
         'spacegroups': spacegroups,
-        'species': species,
         'repositories': repositories,
         'n_atoms': n_atoms,
         'n_species': n_species,

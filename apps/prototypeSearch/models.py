@@ -12,18 +12,26 @@ from sqlalchemy import Integer, String, Column, Float, Index
 SCHEMA = os.environ.get('DB_SCHEMA_FIREWORKS', 'fireworks')
 
 
-url = sqlalchemy.engine.url.URL('postgres',
-                                username=os.environ.get(
-                                    'DB_USER_FIREWORKS', 'fireworks'),
-                                host=os.environ.get(
-                                    'DB_HOST_FIREWORKS',
-                                    'catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com'),
-                                database=os.environ.get(
-                                    'DB_DATABASE_FIREWORKS', 'catalysishub'),
-                                password=os.environ.get(
-                                    'DB_PASSWORD_FIREWORKS', ''),
-                                # port=5432,
-                                )
+if os.environ.get('DB_PASSWORD_FIREWORKS', ''):
+    url = sqlalchemy.engine.url.URL('postgres',
+                                    username=os.environ.get(
+                                        'DB_USER_FIREWORKS', 'fireworks'),
+                                    host=os.environ.get(
+                                        'DB_HOST_FIREWORKS',
+                                        'catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com'),
+                                    database=os.environ.get(
+                                        'DB_DATABASE_FIREWORKS', 'catalysishub'),
+                                    password=os.environ.get(
+                                        'DB_PASSWORD_FIREWORKS', ''),
+                                    # port=5432,
+                                    )
+else:
+    url = sqlalchemy.engine.url.URL('postgres',
+                                    username='postgres',
+                                    host='localhost',
+                                    #port=5432,
+                                    database='travis_ci_test_fireworks')
+
 engine = sqlalchemy.create_engine(
     url,
     convert_unicode=True,
@@ -36,6 +44,9 @@ session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(
     bind=engine,
 ))
 
+inspector = sqlalchemy.engine.reflection.Inspector.from_engine(
+        engine
+        )
 
 Base = sqlalchemy.ext.declarative.declarative_base()
 Base.query = session.query_property()

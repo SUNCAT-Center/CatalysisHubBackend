@@ -60,6 +60,10 @@ def main(filename, options):
         for i, line in enumerate(infile):
             if i == 0: print(line); continue
 
+            if i < options.start_line:
+                print(f'Skipped {i}')
+                continue
+
             fields = line.split(' | ')
             filename = (fields[0])
             data = {}
@@ -90,6 +94,13 @@ def main(filename, options):
                 # gives trouble in indexs
                 # let's skip those for now
                 if len(data['species']) >= 70:
+                    continue
+
+                # re-creating structures for those
+                # can lead to excessive memory requirements
+                # 8 different atomic species happens only with
+                # some organic molecule like from proteins
+                if len(data['n_species']) >= 8:
                     continue
 
                 scarcity = statistics.mean([scarcity_data[x]
@@ -151,6 +162,7 @@ if __name__ == '__main__':
     parser = optparse.OptionParser()
     parser.add_option('-t', '--test', dest='test', default=False, action='store_true')
     parser.add_option('-N', '--entries-per-batch', type=int, dest='N', default=500)
+    parser.add_option('-s', '--start-line', type=int, dest='start_line', default=0)
     options, args = parser.parse_args()
     print(args)
     print(len(args))
