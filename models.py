@@ -44,10 +44,10 @@ class JsonEncodedDict(sqla.TypeDecorator):
 # set to local database path
 
 
-if os.environ.get('DB_PASSWORD0', ''):
+if os.environ.get('DB_PASSWORD', ''):
     url = sqlalchemy.engine.url.URL('postgres',
-                                    username='aseroot',
-                                    password=os.environ['DB_PASSWORD0'],
+                                    username='catvisitor',
+                                    password=os.environ['DB_PASSWORD'],
                                     host='catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com',
                                     port=5432,
                                     database='catalysishub')
@@ -68,7 +68,6 @@ if PRODUCTION:
 else:
     SCHEMA = 'public'
 
-print(SCHEMA)
 engine = sqlalchemy.create_engine(
     url,
     convert_unicode=True)
