@@ -64,7 +64,7 @@ else:
 
 
 if PRODUCTION:
-    SCHEMA = 'newase'
+    SCHEMA = 'public'
 else:
     SCHEMA = 'public'
 
