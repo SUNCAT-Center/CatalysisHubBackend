@@ -73,7 +73,7 @@ class ReactionBackendTestCase(unittest.TestCase):
 
         # test that the right number of systems is returned
         rv_data = self.get_data('{systems { edges { node { uniqueId } } }}')
-        assert len(rv_data['data']['systems']['edges']) == 3316, "Found " + str(len(rv_data['data']['systems']['edges'])) + " systems instead of 3316"
+        assert len(rv_data['data']['systems']['edges']) == 3347, "Found " + str(len(rv_data['data']['systems']['edges'])) + " systems instead of 3347"
 
         ## assert that unique id has 32 characters
         #uniqueId = rv_data['data']['systems']['edges'][0]['node']['uniqueId']
@@ -84,6 +84,7 @@ class ReactionBackendTestCase(unittest.TestCase):
         ##pprint.pprint(rv_data)
         ## TODO: Current CifData is None
         ##       Analyze and consider fixing
+
 
     def test_graphql2(self):
         # TEST that 10 elements with energy are returned
@@ -115,16 +116,16 @@ class ReactionBackendTestCase(unittest.TestCase):
         rv_data = self.get_data(query)
         results = rv_data['data']['publications']['edges']
 
-        assert results[0]['node']['doi'] == '10.1021/acs.jpcc.7b02383', results[0]['node']['doi']
-        assert results[0]['node']['journal']  == 'JPCC', results[0]['node']['journal']
+        assert results[0]['node']['doi'] == '10.1021/jacs.7b02622', results[0]['node']['doi']
+        assert results[0]['node']['journal']  == 'JACS', results[0]['node']['journal']
         results_reactions = results[0]['node']['reactions']
-        assert results_reactions[0]['dftCode'] == 'Quantum ESPRESSSO', results_reactions[0]['dftCode']
-        assert results_reactions[0]['dftFunctional'] == 'RPBE', results_reactions[0]['dftFunctional']
+        assert results_reactions[0]['dftCode'] == 'VASP_5.4.1', results_reactions[0]['dftCode']
+        assert results_reactions[0]['dftFunctional'] == 'PBE+U=3.32', results_reactions[0]['dftFunctional']
 
     def test_order_key(self):
         query ='{systems(last: 1, order: "energy") {edges {node { Formula energy} } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['systems']['edges'][0]['node']['Formula'] == 'H2', rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['Formula'] == 'H', rv_data
 
     def test_order_key_descending(self):
         query ='{systems(last: 1, order: "-energy") {edges {node { Formula energy} } }}'
@@ -134,12 +135,12 @@ class ReactionBackendTestCase(unittest.TestCase):
     def test_total_count(self):
         query ='{systems(first: 0) { totalCount edges { node { id } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['systems']['totalCount'] == 3316, rv_data
-
+        assert rv_data['data']['systems']['totalCount'] == 3347, rv_data
 
     def test_resolve_publication_systems(self):
-        query ='{publications(year: 2017, last: 1) { totalCount edges {node { systems { uniqueId } } } }}'
+        query ='{publications(year: 2017, last: 1, before: "YXJyYXljb25uZWN0aW9uOjM=") { totalCount edges {node { systems { uniqueId } } } }}'
         rv_data = self.get_data(query)
+        print(len(rv_data['data']['publications']['edges'][0]['node']['systems']))
         assert len(rv_data['data']['publications']['edges'][0]['node']['systems']) == 7, rv_data
 
     def test_resolve_input_file(self):
@@ -151,7 +152,7 @@ class ReactionBackendTestCase(unittest.TestCase):
         query ='{systems(last: 1, order: "-energy") {edges {node { Formula energy InputFile(format: "blablabla")} } }}'
         rv_data = self.get_data(query)
         assert rv_data['data']['systems']['edges'][0]['node']['InputFile'].strip().startswith('Unsupported'), rv_data
-
+        
     def test_resolve_reaction_systems(self):
         query ='{reactions(first:1, order:"reactionEnergy") { edges { node { reactionEnergy systems { id Formula } } } }}'
         rv_data = self.get_data(query)
@@ -160,12 +161,12 @@ class ReactionBackendTestCase(unittest.TestCase):
     def test_distinct_filter_on(self):
         query = '{reactions(first: 0, reactants:"~H", distinct: true) { totalCount edges { node { id } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['reactions']['totalCount'] == 129, rv_data
+        assert rv_data['data']['reactions']['totalCount'] == 128, rv_data
 
     def test_distinct_filter_off(self):
         query = '{reactions(first: 0, reactants:"~H", distinct: false) { totalCount edges { node { id } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['reactions']['totalCount'] == 3297, rv_data
+        assert rv_data['data']['reactions']['totalCount'] == 3307, rv_data
 
     def test_operation_eq(self):
         query = '{systems(natoms:70, op:"eq" first: 3) { totalCount edges { node { id natoms Formula } } }}'
@@ -185,37 +186,36 @@ class ReactionBackendTestCase(unittest.TestCase):
     def test_operation_le(self):
         query = '{systems(natoms:70, op:"le" first: 3) { totalCount edges { node { id natoms Formula } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['systems']['totalCount'] == 3264, rv_data
+        assert rv_data['data']['systems']['totalCount'] == 3295, rv_data
 
     def test_operation_lt(self):
         query = '{systems(natoms:70, op:"lt" first: 3) { totalCount edges { node { id natoms Formula } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['systems']['totalCount'] == 3262, rv_data
+        assert rv_data['data']['systems']['totalCount'] == 3293, rv_data
 
     def test_operation_ne(self):
         query = '{systems(natoms:70, op:"ne" first: 3) { totalCount edges { node { id natoms Formula } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['systems']['totalCount'] == 3314, rv_data
+        assert rv_data['data']['systems']['totalCount'] == 3345, rv_data
 
     def test_reactants_expansion(self):
         query = '{reactions(first:0, reactants: "CO") { totalCount edges { node { id } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['reactions']['totalCount'] == 428, rv_data
-
+        assert rv_data['data']['reactions']['totalCount'] == 438, rv_data
+        
     def test_reactants_star(self):
         query = '{reactions(first:0, reactants: "COstar") { totalCount edges { node { id } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['reactions']['totalCount'] == 27, rv_data
+        assert rv_data['data']['reactions']['totalCount'] == 21, rv_data
 
     def test_products_star(self):
         query = '{reactions(first:0, products: "COstar") { totalCount edges { node { id } } }}'
         rv_data = self.get_data(query)
-        assert rv_data['data']['reactions']['totalCount'] == 756, rv_data
+        assert rv_data['data']['reactions']['totalCount'] == 772, rv_data
 
     def test_root_website(self):
         rv = self.app.get('/')
         assert rv.status_code == 302 , rv
-
 
     def test_root_website(self):
         rv = self.app.get('/apps/')
@@ -230,7 +230,7 @@ class ReactionBackendTestCase(unittest.TestCase):
         assert rv_data['data']['systems']['edges'][0]['node']['DftFunctional'] == '', rv_data
 
     def test_facet_property(self):
-        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Facet } } }}')
+        rv_data = self.get_data('{systems(uniqueId: "607a860f01f8c9efe82d41e14d0f564c") { edges { node { uniqueId Facet } } }}')
         assert rv_data['data']['systems']['edges'][0]['node']['Facet'] == '1x1x1', rv_data
 
     def test_username_property(self):
@@ -250,60 +250,60 @@ class ReactionBackendTestCase(unittest.TestCase):
         assert rv_data['data']['systems']['edges'][0]['node']['Substrate'] == '', rv_data
 
     def test_charges_property(self):
-        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Charges } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Charges'] == None, rv_data
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId charges } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['charges'] == None, rv_data
 
     def test_magmoms_property(self):
-        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Magmoms } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Magmoms'] == '[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]', rv_data
+        rv_data = self.get_data('{systems(uniqueId: "704635cfa5b954b4fd69a61b82cd1041") { edges { node { uniqueId magmoms } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['magmoms'] == '[4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 0.0, 0.0]', rv_data
 
     def test_stress_property(self):
-        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Stress } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Stress'] == None, rv_data
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId stress } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['stress'] == None, rv_data
 
     def test_dipole_property(self):
-        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Dipole } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Dipole'] == None, rv_data
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId dipole } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['dipole'] == None, rv_data
 
     def test_forces_property(self):
-        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Forces } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Forces'] == '[[ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [ 0.          0.          0.        ]\n [-0.01465996 -0.01466158  0.03802024]\n [-0.0006968   0.00742852  0.00773271]\n [ 0.0104296  -0.00075254  0.03104007]\n [-0.02258781 -0.00894088  0.00446159]\n [-0.02590547  0.01889229 -0.0289584 ]\n [-0.0004256   0.0044127  -0.0189839 ]\n [ 0.00803226  0.01834773 -0.02640747]]', rv_data
+        rv_data = self.get_data('{systems(uniqueId: "2baa0dff53f6e374ec62a851f1519203") { edges { node { uniqueId forces } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['forces'] == "[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [-0.00614427004948372, 0.00449696949293127, -0.00986315727173091], [0.00879477058939808, 0.00917989376165844, 0.0352720011056403], [-0.00206053074046705, -0.0276901353694061, 0.0379683393499177], [0.0245038028154277, 0.0144735534975378, 0.017733582986786], [-0.00910656443668941, -0.00789937561938611, 0.014741863883181], [0.015184343620972, 0.00329439236786369, -0.0317452457101462]]", rv_data
 
     def test_momenta_property(self):
-        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Momenta } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Momenta'] == None, rv_data
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId momenta } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['momenta'] == None, rv_data
 
     def test_tags_property(self):
-        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Tags } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Tags'] == '[9 9 9 9 8 8 8 8 7 7 7 7 5 6 1 6 0 0 0]', rv_data
+        rv_data = self.get_data('{systems(uniqueId: "2baa0dff53f6e374ec62a851f1519203") { edges { node { uniqueId tags } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['tags'] == "[7, 7, 7, 7, 6, 6, 6, 6, 5, 5, 5, 5, 3, 3, 3, 1, 0, 0]", rv_data
 
     def test_masses_property(self):
-        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Masses } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Masses'] == None, rv_data
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId masses } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['masses'] == None, rv_data
 
     def test_initial_charges_property(self):
-        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId InitialCharges } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['InitialCharges'] == None, rv_data
+        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId initialCharges } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['initialCharges'] == None, rv_data
 
     def test_initial_magmom_sproperty(self):
-        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId InitialMagmoms } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['InitialMagmoms'] == '[ 0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.  0.\n  0.]', rv_data
+        rv_data = self.get_data('{systems(uniqueId: "607a860f01f8c9efe82d41e14d0f564c") { edges { node { uniqueId initialMagmoms } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['initialMagmoms'] == "[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]", rv_data
 
     def test_pbc_sproperty(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Pbc } } }}')
         assert rv_data['data']['systems']['edges'][0]['node']['Pbc'] == '[True, True, True]', rv_data
 
     def test_cell_sproperty(self):
-        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Cell } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Cell'] == '[[5.96175869354, 0.0, 0.0], [2.98087934677, 5.163034479838, 0.0], [0.0, 0.0, 31.301633384387]]', rv_data
+        rv_data = self.get_data('{systems(uniqueId: "607a860f01f8c9efe82d41e14d0f564c") { edges { node { uniqueId cell } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['cell'] == "[[5.977315042726, 0.0, 0.0], [2.988657521363, 5.176506673424, 0.0], [0.0, 0.0, 31.320685943271]]", rv_data
 
     def test_positions_sproperty(self):
-        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Positions } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Positions'] == '[[1.0616137722102194e-05, 1.00430434533884e-05, 11.997829572739208], [2.9808667726514777, 4.5044227636223694e-06, 11.997834568811298], [1.49044206705398, 2.5815063385957604, 11.997838654842296], [4.471321767989074, 2.5815186754290025, 11.99782671393662], [1.4904505244993935, 0.8605114997454405, 14.449299006975322], [4.471314559369811, 0.8605074109181713, 14.4493119968848], [2.980875560937021, 3.4420108959380986, 14.449308866590593], [5.961757027072016, 3.4420189051324397, 14.449297102230025], [-4.483034685198158e-06, 1.7210181370421362, 16.8523039699823], [2.9808834348220747, 1.7210143925544918, 16.852307976625248], [1.4904397636199378, 4.302526395841851, 16.852306775315245], [4.471321269220247, 4.302522230598007, 16.85229912711207], [-0.03628027904941261, -0.05829102066632311, 19.329837847258815], [3.012819028302268, -0.025529687587881517, 19.226533590440482], [1.5168413560108742, 2.6232655688289497, 19.340919951038273], [4.451264393456487, 2.590945454445438, 19.2295508630318], [0.8738825829127541, 1.1621072044721459, 21.101176889774322], [0.8679584479779054, 1.0380807857407832, 22.30254059936361], [1.3589593016170325, 1.807364331890099, 22.816141687235255]]', rv_data
+        rv_data = self.get_data('{systems(uniqueId: "1c8b50a73d22bfd72b8b799a12b774fc") { edges { node { uniqueId positions } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['positions'] == "[[10.0, 10.763239, 10.5925363270631], [10.0, 11.5248997266606, 10.0018863364684], [10.0, 10.0015782733394, 10.0018863364684]]", rv_data
 
     def test_numbers_sproperty(self):
-        rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Numbers } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Numbers'] == '[47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 7, 7, 1]', rv_data
+        rv_data = self.get_data('{systems(uniqueId: "1c8b50a73d22bfd72b8b799a12b774fc") { edges { node { uniqueId numbers } } }}')
+        assert rv_data['data']['systems']['edges'][0]['node']['numbers'] == "[8, 1, 1]", rv_data
 
     def test_equation_property(self):
         rv_data = self.get_data('{reactions(first: 1, reactants:"~H", distinct: false) { totalCount edges { node { id Equation } } }}')
@@ -315,7 +315,7 @@ class ReactionBackendTestCase(unittest.TestCase):
 
     def test_timestamp_mtime(self):
         rv_data = self.get_data('{systems(first:10, order:"mtime") { edges { node { id Mtime } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['Mtime'] == 'Mon Feb 12 23:02:48 2018', rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['Mtime'] == "Wed May  9 17:53:11 2018", rv_data
 
     def test_timestamp_ctime(self):
         rv_data = self.get_data('{systems(first:10, order:"ctime") { edges { node { id Ctime } } }}')
@@ -324,6 +324,11 @@ class ReactionBackendTestCase(unittest.TestCase):
     def test_page_info(self):
         rv_data = self.get_data('{systems(first: 2, after:"") { totalCount pageInfo { hasNextPage hasPreviousPage startCursor endCursor } edges { node { Formula energy mtime } } }}')
         assert rv_data['data']['systems']['pageInfo']['startCursor'] == 'YXJyYXljb25uZWN0aW9uOjA=', rv_data
+
+    def test_keyvalue_state(self):
+        rv_data = self.get_data('{systems(keyValuePairs: "state->gas") { totalCount edges { node { id } } }}')
+        assert rv_data['data']['systems']['totalCount'] == 48, rv_data
+
 
 if __name__ == '__main__':
     unittest.main()
