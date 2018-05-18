@@ -131,9 +131,11 @@ Combining tables
 3) Chose one of Julia's reactions and find the `aseId` of the empty slab. Hint: It has :code:`"name"="star"` in the `reactionSystems` table.
    Copy the aseId and use it to find all the reactions that are linked to that particular empty slab.
 
+Custom GraphQL clients
+----------------------
 
 Calling the Backend from the Command Line
------------------------------------------
+.........................................
 
 
 This is easy using `curl` or `wget`::
@@ -179,7 +181,7 @@ for creating a CSV output.
 
 
 Calling the Backend from a Python Script
-----------------------------------------
+........................................
 
 Write a short python script with a GraphQL query of your choice. The script should look something like this::
 
@@ -200,7 +202,7 @@ Write a short python script with a GraphQL query of your choice. The script shou
 And see the result printed in the terminal. How would you like to save the data?
 
 Calling the Backend from a Perl Script
---------------------------------------
+......................................
 
 Write a short Perl script with a GraphQL query of your choice. This result could look something like this
 
@@ -238,7 +240,7 @@ Write a short Perl script with a GraphQL query of your choice. This result could
    print $res->content . "\n";
 
 Calling the Backend from JavaScript
------------------------------------
+...................................
 
 .. code-block:: js
 
@@ -266,7 +268,7 @@ Calling the Backend from JavaScript
 
 
 Calling the Backend from Coffee Script
---------------------------------------
+......................................
 
 .. code-block:: coffee
 
@@ -291,7 +293,7 @@ Calling the Backend from Coffee Script
 
 
 Connecting to the database server with psql
----------------------------------------------
+.............................................
 
 This exercise requires that you have postgreSQL installed, so you can use the `psql` terminal client.
 Also you need the password for the `catvisitor` user, or optionally your own user account. Contact Kirsten Winther at winther@stanford.edu for question.
@@ -338,3 +340,13 @@ This CLI will be used for collecting data from remote sources.
 
    :maxdepth: 1
    cathubcli.md
+
+Using CatKit & CatGen
+---------------------
+
+Please refer to
+
+    - `CatGen <https://github.com/SUNCAT-Center/CatKit/blob/master/catgen/readme.org>`_
+    - `CatKit <https://github.com/SUNCAT-Center/CatKit/blob/master/readme.org>`_
+    - `CatFlow <https://github.com/SUNCAT-Center/CatKit/tree/master/catflow>`_
+
