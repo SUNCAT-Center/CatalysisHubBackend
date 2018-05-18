@@ -113,6 +113,7 @@ class Publication(Base):
     title = sqlalchemy.Column(sqlalchemy.String, )
     authors = sqlalchemy.Column(JSONB, )
     journal = sqlalchemy.Column(sqlalchemy.String, )
+    volume = sqlalchemy.Column(sqlalchemy.String, )
     number = sqlalchemy.Column(sqlalchemy.String, )
     pages = sqlalchemy.Column(sqlalchemy.String, )
     year = sqlalchemy.Column(sqlalchemy.Integer, )
