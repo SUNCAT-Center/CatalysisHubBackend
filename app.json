@@ -1,3 +1,41 @@
 {
-    "name": "CatalysisHubBackend"
+  "name": "CatalysisHubBackend",
+  "scripts": {
+  },
+  "env": {
+    "BULK_ENUMERATOR_PATH": {
+      "required": true
+    },
+    "DB_PASSWORD": {
+      "required": true
+    },
+    "DB_PASSWORD_FIREWORKS": {
+      "required": true
+    },
+    "DB_PASSWORD0": {
+      "required": true
+    },
+    "GA_TRACKING_ID": {
+      "required": true
+    },
+    "GITLAB_PW": {
+      "required": true
+    },
+    "SENTRY_DSN": {
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "addons": [
+    "sentry"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
 }
