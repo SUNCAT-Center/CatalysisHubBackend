@@ -6,7 +6,7 @@ import re
 import numpy as np
 
 from catapp_user import return_features
-from atoml.preprocess.clean_data import clean_variance, clean_infinite
+from catlearn.preprocess.clean_data import clean_variance, clean_infinite
 
 data_path = 'apps/AtoML/train_data/'
 
