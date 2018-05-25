@@ -370,14 +370,16 @@ def get_facet(
 def prototype(request=None):
     time0 = time.time()
     request = flask.request if request is None else request
-    if isinstance(request.args, str):
-        request.args = json.loads(request.args)
+    request.values = dict((request.get_json() or {}),
+                          **request.values.to_dict(), )
+    if isinstance(request.values, str):
+        request.values = json.loads(request.values)
 
-    prototype = request.args.get('prototype', '')
-    search_terms = request.args.get('search_terms', '').split()
-    facet_filters = json.loads(request.args.get('facet_filters', '[]'))
-    offset = int(request.args.get('offset', 0))
-    limit = int(request.args.get('limit', 1000))
+    prototype = request.values.get('prototype', '')
+    search_terms = request.values.get('search_terms', '').split()
+    facet_filters = json.loads(request.values.get('facet_filters', '[]'))
+    offset = int(request.values.get('offset', 0))
+    limit = int(request.values.get('limit', 1000))
 
     # Build prototype response
     query = models.session.query(models.Geometry)
@@ -391,6 +393,13 @@ def prototype(request=None):
     return flask.jsonify({
         'time': time.time() - time0,
         'prototypes': prototypes,
+        'input': {
+            'prototype': prototype,
+            'search_terms': search_terms,
+            'facet_filters': facet_filters,
+            'offset': offset,
+            'limit': limit,
+        },
     })
 
 
@@ -429,15 +438,15 @@ def facet_search(request=None):
 
     time0 = time.time()
     request = flask.request if request is None else request
-    if isinstance(request.args, str):
-        request.args = json.loads(request.args)
+    request.values = dict((request.get_json() or {}),
+                          **request.values.to_dict(), )
+    if isinstance(request.values, str):
+        request.values = json.loads(request.values)
 
-    print(request.args)
-
-    search_terms = request.args.get('search_terms', '').split()
-    facet_filters = json.loads(request.args.get('facet_filters', '[]'))
-    offset = int(request.args.get('offset', 0))
-    limit = int(request.args.get('limit', 10))
+    search_terms = request.values.get('search_terms', '').split()
+    facet_filters = json.loads(request.values.get('facet_filters', '[]'))
+    offset = int(request.values.get('offset', 0))
+    limit = int(request.values.get('limit', 10))
 
     # Build prototype response
     prototypes = get_facet(
@@ -573,18 +582,20 @@ def get_structure(request=None):
     """
     time0 = time.time()
     request = flask.request if request is None else request
-    if isinstance(request.args, str):
-        request.args = json.loads(request.args)
+    request.values = dict((request.get_json() or {}),
+                          **request.values.to_dict(), )
+    if isinstance(request.values, str):
+        request.values = json.loads(request.values)
 
-    args = request.get_json() or {}
-
-    spacegroup = int(args.get('spacegroup', 225))
-    wyckoffs = json.loads(args.get('wyckoffs', '["a"]').replace("'", '"'))
-    species = json.loads(args.get('species', '["Pt"]').replace("'", '"'))
+    spacegroup = int(request.values.get('spacegroup', 225))
+    wyckoffs = json.loads(
+        request.values.get('wyckoffs', '["a"]').replace("'", '"'))
+    species = json.loads(request.values.get('species', '["Pt"]').replace("'", '"'))
     parameter_names = json.loads(
-        args.get('parameter_names', '["a"]').replace("'", '"')
+        request.values.get('parameter_names', '["a"]').replace("'", '"')
     )
-    parameters = json.loads(args.get('parameters', '[2.7]').replace("'", '"'))
+    parameters = json.loads(
+        request.values.get('parameters', '[2.7]').replace("'", '"'))
 
     input_params = {
         'spacegroup': spacegroup,
