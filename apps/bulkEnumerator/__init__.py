@@ -23,6 +23,7 @@ import ase.atoms
 import ase.io
 import ase.build
 import ase.io.formats
+import mendeleev
 
 
 try:
@@ -31,6 +32,15 @@ except ImportError:
     print("Warning: could not import bulk_enumerator, check installation.")
     be = None
 import apps.utils
+
+
+atomic_radii = {
+        element.symbol:
+        (element.atomic_radius
+            or element.covalent_radius_cordero
+            or element.covalent_radius_pyykko)
+        for element in mendeleev.get_all_elements()}
+
 
 bulk_enumerator = flask.Blueprint('bulk_enumerator', __name__)
 
@@ -147,15 +157,12 @@ def get_structure(request=None):
         'utf-8'), map(eval, bulk.get_parameters()))
 
     default_cell_params = {
-        'a': 3.,
-        'b/a': 1.,
-        'c/a': 1.,
-        'alpha': 90,
-        'beta': 90,
-        'gamma': 90,
-        'x': .5,
-        'y': .5,
-        'z': .5,
+        'a': 3.01,
+        'b/a': 1.07,
+        'c/a': 1.09,
+        'alpha': 87,
+        'beta': 83,
+        'gamma': 89,
     }
     # default_cell_params.update(cell_params)
     # cell_params = default_cell_params
