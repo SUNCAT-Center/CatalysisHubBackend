@@ -142,7 +142,7 @@ def get_structure(request=None):
         cell_params = request.args.get('cellParams', {})
 
     # input sanity checks
-    assert len(wyckoff_positions) == len(wyckoff_species)
+    assert len(wyckoff_positions) = len(wyckoff_species)
     # assert len(wyckoff_positions) == len(wyckoff_params)
 
     # build results
