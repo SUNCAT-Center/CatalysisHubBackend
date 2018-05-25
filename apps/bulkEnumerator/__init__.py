@@ -109,7 +109,6 @@ def get_structure(request=None):
                                   (length one strings).
         wyckoffSpecies ([str]): Corresponding list of elements.
 
-
     """
     # housekeeping for both incoming and internal requests
     request = flask.request if request is None else request
@@ -274,6 +273,7 @@ def get_wyckoff_from_cif(request=None):
     Function clone of get_wyckoff_from_structure,
     except working w/ string input
     instead of file upload.
+
     """
 
     import ase.io

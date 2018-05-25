@@ -346,7 +346,4 @@ Using CatKit & CatGen
 
 Please refer to
 
-    - `CatGen <https://github.com/SUNCAT-Center/CatKit/blob/master/catgen/readme.org>`_
-    - `CatKit <https://github.com/SUNCAT-Center/CatKit/blob/master/readme.org>`_
-    - `CatFlow <https://github.com/SUNCAT-Center/CatKit/tree/master/catflow>`_
-
+    - `CatKit <http://catkit.readthedocs.io/en/latest/>`_
