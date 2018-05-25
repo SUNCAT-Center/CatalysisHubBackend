@@ -158,14 +158,11 @@ def get_structure(request=None):
 
     default_cell_params = {
         'a': 3.01,
-        'b/a': 1.,
-        'c/a': 1.,
-        'alpha': 90,
-        'beta': 90,
-        'gamma': 90,
-        'x': .5,
-        'y': .5,
-        'z': .5,
+        'b/a': 1.07,
+        'c/a': 1.09,
+        'alpha': 87,
+        'beta': 83,
+        'gamma': 89,
     }
     # default_cell_params.update(cell_params)
     # cell_params = default_cell_params
