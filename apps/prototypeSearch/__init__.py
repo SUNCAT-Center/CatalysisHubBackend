@@ -587,15 +587,15 @@ def get_structure(request=None):
     if isinstance(request.values, str):
         request.values = json.loads(request.values)
 
-    spacegroup = int(request.values('spacegroup', 225))
+    spacegroup = int(request.values.get('spacegroup', 225))
     wyckoffs = json.loads(
-        request.values('wyckoffs', '["a"]').replace("'", '"'))
-    species = json.loads(request.values('species', '["Pt"]').replace("'", '"'))
+        request.values.get('wyckoffs', '["a"]').replace("'", '"'))
+    species = json.loads(request.values.get('species', '["Pt"]').replace("'", '"'))
     parameter_names = json.loads(
-        request.values('parameter_names', '["a"]').replace("'", '"')
+        request.values.get('parameter_names', '["a"]').replace("'", '"')
     )
     parameters = json.loads(
-        request.values('parameters', '[2.7]').replace("'", '"'))
+        request.values.get('parameters', '[2.7]').replace("'", '"'))
 
     input_params = {
         'spacegroup': spacegroup,
