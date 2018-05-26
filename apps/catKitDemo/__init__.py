@@ -538,6 +538,7 @@ def generate_dft_input(request=None, return_data=False):
         images = adsorbates['images']
         site_names = adsorbates['site_names']
         adsorbates_strings = []
+        site_counter = {}
         for image_i, image in enumerate(images):
             # Generate Adsorbates String
             adsorbate = str(adsorbate_params.get('adsorbate', 'empty'))
@@ -550,7 +551,9 @@ def generate_dft_input(request=None, return_data=False):
             site_name = site_names[image_i]
             equation = 'star{site_name}_{reactants}__{adsorbate}star{site_name}'.format(
                 **locals())
-            adsorbates = '{adsorbate}star{site_name}'.format(**locals())
+            site_counter[site_name] = site_counter.get(site_name, 0) + 1
+            count = site_counter[site_name]
+            adsorbates = '{adsorbate}star{site_name}.{count}'.format(**locals())
 
             adsorbates_strings.append(adsorbates)
             slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{composition}__{structure}/{facet}/{equation}'.format(
