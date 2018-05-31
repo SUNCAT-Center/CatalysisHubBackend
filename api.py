@@ -515,10 +515,13 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                         # TO DO: SELECT DISTINCT jsonb_object_keys(reactants) FROM reaction
 
                 elif isinstance(value, six.string_types):
-                    if value.startswith("~"):
-                        search_string = '%' + value[1:] + '%'
-                        if not query == "~":
-                            query = query.filter(column.ilike(search_string))
+                    if value.startswith("~") or '+' in value:
+                        values = value.split('+')
+                        for value in values:
+                            value = value.replace('~', '')
+                            search_string = '%' + value + '%'
+                            if not query == "~":
+                                query = query.filter(column.ilike(search_string))
                     else:
                         query = query.filter(column == value)
 
