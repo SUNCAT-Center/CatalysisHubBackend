@@ -282,11 +282,11 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
 
         for i, (site, connectivity) in enumerate(zip(*sites)):
             adsorbate_site_label = connectivity
-            site_types.append(adsorbate_site_label)
-            site_names.append(connectivity)
             if site_type != 'all' and str(
                     adsorbate_site_label) != str(site_type):
                 continue
+            site_types.append(adsorbate_site_label)
+            site_names.append(connectivity)
             atoms = gen.get_slab(primitive=True)
             for place_holder_index in range(len(sites[0])):
                 atoms += ase.atom.Atom(adsorbate, site + [0., 0., 1.5])
