@@ -34,6 +34,14 @@ import catgen.surface
 
 catKitDemo = flask.Blueprint('catKitDemo', __name__)
 
+SITE_NAMES = [
+        'gas',
+        'top',
+        'bridge',
+        'hollow',
+        '4fold',
+        ]
+
 VALID_OUT_FORMATS = [
     "abinit",
     "castep-cell",
@@ -95,6 +103,7 @@ def generate_bulk_cif(request=None, return_atoms=False):
     lattice_constant = float(bulk_params.get('lattice_constant', 4.0))
 
     elements = bulk_params.get('elements')
+    input_format = str(bulk_params.get('format', 'cif') or 'cif')
 
     if elements:
         lattice_constant = statistics.mean(
@@ -118,12 +127,17 @@ def generate_bulk_cif(request=None, return_atoms=False):
 
     mem_file = StringIO.StringIO()
     ase.io.write(mem_file, atoms, 'cif')
+
+    input_mem_file = StringIO.StringIO()
+    ase.io.write(input_mem_file, atoms, input_format)
+
     if return_atoms:
         return atoms
 
     return flask.jsonify({
         'cifdata': mem_file.getvalue(),
         'lattice_constants': lattice_constant,
+        'input': input_mem_file.getvalue(),
     })
 
 
@@ -146,7 +160,9 @@ def generate_slab_cif(request=None, return_atoms=False):
     vacuum = float(slab_params.get('vacuum', 10.))
     stoichiometry = bool(slab_params.get('stoichiometry', False))
     termination = int(slab_params.get('termination', 0))
+    input_format = str(slab_params.get('format', 'cif') or 'cif')
     all_terminations = slab_params.get('termination', 'false') == 'true'
+
 
     bulk_cif = str(request.args.get(
         'bulk_cif', (json.loads(generate_bulk_cif(request).data)['cifdata'])))
@@ -169,6 +185,7 @@ def generate_slab_cif(request=None, return_atoms=False):
     terminations = Gen.get_unique_terminations()
     images = []
     mem_files = []
+    input_mem_files = []
     n_terminations = len(terminations)
 
     for (iterm, term) in enumerate(terminations):
@@ -182,11 +199,16 @@ def generate_slab_cif(request=None, return_atoms=False):
         ase.io.write(mem_files[-1], images[-1], format='cif')
         mem_files[-1].seek(0)
 
+        input_mem_files.append(StringIO.StringIO())
+        ase.io.write(input_mem_files[-1], images[-1], format=input_format)
+        input_mem_files[-1].seek(0)
+
     if return_atoms:
         return images
 
     return flask.jsonify({
         'images': [mem_file.getvalue() for mem_file in mem_files],
+        'input': [input_mem_file.getvalue() for input_mem_file in input_mem_files],
         'n_terminations': n_terminations,
     })
 
@@ -209,6 +231,8 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
     axis = int(slab_params.get('axis', 2))
     vacuum = float(slab_params.get('vacuum', 10.))
     stoichiometry = bool(slab_params.get('stoichiometry', False))
+    input_format = str(slab_params.get('format', 'cif') or 'cif')
+
 
     bulk_cif = str(request.args.get(
         'bulk_cif', (json.loads(generate_bulk_cif(request).data)['cifdata'])))
@@ -226,6 +250,7 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
     adsorbate = str(adsorbate_params.get('adsorbate', 'O'))
 
     site_type = str(adsorbate_params.get('siteType', 'all'))
+
 
     # create bulk atoms
     mem_file = StringIO.StringIO()
@@ -258,6 +283,8 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
 
     alt_labels = []
     cif_images = []
+    input_images = []
+    equations = []
     site_names = []
     site_types = []
     error_message = ''
@@ -280,7 +307,15 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
         alt_labels.append({})
         sites = [list(sites[0]), list(sites[1])]
 
+        reference_molecules = {}
+
+        old_connectivity = ''
+        site_counter = 0
         for i, (site, connectivity) in enumerate(zip(*sites)):
+
+            site_counter = site_counter + 1 if connectivity == old_connectivity else 0
+            old_connectivity = connectivity
+
             adsorbate_site_label = connectivity
             site_types.append(adsorbate_site_label)
             site_names.append(connectivity)
@@ -303,14 +338,56 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
                 atoms_objects.append(atoms)
             else:
 
+                symbols = apps.utils.gas_phase_references.molecules2symbols(
+                    [adsorbate])
+                references = apps.utils.gas_phase_references.construct_reference_system(
+                    symbols)
+                stoichiometry = apps.utils.gas_phase_references.get_atomic_stoichiometry(
+                    references)
+                stoichiometry_factors = \
+                    apps.utils.gas_phase_references.get_stoichiometry_factors(
+                        [adsorbate], references)
+
+                molecules = []
+                for molecule_name in [x[1] for x in references]:
+                    molecule = ase.build.molecule(molecule_name)
+                    molecule.cell = np.diag(GAS_PHASE_CELL)
+
+                    with StringIO.StringIO() as f:
+                        ase.io.write(f, molecule, format=input_format)
+                        reference_molecules[molecule_name]= f.getvalue()
+
+                reactants = []
+                gas_phase_molecules = set()
+                for molecule, factor in stoichiometry_factors[adsorbate].items():
+                    reactants.append('{factor}{molecule}gas'.format(**locals()))
+                    gas_phase_molecules.add(molecule)
+
+                reactants = '_'.join(reactants)
+                #site_name = site_names[image_i]
+                _site_name = SITE_NAMES[connectivity]
+                site_name = '{_site_name}{site_counter}'.format(**locals())
+                equation = 'star{site_name}_{reactants}__{adsorbate}star{site_name}'.format(
+                    **locals())
+
+                equations.append(equation)
+
+                with StringIO.StringIO() as f:
+                    ase.io.write(f, atoms, format=input_format)
+                    input_images.append(f.getvalue())
+
                 with StringIO.StringIO() as f:
                     ase.io.write(f, atoms, format='cif')
                     cif_images.append(f.getvalue())
+
+    molecule_images = []
 
     if return_atoms:
         return ({
             'data': (sites_list),
             'images': atoms_objects,
+            'equations': equations,
+            'molecules': reference_molecules,
             'site_types': site_types,
             'site_names': site_names,
             'altLabels': alt_labels,
@@ -320,6 +397,9 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
         return flask.jsonify({
             'data': (sites_list),
             'cifImages': cif_images,
+            'inputImages': input_images,
+            'equations': equations,
+            'molecules': reference_molecules,
             'site_types': site_types,
             'site_names': site_names,
             'altLabels': alt_labels,
@@ -350,6 +430,8 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
     axis = int(slab_params.get('axis', 2))
     vacuum = float(slab_params.get('vacuum', 10.))
     stoichiometry = bool(slab_params.get('stoichiometry', False))
+    input_format = str(slab_params.get('format', 'cif') or 'cif')
+
 
     cif_images = json.loads(generate_slab_cif(request).data)['images']
 
@@ -382,7 +464,7 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
         mem_file = StringIO.StringIO()
         mem_file.write(cif_image)
         mem_file.seek(0)
-        atoms = ase.io.read(mem_file, format='cif')
+        atoms = ase.io.read(mem_file, format=input_format)
         images.append(atoms)
 
     sites_list = []
