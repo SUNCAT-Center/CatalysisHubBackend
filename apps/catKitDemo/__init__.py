@@ -30,7 +30,7 @@ import mendeleev
 import apps.utils.gas_phase_references
 
 import catkit
-import catgen.surface
+import catkit.gen.surface
 
 catKitDemo = flask.Blueprint('catKitDemo', __name__)
 
