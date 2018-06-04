@@ -8,7 +8,7 @@ import numpy as np
 from catapp_user import return_features
 from catlearn.preprocess.clean_data import clean_variance, clean_infinite
 
-data_path = 'apps/AtoML/train_data/'
+data_path = 'apps/catlearn/train_data/'
 
 
 class AttrDict(dict):
@@ -18,7 +18,7 @@ class AttrDict(dict):
 
 
 # Read in CatApp data.
-cafile = open('apps/AtoML/raw_data/catappdata.csv', 'r')
+cafile = open('apps/catlearn/raw_data/catappdata.csv', 'r')
 ca = csv.DictReader(cafile)
 calist = [AttrDict(c) for c in ca]
 

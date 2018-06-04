@@ -3,13 +3,14 @@ from __future__ import absolute_import
 from __future__ import division
 
 import time
-import pickle
 import numpy as np
 
-from atoml.regression import GaussianProcess
+from catlearn.regression import GaussianProcess
+from catlearn.regression.gpfunctions import io as gp_io
 
-train_data = np.load('apps/AtoML/train_data/catapp_features.npy')
-train_target = np.load('apps/AtoML/train_data/catapp_targets.npy')
+train_data = np.load('apps/catlearn/train_data/catapp_features.npy')
+train_target = np.load('apps/catlearn/train_data/catapp_targets.npy')
+print(np.shape(train_data), np.shape(train_target))
 
 kdict = {
     'k1': {
@@ -34,10 +35,12 @@ kdict = {
 st = time.time()
 print('train model')
 gp = GaussianProcess(
-    train_fp=train_data, train_target=train_target, kernel_dict=kdict,
-    regularization=1e-1, optimize_hyperparameters=True, scale_data=True
-)
+    train_fp=train_data[:200, :], train_target=train_target[:200],
+    kernel_dict=kdict,
+    regularization=1e-1, optimize_hyperparameters=True, scale_data=True)
 print('trained {}'.format(time.time() - st))
 
-with open('apps/AtoML/models/catapp_gp_model.pickle', 'wb') as model:
-    pickle.dump(gp, model, protocol=pickle.HIGHEST_PROTOCOL)
+gp_io.write('catapp_catlearn_gp', gp)
+
+# with open('apps/catlearn/models/catapp_catlearn_gp.pickle', 'wb') as model:
+#     pickle.dump(gp, model, protocol=pickle.HIGHEST_PROTOCOL)

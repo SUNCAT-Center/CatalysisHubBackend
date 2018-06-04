@@ -17,9 +17,9 @@ import models
 import api
 #import qmdb_api
 try:
-    from apps.AtoML.run_atoml import atoml_blueprint
+    from apps.catlearn.run_catlearn import catlearn_blueprint
 except ImportError:
-    print('Warning: import atoml_blueprint failed. It may not be available.')
+    print('Warning: import catlearn_blueprint failed. It may not be available.')
     atoml_blueprint = None
 
 # NumpyEncoder: useful for JSON serializing
@@ -66,18 +66,18 @@ def index():
 @app.route('/apps/')
 
 def apps():
-    return "Apps: AtoML, pourbaix"
+    return "Apps: catlearn, pourbaix"
 
 # Blueprint
-#app.register_blueprint(atoml_blueprint)
-from apps.pourbaix.run_pourbaix import pourbaix
-app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
+#app.register_blueprint(catlearn_blueprint)
+#from apps.pourbaix.run_pourbaix import pourbaix
+#app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
 
-from apps.bulkEnumerator import bulk_enumerator
-app.register_blueprint(bulk_enumerator, url_prefix='/apps/bulkEnumerator')
+#from apps.bulkEnumerator import bulk_enumerator
+#app.register_blueprint(bulk_enumerator, url_prefix='/apps/bulkEnumerator')
 
-from apps.catKitDemo import catKitDemo
-app.register_blueprint(catKitDemo, url_prefix='/apps/catKitDemo')
+#from apps.catKitDemo import catKitDemo
+#app.register_blueprint(catKitDemo, url_prefix='/apps/catKitDemo')
 
 # Graphql view
 app.add_url_rule('/graphql',
@@ -103,15 +103,15 @@ app.add_url_rule('/graphql',
 #            )
 #        )
 
-from apps.activityMaps import activityMaps
-app.register_blueprint(activityMaps,  url_prefix='/apps/activityMaps')
+#from apps.activityMaps import activityMaps
+#app.register_blueprint(activityMaps,  url_prefix='/apps/activityMaps')
 
-from apps.prototypeSearch import app as prototypeSearch
-app.register_blueprint(prototypeSearch, url_prefix='/apps/prototypeSearch')
+#from apps.prototypeSearch import app as prototypeSearch
+#app.register_blueprint(prototypeSearch, url_prefix='/apps/prototypeSearch')
 
-# AtoML blueprint
-if atoml_blueprint is not None:
-    app.register_blueprint(atoml_blueprint, url_prefix='/apps/atoml')
+# CatLearn blueprint
+if catlearn_blueprint is not None:
+    app.register_blueprint(catlearn_blueprint, url_prefix='/apps/catlearn')
 
 
 if __name__ == '__main__':
