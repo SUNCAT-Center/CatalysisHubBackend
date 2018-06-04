@@ -7,20 +7,51 @@ import json
 import flask
 import flask_graphql
 from flask_cors import CORS
-from flask import Blueprint
 import logging
 from raven.contrib.flask import Sentry
-
-
 # local imports
 import models
 import api
-#import qmdb_api
+import warnings
+from sqlalchemy.exc import OperationalError
+# import qmdb_api
+
+try:
+    from apps.pourbaix.run_pourbaix import pourbaix
+except ImportError:
+    warnings.warn('pourbaix diagrams not available.')
+    pourbaix = None
+
 try:
     from apps.catlearn.run_catlearn import catlearn_blueprint
 except ImportError:
-    print('Warning: import catlearn_blueprint failed. It may not be available.')
+    warnings.warn('Catlearn not available.')
     atoml_blueprint = None
+
+try:
+    from apps.activityMaps import activityMaps
+except ImportError:
+    warnings.warn('activityMaps not available.')
+    activityMaps = None
+
+try:
+    from apps.prototypeSearch import app as prototypeSearch
+except (ImportError, OperationalError):
+    warnings.warn('prototypeSearch not available.')
+    prototypeSearch = None
+
+try:
+    from apps.bulkEnumerator import bulk_enumerator
+except ImportError:
+    warnings.warn('prototypeSearch not available.')
+    bulk_enumerator = None
+
+try:
+    from apps.catKitDemo import catKitDemo
+except ImportError:
+    warnings.warn('catKitDemo not available.')
+    catKitDemo = None
+
 
 # NumpyEncoder: useful for JSON serializing
 # Dictionaries that contain Numpy Arrays
@@ -47,7 +78,7 @@ app.json_encoder = NumpyEncoder
 
 cors = CORS(app)
 
-#, resources={r"/graphql/*":
+# , resources={r"/graphql/*":
 #    {"origins":
 #        ["localhost:.*",
 #            "catapp-browser.herokuapp.com",
@@ -58,41 +89,37 @@ cors = CORS(app)
 #    }
 #    )
 
-@app.route('/')
 
+@app.route('/')
 def index():
-        return flask.redirect("/graphql?query=%7B%0A%20%20reactions(first%3A%2010)%20%7B%0A%20%20%20%20edges%20%7B%0A%20%20%20%20%20%20node%20%7B%0A%20%20%20%20%20%20%20%20Equation%0A%20%20%20%20%20%20%20%20chemicalComposition%0A%20%20%20%20%20%20%20%20reactionEnergy%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%0A", code=302)
+    return flask.redirect(
+            "/graphql?query=%7B%0A%20%20reactions(first%3A%2010)%20%7B%0A%20%20%20%20edges%20%7B%0A%20%20%20%20%20%20node%20%7B%0A%20%20%20%20%20%20%20%20Equation%0A%20%20%20%20%20%20%20%20chemicalComposition%0A%20%20%20%20%20%20%20%20reactionEnergy%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%0A",
+            code=302)
+
 
 @app.route('/apps/')
-
 def apps():
     return "Apps: catlearn, pourbaix"
 
-# Blueprint
-#app.register_blueprint(catlearn_blueprint)
-#from apps.pourbaix.run_pourbaix import pourbaix
-#app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
 
-#from apps.bulkEnumerator import bulk_enumerator
-#app.register_blueprint(bulk_enumerator, url_prefix='/apps/bulkEnumerator')
+if bulk_enumerator is not None:
+    app.register_blueprint(bulk_enumerator, url_prefix='/apps/bulkEnumerator')
+if catKitDemo is not None:
+    app.register_blueprint(catKitDemo, url_prefix='/apps/catKitDemo')
 
-#from apps.catKitDemo import catKitDemo
-#app.register_blueprint(catKitDemo, url_prefix='/apps/catKitDemo')
 
 # Graphql view
 app.add_url_rule('/graphql',
-        view_func=flask_graphql.GraphQLView.as_view(
-            'graphql',
-            schema=api.schema,
-            graphiql=True,
-            context={
-                'session': models.db_session,
-                }
-            )
-        )
+                 view_func=flask_graphql.GraphQLView.as_view(
+                         'graphql',
+                         schema=api.schema,
+                         graphiql=True,
+                         context={'session': models.db_session}
+                         )
+                 )
 
 # Graphql view
-#app.add_url_rule('/qmdb_graphql',
+# app.add_url_rule('/qmdb_graphql',
 #        view_func=flask_graphql.GraphQLView.as_view(
 #            'qmdb_graphql',
 #            schema=qmdb_api.schema,
@@ -103,13 +130,13 @@ app.add_url_rule('/graphql',
 #            )
 #        )
 
-#from apps.activityMaps import activityMaps
-#app.register_blueprint(activityMaps,  url_prefix='/apps/activityMaps')
 
-#from apps.prototypeSearch import app as prototypeSearch
-#app.register_blueprint(prototypeSearch, url_prefix='/apps/prototypeSearch')
-
-# CatLearn blueprint
+if pourbaix is not None:
+    app.register_blueprint(pourbaix, url_prefix='/apps/pourbaix')
+if activityMaps is not None:
+    app.register_blueprint(activityMaps,  url_prefix='/apps/activityMaps')
+if prototypeSearch is not None:
+    app.register_blueprint(prototypeSearch, url_prefix='/apps/prototypeSearch')
 if catlearn_blueprint is not None:
     app.register_blueprint(catlearn_blueprint, url_prefix='/apps/catlearn')
 
@@ -126,7 +153,7 @@ if __name__ == '__main__':
                       default=False)
 
     options, args = parser.parse_args()
-    
+
     if options.debug_sql:
         import logging
         logging.basicConfig()
