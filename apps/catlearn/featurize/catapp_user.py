@@ -12,7 +12,7 @@ from mendeleev import element
 def return_features(inp):
     """Return feature space."""
     # Open previously generated features.
-    with open('apps/AtoML/raw_data/feature_store.json', 'r') as featurefile:
+    with open('apps/catlearn/raw_data/feature_store.json', 'r') as featurefile:
         store_dict = json.load(featurefile)
 
     # Pull out all relevant features for supplied system.
@@ -128,7 +128,7 @@ def _feature_generate():
                   'elemdict': elemdict, 'sitedict': sitedict}
 
     # Save the potential feature space.
-    with open('apps/AtoML/raw_data/feature_store.json', 'w') as featurefile:
+    with open('apps/catlearn/raw_data/feature_store.json', 'w') as featurefile:
         json.dump(store_dict, featurefile)
 
 
