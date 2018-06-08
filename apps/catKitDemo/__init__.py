@@ -34,13 +34,15 @@ import catgen.surface
 
 catKitDemo = flask.Blueprint('catKitDemo', __name__)
 
+VERSION = 1
+
 SITE_NAMES = [
-        'gas',
-        'top',
-        'bridge',
-        'hollow',
-        '4fold',
-        ]
+    'gas',
+    'top',
+    'bridge',
+    'hollow',
+    '4fold',
+]
 
 VALID_OUT_FORMATS = [
     "abinit",
@@ -102,7 +104,7 @@ def generate_bulk_cif(request=None, return_atoms=False):
     structure = bulk_params.get('structure', 'fcc')
     lattice_constant = float(bulk_params.get('lattice_constant', 4.0))
 
-    elements = bulk_params.get('elements')
+    elements = bulk_params.get('elements', ['Pt'])
     input_format = str(bulk_params.get('format', 'cif') or 'cif')
 
     if elements:
@@ -135,6 +137,7 @@ def generate_bulk_cif(request=None, return_atoms=False):
         return atoms
 
     return flask.jsonify({
+        'version': VERSION,
         'cifdata': mem_file.getvalue(),
         'lattice_constants': lattice_constant,
         'input': input_mem_file.getvalue(),
@@ -144,13 +147,17 @@ def generate_bulk_cif(request=None, return_atoms=False):
 @catKitDemo.route('/generate_slab_cif/', methods=['GET', 'POST'])
 def generate_slab_cif(request=None, return_atoms=False):
     request = flask.request if request is None else request
-    if isinstance(request.args, str):
-        request.args = json.loads(request.args)
+    request.values = dict((request.get_json() or {}),
+                          **(request.values if type(request.values) is dict
+                              else request.values.to_dict()
+                             ))
+    if isinstance(request.values, str):
+        request.values = json.loads(request.values)
 
-    if isinstance(request.args.get('slabParams', '{}'), str):
-        slab_params = json.loads(request.args.get('slabParams', '{}'))
+    if isinstance(request.values.get('slabParams', '{}'), str):
+        slab_params = json.loads(request.values.get('slabParams', '{}'))
     else:
-        slab_params = request.args.get('slabParams', {})
+        slab_params = request.values.get('slabParams', {})
 
     miller_x = int(slab_params.get('millerX', 1))
     miller_y = int(slab_params.get('millerY', 1))
@@ -163,8 +170,7 @@ def generate_slab_cif(request=None, return_atoms=False):
     input_format = str(slab_params.get('format', 'cif') or 'cif')
     all_terminations = slab_params.get('termination', 'false') == 'true'
 
-
-    bulk_cif = str(request.args.get(
+    bulk_cif = str(request.values.get(
         'bulk_cif', (json.loads(generate_bulk_cif(request).data)['cifdata'])))
 
     mem_file = StringIO.StringIO()
@@ -207,6 +213,7 @@ def generate_slab_cif(request=None, return_atoms=False):
         return images
 
     return flask.jsonify({
+        'version': VERSION,
         'images': [mem_file.getvalue() for mem_file in mem_files],
         'input': [input_mem_file.getvalue() for input_mem_file in input_mem_files],
         'n_terminations': n_terminations,
@@ -216,13 +223,15 @@ def generate_slab_cif(request=None, return_atoms=False):
 @catKitDemo.route('/get_adsorption_sites', methods=['GET', 'POST'])
 def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
     request = flask.request if request is None else request
-    if isinstance(request.args, str):
-        request.args = json.loads(request.args)
+    request.values = dict((request.get_json() or {}),
+                          **request.values.to_dict(), )
+    if isinstance(request.values, str):
+        request.values = json.loads(request.values)
 
-    if isinstance(request.args.get('slabParams', '{}'), str):
-        slab_params = json.loads(request.args.get('slabParams', '{}'))
+    if isinstance(request.values.get('slabParams', '{}'), str):
+        slab_params = json.loads(request.values.get('slabParams', '{}'))
     else:
-        slab_params = request.args.get('slabParams', {})
+        slab_params = request.values.get('slabParams', {})
 
     miller_x = int(slab_params.get('millerX', 1))
     miller_y = int(slab_params.get('millerY', 1))
@@ -233,24 +242,24 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
     stoichiometry = bool(slab_params.get('stoichiometry', False))
     input_format = str(slab_params.get('format', 'cif') or 'cif')
 
-
-    bulk_cif = str(request.args.get(
+    bulk_cif = str(request.values.get(
         'bulk_cif', (json.loads(generate_bulk_cif(request).data)['cifdata'])))
-    cif_images = json.loads(generate_slab_cif(request).data)['images']
+    cif_images = json.loads(generate_slab_cif(
+        request
+    ).data)['images']
 
-    if isinstance(request.args.get('adsorbateParams', '{}'), str):
+    if isinstance(request.values.get('adsorbateParams', '{}'), str):
         adsorbate_params = json.loads(
-            request.args.get('adsorbateParams', '{}'))
+            request.values.get('adsorbateParams', '{}'))
     else:
-        adsorbate_params = request.args.get('adsorbateParams', {})
+        adsorbate_params = request.values.get('adsorbateParams', {})
 
     if place_holder is None:
-        place_holder = str(adsorbate_params.get('placeHolder', 'F'))
+        place_holder = str(adsorbate_params.get('placeHolder', 'empty'))
 
     adsorbate = str(adsorbate_params.get('adsorbate', 'O'))
 
     site_type = str(adsorbate_params.get('siteType', 'all'))
-
 
     # create bulk atoms
     mem_file = StringIO.StringIO()
@@ -329,10 +338,10 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
                 for place_holder_index in range(len(sites[0])):
                     if place_holder_index != i:
                         atoms += ase.atom.Atom(
-                                place_holder,
-                                sites[0][place_holder_index] + [0.,
-                                                                0.,
-                                                                1.5])
+                            place_holder,
+                            sites[0][place_holder_index] + [0.,
+                                                            0.,
+                                                            1.5])
 
             if return_atoms:
                 atoms_objects.append(atoms)
@@ -355,12 +364,13 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
 
                     with StringIO.StringIO() as f:
                         ase.io.write(f, molecule, format=input_format)
-                        reference_molecules[molecule_name]= f.getvalue()
+                        reference_molecules[molecule_name] = f.getvalue()
 
                 reactants = []
                 gas_phase_molecules = set()
                 for molecule, factor in stoichiometry_factors[adsorbate].items():
-                    reactants.append('{factor}{molecule}gas'.format(**locals()))
+                    reactants.append(
+                        '{factor}{molecule}gas'.format(**locals()))
                     gas_phase_molecules.add(molecule)
 
                 reactants = '_'.join(reactants)
@@ -384,6 +394,7 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
 
     if return_atoms:
         return ({
+            'version': VERSION,
             'data': (sites_list),
             'images': atoms_objects,
             'equations': equations,
@@ -395,6 +406,7 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
         })
     else:
         return flask.jsonify({
+            'version': VERSION,
             'data': (sites_list),
             'cifImages': cif_images,
             'inputImages': input_images,
@@ -431,7 +443,6 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
     vacuum = float(slab_params.get('vacuum', 10.))
     stoichiometry = bool(slab_params.get('stoichiometry', False))
     input_format = str(slab_params.get('format', 'cif') or 'cif')
-
 
     cif_images = json.loads(generate_slab_cif(request).data)['images']
 
@@ -517,6 +528,7 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
         return images
 
     return flask.jsonify({
+        'version': VERSION,
         'images': [mem_file.getvalue() for mem_file in mem_files],
         'n': len(images),
         'cif_images': cif_images,
@@ -635,7 +647,8 @@ def generate_dft_input(request=None, return_data=False):
                 **locals())
             site_counter[site_name] = site_counter.get(site_name, 0) + 1
             count = site_counter[site_name]
-            adsorbates = '{adsorbate}star{site_name}.{count}'.format(**locals())
+            adsorbates = '{adsorbate}star{site_name}.{count}'.format(
+                **locals())
 
             adsorbates_strings.append(adsorbates)
             slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{composition}__{structure}/{facet}/{equation}'.format(
@@ -829,6 +842,7 @@ def convert_atoms(request=None):
     extension = format2extension.get(out_format, out_format)
 
     return flask.jsonify({
+        'version': VERSION,
         'image': str(out_content),
         'input_filetype': 'cif',
         'output_filetype': out_format,
@@ -857,5 +871,6 @@ def upload_dataset(request=None):
         request.files['file'].save(in_bfile)
 
     return flask.jsonify({
+        'version': VERSION,
         'message': message,
     })
