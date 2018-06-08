@@ -30,7 +30,7 @@ import mendeleev
 import apps.utils.gas_phase_references
 
 import catkit
-import catgen.surface
+import catkit.gen.surface
 
 catKitDemo = flask.Blueprint('catKitDemo', __name__)
 
@@ -162,6 +162,7 @@ def generate_slab_cif(request=None, return_atoms=False):
     miller_x = int(slab_params.get('millerX', 1))
     miller_y = int(slab_params.get('millerY', 1))
     miller_z = int(slab_params.get('millerZ', 1))
+    unit_cell_size = int(slab_params.get('unitCellSize', 2))
     layers = int(slab_params.get('layers', 4))
     axis = int(slab_params.get('axis', 2))
     vacuum = float(slab_params.get('vacuum', 10.))
@@ -179,7 +180,7 @@ def generate_slab_cif(request=None, return_atoms=False):
 
     atoms = ase.io.read(mem_file, format='cif')
 
-    Gen = catgen.surface.SlabGenerator(
+    Gen = catkit.gen.surface.SlabGenerator(
         bulk=atoms,
         miller_index=[miller_x,
                       miller_y,
@@ -199,7 +200,9 @@ def generate_slab_cif(request=None, return_atoms=False):
             if iterm != termination:
                 continue
             terminations = [terminations[termination]]
-        images.append(Gen.get_slab(iterm=iterm))
+        images.append(Gen.get_slab(
+            iterm=iterm,
+            size=(unit_cell_size, unit_cell_size)))
         images[-1].center(axis=axis, vacuum=vacuum)
         mem_files.append(StringIO.StringIO())
         ase.io.write(mem_files[-1], images[-1], format='cif')
@@ -236,6 +239,7 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
     miller_x = int(slab_params.get('millerX', 1))
     miller_y = int(slab_params.get('millerY', 1))
     miller_z = int(slab_params.get('millerZ', 1))
+    unit_cell_size = int(slab_params.get('unitCellSize', 2))
     layers = int(slab_params.get('layers', 4))
     axis = int(slab_params.get('axis', 2))
     vacuum = float(slab_params.get('vacuum', 10.))
@@ -271,7 +275,7 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
         ase.io.write(f, bulk_atoms, format='py')
         _batoms = '='.join(f.getvalue().split('=')[1:])
 
-    gen = catgen.surface.SlabGenerator(
+    gen = catkit.gen.surface.SlabGenerator(
         bulk=bulk_atoms,
         miller_index=[miller_x, miller_y, miller_z],
         layers=layers,
@@ -299,14 +303,14 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
     error_message = ''
     atoms_objects = []
     for atoms_i, atoms in enumerate(copy.deepcopy(images)):
-        gen = catgen.surface.SlabGenerator(
+        gen = catkit.gen.surface.SlabGenerator(
             bulk=bulk_atoms,
             miller_index=[miller_x, miller_y, miller_z, ],
             layers=layers,
             vacuum=vacuum,
             fix_stoichiometry=stoichiometry,
         )
-        atoms = gen.get_slab(primitive=True)
+        atoms = gen.get_slab(size=(unit_cell_size, unit_cell_size))
         sites = gen.adsorption_sites(
             atoms,
             symmetry_reduced=True,
@@ -331,7 +335,7 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
             if site_type != 'all' and str(
                     adsorbate_site_label) != str(site_type):
                 continue
-            atoms = gen.get_slab(primitive=True)
+            atoms = gen.get_slab(size=(unit_cell_size, unit_cell_size))
             atoms += ase.atom.Atom(adsorbate, site + [0., 0., 1.5])
             if place_holder != 'empty':
                 for place_holder_index in range(len(sites[0])):
@@ -437,6 +441,7 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
     miller_x = int(slab_params.get('millerX', 1))
     miller_y = int(slab_params.get('millerY', 1))
     miller_z = int(slab_params.get('millerZ', 1))
+    unit_cell_size = int(slab_params.get('unitCellSize', 2))
     layers = int(slab_params.get('layers', 4))
     axis = int(slab_params.get('axis', 2))
     vacuum = float(slab_params.get('vacuum', 10.))
@@ -460,7 +465,7 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
         ase.io.write(f, bulk_atoms, format='py')
         _batoms = '='.join(f.getvalue().split('=')[1:])
 
-    gen = catgen.surface.SlabGenerator(
+    gen = catkit.gen.surface.SlabGenerator(
         bulk=bulk_atoms,
         miller_index=[miller_x, miller_y, miller_z
                       ],
@@ -481,14 +486,14 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
 
     for i, atoms in enumerate(images):
         atoms0 = atoms
-        gen = catgen.surface.SlabGenerator(
+        gen = catkit.gen.surface.SlabGenerator(
             bulk=bulk_atoms,
             miller_index=[miller_x, miller_y, miller_z],
             layers=layers,
             vacuum=vacuum,
             fix_stoichiometry=stoichiometry,
         )
-        atoms = gen.get_slab(primitive=True)
+        atoms = gen.get_slab(size=(unit_cell_size, unit_cell_size))
         sites = gen.adsorption_sites(
             atoms, symmetry_reduced=True,
         )
@@ -499,7 +504,7 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
                     sites[adsorbate_site_label][0]):
                 if len(adsorbate_site) == 0:
                     continue  # skip empty sites
-                atoms = gen.get_slab(primitive=True)
+                atoms = gen.get_slab(size=(unit_cell_size, unit_cell_size))
 
                 for site_label_i, site_label in enumerate(sites):
 
@@ -597,6 +602,7 @@ def generate_dft_input(request=None, return_data=False):
         miller_x = slab_params.get('millerX', 'N')
         miller_y = slab_params.get('millerY', 'N')
         miller_z = slab_params.get('millerZ', 'N')
+        unit_cell_size = int(slab_params.get('unitCellSize', 2))
         facet = '{miller_x}_{miller_y}_{miller_z}'.format(**locals())
 
         composition = ''.join(bulk_params.get('elements', []))
