@@ -341,6 +341,15 @@ This CLI will be used for collecting data from remote sources.
    :maxdepth: 1
    cathubcli.md
 
+
+IPython Notebook tutorials for API usage
+----------------------------------------
+
+`Prototype Search <http://nbviewer.jupyter.org/gist/mhoffman/2f680eb90a5531fe6e3e588f2c835775>`_
+...............................................................................................
+
+
+
 Using CatKit & CatGen
 ---------------------
 
