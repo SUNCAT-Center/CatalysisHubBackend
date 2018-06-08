@@ -332,8 +332,7 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
                     adsorbate_site_label) != str(site_type):
                 continue
             atoms = gen.get_slab(primitive=True)
-            for place_holder_index in range(len(sites[0])):
-                atoms += ase.atom.Atom(adsorbate, site + [0., 0., 1.5])
+            atoms += ase.atom.Atom(adsorbate, site + [0., 0., 1.5])
             if place_holder != 'empty':
                 for place_holder_index in range(len(sites[0])):
                     if place_holder_index != i:
