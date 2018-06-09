@@ -128,9 +128,13 @@ def generate_bulk_cif(request=None, return_atoms=False):
         atoms[i].symbol = elements[i % len(elements)]
 
     mem_file = StringIO.StringIO()
+    #  Castep file writer needs name
+    mem_file.name = 'Catalysis-Hub.Org Structure'
     ase.io.write(mem_file, atoms, 'cif')
 
     input_mem_file = StringIO.StringIO()
+    #  Castep file writer needs name
+    input_mem_file.name = 'Catalysis-Hub.Org Structure'
     ase.io.write(input_mem_file, atoms, input_format)
 
     if return_atoms:
@@ -148,7 +152,7 @@ def generate_bulk_cif(request=None, return_atoms=False):
 def generate_slab_cif(request=None, return_atoms=False):
     request = flask.request if request is None else request
     request.values = dict((request.get_json() or {}),
-                          **(request.values if type(request.values) is dict
+                          **(request.values if isinstance(request.values, dict)
                               else request.values.to_dict()
                              ))
     if isinstance(request.values, str):
@@ -164,6 +168,7 @@ def generate_slab_cif(request=None, return_atoms=False):
     miller_z = int(slab_params.get('millerZ', 1))
     unit_cell_size = int(slab_params.get('unitCellSize', 2))
     layers = int(slab_params.get('layers', 4))
+    fixed = int(slab_params.get('fixed', 2))
     axis = int(slab_params.get('axis', 2))
     vacuum = float(slab_params.get('vacuum', 10.))
     stoichiometry = bool(slab_params.get('stoichiometry', False))
@@ -187,7 +192,9 @@ def generate_slab_cif(request=None, return_atoms=False):
                       miller_z
                       ],
         layers=layers,
+        fixed=fixed,
         fix_stoichiometry=stoichiometry,
+        attach_graph=False,
     )
     terminations = Gen.get_unique_terminations()
     images = []
@@ -205,10 +212,14 @@ def generate_slab_cif(request=None, return_atoms=False):
             size=(unit_cell_size, unit_cell_size)))
         images[-1].center(axis=axis, vacuum=vacuum)
         mem_files.append(StringIO.StringIO())
+        #  Castep file writer needs name
+        mem_files[-1].name = 'Catalysis-Hub.Org Structure'
         ase.io.write(mem_files[-1], images[-1], format='cif')
         mem_files[-1].seek(0)
 
         input_mem_files.append(StringIO.StringIO())
+        #  Castep file writer needs name
+        input_mem_files[-1].name = 'Catalysis-Hub.Org Structure'
         ase.io.write(input_mem_files[-1], images[-1], format=input_format)
         input_mem_files[-1].seek(0)
 
@@ -241,6 +252,7 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
     miller_z = int(slab_params.get('millerZ', 1))
     unit_cell_size = int(slab_params.get('unitCellSize', 2))
     layers = int(slab_params.get('layers', 4))
+    fixed = int(slab_params.get('fixed', 2))
     axis = int(slab_params.get('axis', 2))
     vacuum = float(slab_params.get('vacuum', 10.))
     stoichiometry = bool(slab_params.get('stoichiometry', False))
@@ -272,6 +284,8 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
 
     bulk_atoms = ase.io.read(mem_file, format='cif')
     with StringIO.StringIO() as f:
+        #  Castep file writer needs name
+        f.name = 'Catalysis-Hub.Org Structure'
         ase.io.write(f, bulk_atoms, format='py')
         _batoms = '='.join(f.getvalue().split('=')[1:])
 
@@ -279,8 +293,10 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
         bulk=bulk_atoms,
         miller_index=[miller_x, miller_y, miller_z],
         layers=layers,
+        fixed=fixed,
         vacuum=vacuum,
         fix_stoichiometry=stoichiometry,
+        attach_graph=False,
     )
 
     in_mem_files = []
@@ -307,8 +323,10 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
             bulk=bulk_atoms,
             miller_index=[miller_x, miller_y, miller_z, ],
             layers=layers,
+            fixed=fixed,
             vacuum=vacuum,
             fix_stoichiometry=stoichiometry,
+            attach_graph=False,
         )
         atoms = gen.get_slab(size=(unit_cell_size, unit_cell_size))
         sites = gen.adsorption_sites(
@@ -366,12 +384,15 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
                     molecule.cell = np.diag(GAS_PHASE_CELL)
 
                     with StringIO.StringIO() as f:
+                        #  Castep file writer needs name
+                        f.name = 'Catalysis-Hub.Org Structure'
                         ase.io.write(f, molecule, format=input_format)
                         reference_molecules[molecule_name] = f.getvalue()
 
                 reactants = []
                 gas_phase_molecules = set()
-                for molecule, factor in stoichiometry_factors[adsorbate].items():
+                for molecule, factor in stoichiometry_factors[
+                        adsorbate].items():
                     reactants.append(
                         '{factor}{molecule}gas'.format(**locals()))
                     gas_phase_molecules.add(molecule)
@@ -386,10 +407,14 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
                 equations.append(equation)
 
                 with StringIO.StringIO() as f:
+                    #  Castep file writer needs name
+                    f.name = 'Catalysis-Hub.Org Structure'
                     ase.io.write(f, atoms, format=input_format)
                     input_images.append(f.getvalue())
 
                 with StringIO.StringIO() as f:
+                    #  Castep file writer needs name
+                    f.name = 'Catalysis-Hub.Org Structure'
                     ase.io.write(f, atoms, format='cif')
                     cif_images.append(f.getvalue())
 
@@ -443,6 +468,7 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
     miller_z = int(slab_params.get('millerZ', 1))
     unit_cell_size = int(slab_params.get('unitCellSize', 2))
     layers = int(slab_params.get('layers', 4))
+    fixed = int(slab_params.get('fixed', 4))
     axis = int(slab_params.get('axis', 2))
     vacuum = float(slab_params.get('vacuum', 10.))
     stoichiometry = bool(slab_params.get('stoichiometry', False))
@@ -462,6 +488,8 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
     bulk_atoms = generate_bulk_cif(request, return_atoms=True)
 
     with StringIO.StringIO() as f:
+        #  Castep file writer needs name
+        f.name = 'Catalysis-Hub.Org Structure'
         ase.io.write(f, bulk_atoms, format='py')
         _batoms = '='.join(f.getvalue().split('=')[1:])
 
@@ -470,7 +498,9 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
         miller_index=[miller_x, miller_y, miller_z
                       ],
         layers=layers,
+        fixed=fixed,
         fix_stoichiometry=stoichiometry,
+        attach_graph=False,
     )
 
     in_mem_files = []
@@ -490,8 +520,10 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
             bulk=bulk_atoms,
             miller_index=[miller_x, miller_y, miller_z],
             layers=layers,
+            fixed=fixed,
             vacuum=vacuum,
             fix_stoichiometry=stoichiometry,
+            attach_graph=False,
         )
         atoms = gen.get_slab(size=(unit_cell_size, unit_cell_size))
         sites = gen.adsorption_sites(
@@ -525,6 +557,8 @@ def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
     mem_files = []
     for atoms in images:
         mem_files.append(StringIO.StringIO())
+        #  Castep file writer needs name
+        mem_files[-1].name = 'Catalysis-Hub.Org Structure'
         ase.io.write(mem_files[-1], atoms, format='cif')
         mem_files[-1].seek(0)
 
@@ -674,6 +708,8 @@ def generate_dft_input(request=None, return_data=False):
                     image)
             else:
                 with StringIO.StringIO() as mem_file:
+                    #  Castep file writer needs name
+                    mem_file.name = 'Catalysis-Hub.Org Structure'
                     ase.io.write(mem_file, image, format=SUFFIX)
                     zf.writestr(
                         '{slab_path}/{adsorbates}.{SUFFIX}'.format(**locals()),
@@ -719,6 +755,8 @@ def generate_dft_input(request=None, return_data=False):
                             slab_image)
                     else:
                         with StringIO.StringIO() as mem_file:
+                            #  Castep file writer needs name
+                            mem_file.name = 'Catalysis-Hub.Org Structure'
                             ase.io.write(mem_file, slab_image, format=SUFFIX)
                             zf.writestr(
                                 slab_path.format(**locals()),
@@ -755,6 +793,8 @@ def generate_dft_input(request=None, return_data=False):
                         bulk_atoms)
                 else:
                     with StringIO.StringIO() as mem_file:
+                        #  Castep file writer needs name
+                        mem_file.name = 'Catalysis-Hub.Org Structure'
                         ase.io.write(mem_file, bulk_atoms, format=SUFFIX)
                         zf.writestr(
                             bulk_path,
@@ -785,6 +825,8 @@ def generate_dft_input(request=None, return_data=False):
                         molecule)
                 else:
                     with StringIO.StringIO() as mem_file:
+                        #  Castep file writer needs name
+                        mem_file.name = 'Catalysis-Hub.Org Structure'
                         ase.io.write(mem_file, molecule, format=SUFFIX)
                         zf.writestr(molecule_path, mem_file.getvalue())
 
@@ -837,6 +879,7 @@ def convert_atoms(request=None):
     composition = atoms.get_chemical_formula(mode='metal')
 
     with StringIO.StringIO() as out_file:
+        #  Castep file writer needs name
         out_file.name = 'CatApp Browser Export'
         ase.io.write(out_file, atoms, out_format)
         out_content = out_file.getvalue()
