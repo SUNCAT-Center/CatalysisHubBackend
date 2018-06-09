@@ -345,8 +345,13 @@ This CLI will be used for collecting data from remote sources.
 IPython Notebook tutorials for API usage
 ----------------------------------------
 
+The following noteboks demonstrate how make interactive use of the `Catalysis-Hub.Org API <http://api.catalysis-hub.org/>`_. The recommend of using these Notebook is `Jupyter Lab <http://jupyterlab.readthedocs.io/>`_.
+
+`GraphQL Querying <http://nbviewer.jupyter.org/gist/mhoffman/556332aaac0e7e11769ce28848b6b721>`_
+................................................................................................
+
 `Prototype Search <http://nbviewer.jupyter.org/gist/mhoffman/2f680eb90a5531fe6e3e588f2c835775>`_
-...............................................................................................
+.................................................................................................
 
 
 
