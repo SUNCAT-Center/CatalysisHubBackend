@@ -12,8 +12,6 @@ from raven.contrib.flask import Sentry
 # local imports
 import models
 import api
-import warnings
-import sys
 import traceback
 from sqlalchemy.exc import OperationalError
 # import qmdb_api
@@ -169,4 +167,4 @@ if __name__ == '__main__':
         logging.basicConfig()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
-    app.run()
+    app.run(debug=True)
