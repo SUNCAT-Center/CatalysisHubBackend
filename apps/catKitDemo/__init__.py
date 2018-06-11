@@ -151,10 +151,15 @@ def generate_bulk_cif(request=None, return_atoms=False):
 @catKitDemo.route('/generate_slab_cif/', methods=['GET', 'POST'])
 def generate_slab_cif(request=None, return_atoms=False):
     request = flask.request if request is None else request
-    request.values = dict((request.get_json() or {}),
-                          **(request.values if isinstance(request.values, dict)
-                              else request.values.to_dict()
-                             ))
+    if hasattr(request, 'get_json'):
+        request.values = dict((request.get_json() or {}),
+                              **(request.values
+                                  if type(request.values) is dict
+                                  else request.values.to_dict()
+                                 ))
+    else:
+        request.values = copy.deepcopy(request)
+
     if isinstance(request.values, str):
         request.values = json.loads(request.values)
 
@@ -401,7 +406,7 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
                 #site_name = site_names[image_i]
                 _site_name = SITE_NAMES[connectivity]
                 site_name = '{_site_name}{site_counter}'.format(**locals())
-                equation = 'star{site_name}_{reactants}__{adsorbate}star{site_name}'.format(
+                equation = 'star@{site_name}_{reactants}__{adsorbate}star@{site_name}'.format(
                     **locals())
 
                 equations.append(equation)
@@ -445,132 +450,6 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
             'altLabels': alt_labels,
             'error': error_message
         })
-
-
-@catKitDemo.route('/place_adsorbates', methods=['GET', 'POST'])
-def place_adsorbates(request=None, return_atoms=False, place_holder='F'):
-    request = flask.request if request is None else request
-    if isinstance(request.args, str):
-        request.args = json.loads(request.args)
-
-    if isinstance(request.args.get('siteOccupations', '{}'), str):
-        site_occupation = json.loads(request.args.get('siteOccupations', '{}'))
-    else:
-        site_occupation = request.args.get('siteOccupations', {})
-
-    if isinstance(request.args.get('slabParams', '{}'), str):
-        slab_params = json.loads(request.args.get('slabParams', '{}'))
-    else:
-        slab_params = request.args.get('slabParams', {})
-
-    miller_x = int(slab_params.get('millerX', 1))
-    miller_y = int(slab_params.get('millerY', 1))
-    miller_z = int(slab_params.get('millerZ', 1))
-    unit_cell_size = int(slab_params.get('unitCellSize', 2))
-    layers = int(slab_params.get('layers', 4))
-    fixed = int(slab_params.get('fixed', 4))
-    axis = int(slab_params.get('axis', 2))
-    vacuum = float(slab_params.get('vacuum', 10.))
-    stoichiometry = bool(slab_params.get('stoichiometry', False))
-    input_format = str(slab_params.get('format', 'cif') or 'cif')
-
-    cif_images = json.loads(generate_slab_cif(request).data)['images']
-
-    if isinstance(request.args.get('adsorbateParams', '{}'), str):
-        adsorbate_params = json.loads(
-            request.args.get('adsorbateParams', '{}'))
-    else:
-        adsorbate_params = request.args.get('adsorbateParams', {})
-
-    site_type = str(adsorbate_params.get('siteType', 'all'))
-    adsorbate = str(adsorbate_params.get('adsorbate', 'empty'))
-
-    bulk_atoms = generate_bulk_cif(request, return_atoms=True)
-
-    with StringIO.StringIO() as f:
-        #  Castep file writer needs name
-        f.name = 'Catalysis-Hub.Org Structure'
-        ase.io.write(f, bulk_atoms, format='py')
-        _batoms = '='.join(f.getvalue().split('=')[1:])
-
-    gen = catkit.gen.surface.SlabGenerator(
-        bulk=bulk_atoms,
-        miller_index=[miller_x, miller_y, miller_z
-                      ],
-        layers=layers,
-        fixed=fixed,
-        fix_stoichiometry=stoichiometry,
-        attach_graph=False,
-    )
-
-    in_mem_files = []
-    images = []
-    for cif_image in cif_images:
-        mem_file = StringIO.StringIO()
-        mem_file.write(cif_image)
-        mem_file.seek(0)
-        atoms = ase.io.read(mem_file, format=input_format)
-        images.append(atoms)
-
-    sites_list = []
-
-    for i, atoms in enumerate(images):
-        atoms0 = atoms
-        gen = catkit.gen.surface.SlabGenerator(
-            bulk=bulk_atoms,
-            miller_index=[miller_x, miller_y, miller_z],
-            layers=layers,
-            fixed=fixed,
-            vacuum=vacuum,
-            fix_stoichiometry=stoichiometry,
-            attach_graph=False,
-        )
-        atoms = gen.get_slab(size=(unit_cell_size, unit_cell_size))
-        sites = gen.adsorption_sites(
-            atoms, symmetry_reduced=True,
-        )
-        for adsorbate_site_label in sorted(sites):
-            if site_type != 'all' and adsorbate_site_label != site_type:
-                continue
-            for adsorbate_site_i, adsorbate_site in enumerate(
-                    sites[adsorbate_site_label][0]):
-                if len(adsorbate_site) == 0:
-                    continue  # skip empty sites
-                atoms = gen.get_slab(size=(unit_cell_size, unit_cell_size))
-
-                for site_label_i, site_label in enumerate(sites):
-
-                    for site_i, site in enumerate(sites[site_label][0]):
-                        if adsorbate_site_label == site_label \
-                                and adsorbate_site_i == site_i:
-                            atoms += ase.atom.Atom(adsorbate,
-                                                   site + [0., 0., 1.5])
-
-                        elif place_holder in ase.atoms.chemical_symbols:
-                            if site_type != 'all' and site_label != site_type:
-                                continue
-                            atoms += ase.atom.Atom(place_holder,
-                                                   site + [0., 0., 1.5])
-
-        images[i] = atoms
-
-    mem_files = []
-    for atoms in images:
-        mem_files.append(StringIO.StringIO())
-        #  Castep file writer needs name
-        mem_files[-1].name = 'Catalysis-Hub.Org Structure'
-        ase.io.write(mem_files[-1], atoms, format='cif')
-        mem_files[-1].seek(0)
-
-    if return_atoms:
-        return images
-
-    return flask.jsonify({
-        'version': VERSION,
-        'images': [mem_file.getvalue() for mem_file in mem_files],
-        'n': len(images),
-        'cif_images': cif_images,
-    })
 
 
 @catKitDemo.route('/generate_dft_input', methods=['GET', 'POST'])
@@ -682,7 +561,7 @@ def generate_dft_input(request=None, return_data=False):
 
             reactants = '_'.join(reactants)
             site_name = site_names[image_i]
-            equation = 'star{site_name}_{reactants}__{adsorbate}star{site_name}'.format(
+            equation = 'star@{site_name}_{reactants}__{adsorbate}star@{site_name}'.format(
                 **locals())
             site_counter[site_name] = site_counter.get(site_name, 0) + 1
             count = site_counter[site_name]
