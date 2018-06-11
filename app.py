@@ -167,4 +167,4 @@ if __name__ == '__main__':
         logging.basicConfig()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
-    app.run(debug=True)
+    app.run()
