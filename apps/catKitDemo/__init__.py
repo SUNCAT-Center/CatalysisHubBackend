@@ -198,7 +198,7 @@ def generate_slab_cif(request=None, return_atoms=False):
                       ],
         layers=layers,
         fixed=fixed,
-        fix_stoichiometry=stoichiometry,
+        #fix_stoichiometry=stoichiometry,
         attach_graph=False,
     )
     terminations = Gen.get_unique_terminations()
@@ -300,7 +300,7 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
         layers=layers,
         fixed=fixed,
         vacuum=vacuum,
-        fix_stoichiometry=stoichiometry,
+        #fix_stoichiometry=stoichiometry,
         attach_graph=False,
     )
 
@@ -330,7 +330,7 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
             layers=layers,
             fixed=fixed,
             vacuum=vacuum,
-            fix_stoichiometry=stoichiometry,
+            #fix_stoichiometry=stoichiometry,
             attach_graph=False,
         )
         atoms = gen.get_slab(size=(unit_cell_size, unit_cell_size))
