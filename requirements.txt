@@ -3,7 +3,7 @@
 # Add new packages in requirements.template instead.
 ase==3.15.0
 backports.functools-lru-cache==1.4
-git+https://github.com/SUNCAT-Center/CatKit.git@2f26a49af15689763c39f84b7a8ac4044e51b1d5#egg=catkit
+git+https://github.com/SUNCAT-Center/CatKit.git@d033697990fb8b9ac3e1c808b1eede5e37d38c8c#egg=catkit
 git+https://github.com/SUNCAT-Center/CatLearn.git@beb84a3eabdab7912c7a2c345cd2e7804ec4a07b#egg=catlearn
 blinker==1.4
 click==6.7

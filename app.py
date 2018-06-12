@@ -12,44 +12,52 @@ from raven.contrib.flask import Sentry
 # local imports
 import models
 import api
-import warnings
+import traceback
 from sqlalchemy.exc import OperationalError
 # import qmdb_api
+
 
 try:
     from apps.pourbaix.run_pourbaix import pourbaix
 except ImportError:
-    warnings.warn('pourbaix diagrams not available.')
+    print('pourbaix diagrams not available.')
+    traceback.print_exc()
     pourbaix = None
 
 try:
     from apps.catlearn.run_catlearn import catlearn_blueprint
-except ImportError:
-    warnings.warn('Catlearn not available.')
+except ImportError as e:
+    print('Catlearn not available: {e}'.format(e=e))
+    traceback.print_exc()
     atoml_blueprint = None
 
 try:
     from apps.activityMaps import activityMaps
-except ImportError:
-    warnings.warn('activityMaps not available.')
+except ImportError as e:
+    print('activityMaps not available: {e}'.format(e=e))
+    traceback.print_exc()
     activityMaps = None
 
 try:
     from apps.prototypeSearch import app as prototypeSearch
-except (ImportError, OperationalError):
-    warnings.warn('prototypeSearch not available.')
+except (ImportError, OperationalError) as e:
+    print('prototypeSearch not available: {e}'.format(e=e))
+    traceback.print_exc()
     prototypeSearch = None
 
 try:
     from apps.bulkEnumerator import bulk_enumerator
 except ImportError:
-    warnings.warn('prototypeSearch not available.')
+    ('prototypeSearch not available: {e}'.format(e=e))
+    print('prototypeSearch not available: {e}'.format(e=e))
+    traceback.print_exc()
     bulk_enumerator = None
 
 try:
     from apps.catKitDemo import catKitDemo
-except ImportError:
-    warnings.warn('catKitDemo not available.')
+except ImportError as e:
+    print('catKitDemo not available: {e}'.format(e=e))
+    traceback.print_exc()
     catKitDemo = None
 
 
