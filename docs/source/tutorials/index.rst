@@ -350,8 +350,13 @@ The following noteboks demonstrate how make interactive use of the `Catalysis-Hu
 `GraphQL Querying <http://nbviewer.jupyter.org/gist/mhoffman/556332aaac0e7e11769ce28848b6b721>`_
 ................................................................................................
 
+
 `Prototype Search <http://nbviewer.jupyter.org/gist/mhoffman/2f680eb90a5531fe6e3e588f2c835775>`_
 .................................................................................................
+
+
+`Search Structures and Cut Slabs <http://nbviewer.jupyter.org/gist/mhoffman/e0e9edf6771c3c0c5838043a022e0857>`_
+................................................................................................................
 
 
 
