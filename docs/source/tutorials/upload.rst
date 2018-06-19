@@ -15,6 +15,7 @@ If you're a member of the SUNCAT group, you can add your data to one of the fold
 
 On SHERLOCK2 you can go to the directory and run::
 
+  module load python/3.6.1
   . CATKITENV/bin/activate
 
 to use the local installation of CatKit. Alternatively you can install your own version of CatKit - see instructions below.
