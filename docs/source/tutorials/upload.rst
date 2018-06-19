@@ -21,7 +21,7 @@ to use the local installation of CatKit. Alternatively you can install your own 
 
 Installing CatKit
 ...........................
-CatKit is set of computational tools for catalysis, that comes with a cli tool :highlight:`cathub` that will be used to arrange your data into folders and submit your data to the server. To install, use pip::
+CatKit is set of computational tools for catalysis, that comes with a cli tool :``cathub`` that will be used to arrange your data into folders and submit your data to the server. To install, use pip::
 
   pip install --upgrade --user git+https://github.com/kirstenwinther/CatKit.git#egg=catkit
 
@@ -51,7 +51,7 @@ To read the data from a general folder, type::
   
   cathub organize <FOLDER> -a ADS1,ADS2 -f <FACET>
 
-Use the -a option to specify which adsorbates to look for. Also, please use the -f option to specify the surface facet when applicable. This will generate an organized folder named :highlight:`<FOLDER>.organized`. Please open the .txt file  :highlight:`<FOLDER>.organized/publication.txt`, and update it with info about your publication. It should look something like this::
+Use the -a option to specify which adsorbates to look for. Also, please use the -f option to specify the surface facet when applicable. This will generate an organized folder named ``<FOLDER>.organized``. Please open the .txt file ``<FOLDER>.organized/publication.txt``, and update it with info about your publication. It should look something like this::
   
   { 
     "volume": "8", 
@@ -86,7 +86,7 @@ Then type::
 
 And your folders will be created. You can check that they look right with :code:`tree <FOLDER>`
 
-Then add your atomic structure output files to the right folders. The files can be in any format that ASE can read, and must contain the total potential energy from the calculation - .traj files are generaly a good choice. Your structures will include the adsorbed atoms/molecules, empty slabs, and gas phase species for your reactions. Also, if you have done calculations for the bulk geometries, please include them as well. All gas phase species involved must be added to the `<publication>/<dft code>/<dft functional>/gas/` folder. Also, notice that dummy files names `MISSING:` have been placed in the folders, to help you determine the right location for your files. 
+Then add your atomic structure output files to the right folders. The files can be in any format that ASE can read, and must contain the total potential energy from the calculation - .traj files are generaly a good choice. Your structures will include the adsorbed atoms/molecules, empty slabs, and gas phase species for your reactions. Also, if you have done calculations for the bulk geometries, please include them as well. All gas phase species involved must be added to the ``<publication>/<dft code>/<dft functional>/gas/`` folder. Also, notice that dummy files names ``MISSING:..`` have been placed in the folders, to help you determine the right location for your files. 
 
 Reading into database
 ......................
@@ -94,10 +94,10 @@ After adding all your structures (or after running cathub organize), read your s
   
   cathub folder2db <FOLDER>
 
-If anything is wrong with your files, or anything is missing, you should recieve appropiate error messages. When reading of the folders is complete, a table with a summary will be printed in you terminal. Please verify that the energies looks right. Also a database file has been written at :highlight:`<FOLDER>/<DBNAME>.db`.
+If anything is wrong with your files, or anything is missing, you should recieve appropiate error messages. When reading of the folders is complete, a table with a summary will be printed in you terminal. Please verify that the energies looks right. Also a database file has been written at ``<FOLDER>/<DBNAME>.db``.
 
 Upload your data to the server by typing::
   
   cathub folder2db <DBNAME>.db
   
-and follow the feedback in the terminal. Your data will not be made accessible from catalysis-hub.org before you have approved. Send an email to Kirsten Winther,  winther@stanford.edu, and request to have your data made public - Please include the name of the .db folder in the email since this is the :highlight:`id` of the submitted  publication.
+and follow the feedback in the terminal. Your data will not be made accessible from catalysis-hub.org before you have approved. Send an email to Kirsten Winther,  winther@stanford.edu, and request to have your data made public - Please include the name of the .db folder in the email since this is the ``id`` of the submitted  publication.
