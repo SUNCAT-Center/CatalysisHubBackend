@@ -1,16 +1,16 @@
-"""Flask app for AtoML-CatApp model."""
-import pickle
+"""Flask app for catlearn-CatApp model."""
 import flask
 import numpy as np
 from flask import Blueprint
 
-from apps.AtoML.featurize.catapp_user import return_features
+from apps.catlearn.featurize.catapp_user import return_features
+from catlearn.regression.gpfunctions import io as gp_io
 
-atoml_blueprint = Blueprint('atoml', __name__)
+catlearn_blueprint = Blueprint('catlearn', __name__)
 
 
-@atoml_blueprint.route('/', methods=['GET', 'POST'])
-def run_atoml_app():
+@catlearn_blueprint.route('/', methods=['GET', 'POST'])
+def run_catlearn_app():
     """The actual app to predict and generate output."""
     data = flask.request.json
     # Add some default values in case no data is provided.
@@ -34,8 +34,7 @@ def run_atoml_app():
 
 def _get_model():
     """Load the generated model."""
-    with open('apps/AtoML/models/catapp_gp_model.pickle', 'rb') as modelfile:
-        model = pickle.load(modelfile)
+    model = gp_io.read('apps/catlearn/models/catapp_catlearn_gp')
     return model
 
 
