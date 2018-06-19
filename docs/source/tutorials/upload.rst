@@ -1,5 +1,5 @@
-Submitting your data
---------------------
+Submitting data
+---------------
 
 Please submit your electronic structures calculations for surface reactions! Data submissions will be part of the Surface Reactions app (essentially CatApp v2.0) and is open to all institutions. Furthermore, the atomic structures that are part of your reaction can be utilized for other apps.
 
