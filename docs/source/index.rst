@@ -10,7 +10,8 @@ Welcome to catalysis-hub.org's documentation!
    
    :maxdepth: 1
 
-   topics/index	      
+   topics/index
+   tutorials/upload
    tutorials/index
    reference/index
    troubleshooting/index
