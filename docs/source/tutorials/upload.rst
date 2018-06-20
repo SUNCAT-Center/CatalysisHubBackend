@@ -18,12 +18,15 @@ On SHERLOCK2 you can go to the directory and run::
   module load python/3.6.1
   . CATKITENV/bin/activate
 
-to use the local installation of CatKit. Alternatively you can install your own version of CatKit - see instructions below.
+to use the local installation of CatKit. You should see a (CATKITENV) at the beginning of your prompt now to indicate that all python script and libraries are first imported from the virtualenv. To return your shell to the previous state simply type deactivate or log out.
+
+Alternatively you can install your own version of CatKit - see instructions below.
 
 Installing CatKit
 ...........................
-CatKit is set of computational tools for catalysis, that comes with a cli tool :``cathub`` that will be used to arrange your data into folders and submit your data to the server. To install, use pip::
+CatKit is set of computational tools for catalysis, that comes with a cli tool :``cathub`` that will be used to arrange your data into folders and submit your data to the server. To install CatKit, together with the ASE dependency, use pip::
 
+  pip install --upgrade --user git+https://gitlab.com/ase/ase.git@database_writemany#egg=ase-3.16.3b1
   pip install --upgrade --user git+https://github.com/kirstenwinther/CatKit.git#egg=catkit
 
 which will install CatKit and all the dependencies.
@@ -38,11 +41,11 @@ You have two options for organizing your data:
 
 * cathub organize: For larger systematic datasets without reaction barriers, this approach will create folders and and arrange your data-files in the right location for you.
   
-* cathub make_folders: For smaller or more complicated datasets with reaction barriers, this method will only create your folders, and you will have to drop the files in the right location yourself. It's recommended to write a script to transfer files from one folder-structure to another in a systematic way, for example using :code:`shuttils.copyfile('/path/to/initial/file', '/path/to/final/file')`. 
+* cathub make_folders: For smaller or more complicated datasets with reaction barriers, this method will only create your folders, and you will have to drop the files in the right location yourself. It's recommended to write a script to transfer files from one folder-structure to another in a systematic way, for example using :code:`shutils.copyfile('/path/to/initial/file', '/path/to/final/file')`.
 
 cathub organize
 ................
-This tool will take all your structure files from a general folder and organize them in the right folder-structure that can be used for data submission. Note: this approach does not work for transition states / barrier calculations. 
+This tool will take all your structure files from a general folder and organize them in the right folder-structure that can be used for data submission. Note: this approach does not work for transition states / barrier calculations. Furthermore for some higher coverage calculations not all geometries might be assigned correctly. While we are working on this cathub organize might still give you a head start with file organization.
   
 To learn about the organize command, type::
   
@@ -67,7 +70,9 @@ Use the -a option to specify which adsorbates to look for. Also, please use the 
     "pages": "2140-2267"
   }
 Note that authors should be a list, with names in the form "lastname, firstname M.".
-  
+
+Please go through the created folder and rename folders to make your data easier to localize later. For example a structure folder like Pt16_structure, could be changed to Pt16_fcc or Pt16_bcc respectively. Please do not use spaces in folders or file-names.
+
 cathub make_folders
 ...................
   
