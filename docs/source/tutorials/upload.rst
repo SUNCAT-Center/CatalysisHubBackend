@@ -14,7 +14,6 @@ If you're a member of the SUNCAT group, you can add your data to one of the fold
 
 Start by going to one of the directories and run::
 
-  module load python/3.6.1
   . CATKITENV/bin/activate
 
 to use the local installation of CatKit. You should see a (CATKITENV) at the beginning of your prompt now to indicate that all python script and libraries are first imported from the virtualenv. To return your shell to the previous state simply type ``deactivate`` or log out.
