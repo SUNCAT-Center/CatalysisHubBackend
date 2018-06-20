@@ -1,6 +1,3 @@
-Tutorials
-=========
-
 Searching for reaction energies
 --------------------------------
 
