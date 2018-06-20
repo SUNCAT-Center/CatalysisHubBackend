@@ -1,7 +1,7 @@
 Submitting data
 ---------------
 
-Please submit your electronic structures calculations for surface reactions! Data submissions will be part of the Surface Reactions app (essentially CatApp v2.0) and is open to all institutions. Furthermore, the atomic structures that are part of your reaction can be utilized for other apps.
+Please submit your electronic structures calculations for surface reactions! Data submissions will be part of the Surface Reactions app at http://www.catalysis-hub.org/energies (essentially CatApp v2.0) and is open to all institutions. Furthermore, the atomic structures that are part of your reaction can be utilized for other apps.
 
 Your publication/dataset will be listed on the http://www.catalysis-hub.org/publications page, with a link to the publishers homepage (if already published). Your data will be easily accessible to other researchers, who will be able to browse through reaction energies and atomic structures from your publication. 
 
@@ -22,7 +22,7 @@ Alternatively you can install your own version of CatKit - see instructions belo
 
 Installing CatKit
 ...........................
-CatKit is set of computational tools for catalysis, that comes with a cli tool :``cathub`` that will be used to arrange your data into folders and submit your data to the server. To install CatKit, together with the ASE dependency, use pip::
+CatKit is set of computational tools for catalysis, that comes with a cli tool ``cathub`` that will be used to arrange your data into folders and submit your data to the server. To install CatKit, together with the ASE dependency, use pip::
 
   pip install --upgrade --user git+https://gitlab.com/ase/ase.git@database_writemany#egg=ase-3.16.3b1
   pip install --upgrade --user git+https://github.com/kirstenwinther/CatKit.git#egg=catkit
@@ -55,7 +55,7 @@ To read the data from a general folder, type::
   
   cathub organize <FOLDER> -a ADS1,ADS2 -c <dft-code> -x <xc-functional> -f <facet> -S <crystal structure> 
 
-Use the ``-a`` option to specify which adsorbates to look for. Also, please use the ``-c`` and ``-x`` options to specify the DFT code and xc-functional respectively. Also you are highly encurraged to use the ``-f`` and ``-S`` options to specify the surface facet and crystal structure when applicable.
+Use the ``-a`` option to specify which adsorbates to look for. Also, please use the ``-c`` and ``-x`` options to specify the DFT code and xc-functional respectively. Furthermore, you are highly encurraged to use the ``-f`` and ``-S`` options to specify the surface facet and crystal structure when applicable.
 
 This will generate an organized folder named ``<FOLDER>.organized``. Please open the .txt file ``<FOLDER>.organized/publication.txt``, and update it with info about your publication. It should look something like this::
   
@@ -104,7 +104,7 @@ Reading into database
 ......................
 After adding all your structure files (or after running cathub organize), read your structures into a local database file with the command::
   
-  cathub folder2db <FOLDER> --userhandle <slack username or gmail address>
+  cathub folder2db <FOLDER> --userhandle <slack-username or gmail-address>
 
 Remember your ``userhandle`` since it will be used to log in at http://www.catalysis-hub.org later (to be implemented).
 
