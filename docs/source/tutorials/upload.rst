@@ -41,7 +41,7 @@ You have two options for organizing your data:
 
 * cathub organize: For larger systematic datasets without reaction barriers, this approach will create folders and and arrange your data-files in the right location for you.
   
-* cathub make_folders: For smaller or more complicated datasets with reaction barriers, this method will only create your folders, and you will have to drop the files in the right location yourself. It's recommended to write a script to transfer files from one folder-structure to another in a systematic way, for example using :code:`shutils.copyfile('/path/to/initial/file', '/path/to/final/file')`.
+* cathub make_folders: For smaller or more complicated datasets with reaction barriers, this method will only create your folders, and you will have to drop the files in the right location yourself.
 
 cathub organize
 ................
@@ -98,7 +98,7 @@ Then type::
 
 And your folders will be created. You can check that they look right with :code:`tree <FOLDER>`
 
-Then add your atomic structure output files to the right folders. The files can be in any format that ASE can read, and must contain the total potential energy from the calculation - .traj files are generally a good choice. Your structures will include the adsorbed atoms/molecules, empty slabs, and gas phase species for your reactions. Also, if you have done calculations for the bulk geometries, please include them as well. All gas phase species involved must be added to the ``<publication>/<dft code>/<dft functional>/gas/`` folder. Also, notice that dummy files names ``MISSING:..`` have been placed in the folders, to help you determine the right location for your files. 
+Then add your atomic structure output files to the right folders. The files can be in any format that ASE can read, and must contain the total potential energy from the calculation - .traj files are generally a good choice. Your structures will include the adsorbed atoms/molecules, empty slabs, and gas phase species for your reactions. Also, if you have done calculations for the bulk geometries, please include them as well. All gas phase species involved must be added to the ``<publication>/<dft code>/<dft functional>/gas/`` folder. Also, notice that dummy files named ``MISSING:..`` have been placed in the folders, to help you determine the right location for your files. It's recommended to write a script to transfer files from one folder-structure to another in a systematic way, for example using :code:`shutils.copyfile('/path/to/initial/file', '/path/to/final/file')`.
 
 Reading into database
 ......................
