@@ -112,6 +112,6 @@ If anything is wrong with your files, or anything is missing, you should receive
 
 Upload your data to the server by typing::
   
-  cathub folder2db <DBNAME>.db
+  cathub db2server <DBNAME>.db
   
 and follow the feedback in the terminal. Your data will not be made accessible from catalysis-hub.org before you have approved. Send an email to Kirsten Winther,  winther@stanford.edu, and request to have your data made public. Please include the ``userhandle`` you defined above in the email. 
