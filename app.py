@@ -85,10 +85,15 @@ class NumpyEncoder(json.JSONEncoder):
 
 app = flask.Flask(__name__)
 
-app.config.update({
-    'CORS_SUPPORTS_CREDENTIALS': True,
-    'SQLALCHEMY_DATABASE_URI': f'postgres://catvisitor:{os.environ["DB_PASSWORD"]}@catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com:5432/catalysishub',
-    })
+if os.environ.get('DB_PASSWORD', ''):
+    app.config.update({
+        'CORS_SUPPORTS_CREDENTIALS': True,
+        'SQLALCHEMY_DATABASE_URI': f'postgres://catvisitor:{os.environ["DB_PASSWORD"]}@catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com:5432/catalysishub', })
+else:
+    # for Travis CI
+    app.config.update({
+        'CORS_SUPPORTS_CREDENTIALS': True,
+        'SQLALCHEMY_DATABASE_URI': f'postgres://postgres@localhost:5432/travis_ci_test', })
 
 db = flask_sqlalchemy.SQLAlchemy(app)
 
