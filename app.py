@@ -3,9 +3,11 @@
 # global imports
 
 import numpy as np
+import os
 import json
 import flask
 import flask_graphql
+import flask_sqlalchemy
 from flask_cors import CORS
 import logging
 from raven.contrib.flask import Sentry
@@ -60,6 +62,13 @@ except ImportError as e:
     traceback.print_exc()
     catKitDemo = None
 
+try:
+    from apps.upload import upload
+except ImportError as e:
+    print('upload not available: {e}'.format(e=e))
+    traceback.print_exc()
+    upload = None
+
 
 # NumpyEncoder: useful for JSON serializing
 # Dictionaries that contain Numpy Arrays
@@ -74,8 +83,14 @@ class NumpyEncoder(json.JSONEncoder):
         else:
             return super(NumpyEncoder, self).default(obj)
 
-
 app = flask.Flask(__name__)
+
+app.config.update({
+    'CORS_SUPPORTS_CREDENTIALS': True,
+    'SQLALCHEMY_DATABASE_URI': f'postgres://catvisitor:{os.environ["DB_PASSWORD"]}@catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com:5432/catalysishub',
+    })
+
+db = flask_sqlalchemy.SQLAlchemy(app)
 
 app.debug = False
 
@@ -122,21 +137,8 @@ app.add_url_rule('/graphql',
                          'graphql',
                          schema=api.schema,
                          graphiql=True,
-                         context={'session': models.db_session}
-                         )
-                 )
-
-# Graphql view
-# app.add_url_rule('/qmdb_graphql',
-#        view_func=flask_graphql.GraphQLView.as_view(
-#            'qmdb_graphql',
-#            schema=qmdb_api.schema,
-#            graphiql=True,
-#            context={
-#                'session': qmdb_api.db_session,
-#                }
-#            )
-#        )
+                         context={'session': db.session}
+                         ))
 
 
 if pourbaix is not None:
@@ -148,6 +150,8 @@ if prototypeSearch is not None:
 if catlearn_blueprint is not None:
     app.register_blueprint(catlearn_blueprint, url_prefix='/apps/catlearn')
 
+if upload is not None:
+    app.register_blueprint(upload, url_prefix='/apps/upload')
 
 if __name__ == '__main__':
     import optparse
@@ -167,4 +171,8 @@ if __name__ == '__main__':
         logging.basicConfig()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
+    # for local testing
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
+    app.secret_key = os.urandom(48)
     app.run()
