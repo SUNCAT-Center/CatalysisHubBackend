@@ -42,6 +42,7 @@ raven>=3
 scikit-learn==0.19.1
 scipy==0.19.1
 seaborn==0.8.1
+sendgrid==5.4.1
 singledispatch==3.4.0.3
 six==1.11.0
 SQLAlchemy==1.1.14
