@@ -30,20 +30,10 @@ import ase.atoms
 import ase.io
 import ase.build
 
-#from apps.upload import models, api
-#from apps.upload import db
-from apps.upload import db
 import models
 import api
-import apps.upload.db
 
 import sendgrid
-
-#models = db.monkey_patch_models('upload')
-#api = db.monkey_patch_api('upload')
-
-#models.metadata.create_all(models.engine)
-#models.session.commit()
 
 API_ROOT = 'https://api.catalysis-hub.org'
 API_ROOT = 'http://localhost:5000'
@@ -52,21 +42,21 @@ upload = flask.Blueprint('upload', __name__)
 
 # Not secret, just needed to identify App.
 client_id = {
-        'github': '94895cb9f588ac74ab9d',
-        'slack': '7745294259.330986790417'
-        }
+    'github': '94895cb9f588ac74ab9d',
+    'slack': '7745294259.330986790417'
+}
 
 
 scope = {
-        'slack': ['users.profile:read', 'team:read'],
-        'github': ['user:read'],
-        }
+    'slack': ['users.profile:read', 'team:read'],
+    'github': ['user:read'],
+}
 
 # Should be secret and only stored safely
 client_secret = {
-        'github': os.environ.get('GITHUB_CLIENT_SECRET', ''),
-        'slack': os.environ.get('SLACK_CLIENT_SECRET', ''),
-        }
+    'github': os.environ.get('GITHUB_CLIENT_SECRET', ''),
+    'slack': os.environ.get('SLACK_CLIENT_SECRET', ''),
+}
 
 for key, value in client_secret.items():
     if not value:
@@ -74,66 +64,67 @@ for key, value in client_secret.items():
 
 
 authorization_base_url = {
-        'github': 'https://github.com/login/oauth/authorize',
-        'slack': 'https://slack.com/oauth/authorize',
-        }
+    'github': 'https://github.com/login/oauth/authorize',
+    'slack': 'https://slack.com/oauth/authorize',
+}
 
 redirect_uri = {
-        'github': f'{API_ROOT}/apps/upload/callback',
-        'slack': f'{API_ROOT}/apps/upload/callback',
-        }
+    'github': f'{API_ROOT}/apps/upload/callback',
+    'slack': f'{API_ROOT}/apps/upload/callback',
+}
 
 token_url = {
-        'github': 'https://github.com/login/oauth/access_token',
-        'slack': 'https://slack.com/api/oauth.access',
-        }
+    'github': 'https://github.com/login/oauth/access_token',
+    'slack': 'https://slack.com/api/oauth.access',
+}
 
 info_url = {
-        'github': 'https://api.github.com/user',
-        'slack': 'https://slack.com/api/users.profile.get',
-        }
+    'github': 'https://api.github.com/user',
+    'slack': 'https://slack.com/api/users.profile.get',
+}
+
 
 def send_email(
         subject="Hello from Catalysis-Hub.Org",
         message="This is a test message. Sorry, for the spam.",
         recipient_emails=[]
-        ):
+):
 
     recipient_emails.insert(0, 'no-reply@catalysis-hub.org')
     sg = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY'))
     recipients = [{'email': _x}
-            for _x in recipient_emails
-            ]
+                  for _x in recipient_emails
+                  ]
     data = {
-      "personalizations": [
-        {
-          "to": recipients,
-          "subject": subject,
-        }
-      ],
-      "from": {
-        "email": recipient_emails[0]
-      },
-      "content": [
-        {
-          "type": "text/plain",
-          "value": message,
-        }
-      ]
+        "personalizations": [
+            {
+                "to": recipients,
+                "subject": subject,
+            }
+        ],
+        "from": {
+            "email": recipient_emails[0]
+        },
+        "content": [
+            {
+                "type": "text/plain",
+                "value": message,
+            }
+        ]
     }
     response = sg.client.mail.send.post(request_body=data)
 
 
 def team_info_url(username):
     return {
-            'github': f"https://api.github.com/users/{username}/orgs",
-            'slack': 'https://slack.com/api/team.info',
-            }
+        'github': f"https://api.github.com/users/{username}/orgs",
+        'slack': 'https://slack.com/api/team.info',
+    }
 
 
 username_key = {
-        'github': 'login',
-        }
+    'github': 'login',
+}
 
 PROVIDER = 'github'
 PROVIDER = 'slack'
@@ -148,6 +139,7 @@ def get_or_create(session, model, **kwargs):
         session.add(instance)
         session.commit()
         return instance
+
 
 def complinify(session, provider=None):
     if provider == 'linkedin':
@@ -165,21 +157,22 @@ def init():
     flask.session['oauth_provider'] = provider
 
     oauth_session = complinify(requests_oauthlib.OAuth2Session(
-            client_id[provider],
-            scope=scope[provider],
-            redirect_uri=redirect_uri[provider]
-            ))
+        client_id[provider],
+        scope=scope[provider],
+        redirect_uri=redirect_uri[provider]
+    ))
 
     authorization_url, state = oauth_session.authorization_url(
-            authorization_base_url[provider]
-            )
+        authorization_base_url[provider]
+    )
     flask.session['oauth_state'] = state
 
-    #return flask.redirect(authorization_url)
+    # return flask.redirect(authorization_url)
     return flask.jsonify({
         'message': 'Please login first',
         'location': authorization_url,
-        })
+    })
+
 
 @upload.route('/callback')
 def callback():
@@ -190,22 +183,21 @@ def callback():
     print(flask.session)
 
     oauth_session = complinify(requests_oauthlib.OAuth2Session(
-            client_id[provider],
-            state=flask.session.get('oauth_state', ''),
-            ))
+        client_id[provider],
+        state=flask.session.get('oauth_state', ''),
+    ))
 
     token = oauth_session.fetch_token(
-            token_url[provider],
-            authorization_response=flask.request.url,
-            client_secret=client_secret[provider],
-            )
+        token_url[provider],
+        authorization_response=flask.request.url,
+        client_secret=client_secret[provider],
+    )
 
     flask.session['oauth_token'] = token
 
     return flask.redirect(
-            flask.url_for('.info')
-            )
-
+        flask.url_for('.info')
+    )
 
 
 @upload.route('/info')
@@ -216,13 +208,13 @@ def info():
 
     if 'oauth_token' in flask.session:
         oauth_session = complinify(requests_oauthlib.OAuth2Session(
-                client_id[provider],
-                token=flask.session['oauth_token'],
-                ))
+            client_id[provider],
+            token=flask.session['oauth_token'],
+        ))
     else:
         return flask.redirect(
-                flask.url_for('.init')
-                )
+            flask.url_for('.init')
+        )
 
     pprint.pprint(oauth_session)
 
@@ -238,25 +230,26 @@ def info():
         teams_info = oauth_session.get(f'https://api.github.com/repos/SUNCAT-Center/CatKit/collaborators').json()
 
         return flask.redirect(
-                flask.url_for('.submit')
-                )
+            flask.url_for('.submit')
+        )
 
-        #return flask.jsonify({
-            #'user': user_info,
-            #'organization': team_info,
-            #'org_id': organization,
-            #'teams': teams_info,
-            #'teams_url': f'https://api.github.com/orgs/{organization}/teams',
+        # return flask.jsonify({
+        #'user': user_info,
+        #'organization': team_info,
+        #'org_id': organization,
+        #'teams': teams_info,
+        #'teams_url': f'https://api.github.com/orgs/{organization}/teams',
 
-            #})
+        #})
     elif provider == 'slack':
         user_info = oauth_session.get(info_url[provider]).json()
         team_info = oauth_session.get(team_info_url('')[provider]).json()
         flask.session['team_info'] = team_info
         flask.session['user_info'] = user_info
         return flask.redirect(
-                flask.url_for('.submit')
-                )
+            flask.url_for('.submit')
+        )
+
 
 @upload.route('/submit')
 def submit():
@@ -264,8 +257,8 @@ def submit():
         team_id = flask.session['team_info'].get('team', {}).get('id', '')
 
         if team_id and team_id == os.environ.get('SLACK_SUNCAT_TEAM_ID', ''):
-            #user = get_or_create(
-                    #models.User,
+            # user = get_or_create(
+                    # models.User,
                     #username=flask.session.get('user_info', {})\
                             #.get('profile', {}) \
                             #.get('display_name', ''),
@@ -274,18 +267,18 @@ def submit():
                             #.get('email', ''),
                     #token=flask.session.get('oauth_token', {}) \
                             #.get('access_token', ''),
-                    #login_ip=flask.request.remote_addr,
+                    # login_ip=flask.request.remote_addr,
                     #)
             flask.session['LOGGED_IN'] = True
             return flask.redirect('http://localhost:3000/upload?login=success')
 
-            #return flask.jsonify({
-                #'message': 'Ok, you are on the SUNCAT team',
-                #'user': str(user),
-                #'username': user.username,
-                #'email': user.email,
-                #'access_token': user.token,
-                #})
+            # return flask.jsonify({
+            #'message': 'Ok, you are on the SUNCAT team',
+            #'user': str(user),
+            #'username': user.username,
+            #'email': user.email,
+            #'access_token': user.token,
+            #})
 
         else:
             flask.session['LOGGED_IN'] = False
@@ -293,8 +286,8 @@ def submit():
 
     else:
         return flask.redirect(
-                flask.url_for('.init')
-                )
+            flask.url_for('.init')
+        )
 
 
 @upload.route('/logout', methods=['GET', 'POST'])
@@ -302,8 +295,7 @@ def logout():
     flask.session.clear()
     return flask.jsonify({
         'message': 'Logged out',
-        })
-
+    })
 
 
 @upload.route('/user_info', methods=['GET', 'POST'])
@@ -316,27 +308,27 @@ def user_info():
         team_id = flask.session['team_info'].get('team', {}).get('id', '')
         if team_id and team_id == os.environ.get('SLACK_SUNCAT_TEAM_ID', ''):
             return flask.jsonify({
-                    'username': flask.session.get('user_info', {})\
-                            .get('profile', {}) \
-                            .get('display_name', ''),
-                    'email': flask.session.get('user_info', {}) \
-                            .get('profile', {}) \
-                            .get('email', ''),
-                    'token': flask.session.get('oauth_token', {}) \
-                            .get('access_token', ''),
-                })
+                'username': flask.session.get('user_info', {})
+                .get('profile', {})
+                .get('display_name', ''),
+                'email': flask.session.get('user_info', {})
+                .get('profile', {})
+                .get('email', ''),
+                'token': flask.session.get('oauth_token', {})
+                .get('access_token', ''),
+            })
         else:
             return flask.jsonify({
                 'error': True,
                 'message': 'Please login first',
                 'location': authorization_url,
-                })
+            })
     else:
         return flask.jsonify({
             'error': True,
             'message': 'Please login first',
             'location': authorization_url,
-            })
+        })
 
 
 @upload.route('/dataset/', methods=['GET', 'POST'])
@@ -359,9 +351,7 @@ def upload_dataset(request=None):
 
     return flask.jsonify({
         'message': message,
-        })
-
-
+    })
 
 
 @upload.route('/download_structure/', methods=['GET', 'POST'])
@@ -388,19 +378,11 @@ def download_structure(request=None):
     return response
 
 
-# Add privileged GraphQL access
-#class UploadMixin(db.MetaMixin):
-    #__table_args__  = {'schema': 'upload'}
-
-#api = db.monkey_patch_api(schema='upload')
-#models = db.monkey_patch_models(schema='upload')
-
-
 def userify_request(request, userhandle):
     ast = graphql.language.parser.parse(request)
     argument = graphql.language.ast.Argument(
-            name=graphql.language.ast.Name(value='username'),
-            value=graphql.language.ast.StringValue(value=userhandle))
+        name=graphql.language.ast.Name(value='username'),
+        value=graphql.language.ast.StringValue(value=userhandle))
     ast \
         .definitions[0] \
         .selection_set \
@@ -409,23 +391,21 @@ def userify_request(request, userhandle):
         .append(argument)
 
 
-
-
 url = sqlalchemy.engine.url.URL('postgres',
-        username='upload_admin',
-        password=os.environ['UPLOAD_ADMIN_PASSWORD'],
-        host='catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com',
-        port=5432,
-        database='catalysishub', )
+                                username='upload_admin',
+                                password=os.environ['UPLOAD_ADMIN_PASSWORD'],
+                                host='catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com',
+                                port=5432,
+                                database='catalysishub', )
 
 engine = sqlalchemy.create_engine(
-        url,
-        execution_options={
-            'schema_translate_map': {
-                'public': 'upload',
-                }
-            },
-        convert_unicode=True)
+    url,
+    execution_options={
+        'schema_translate_map': {
+            'public': 'upload',
+        }
+    },
+    convert_unicode=True)
 
 db_session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(
     autocommit=False,
@@ -434,15 +414,18 @@ db_session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(
 ))
 
 # Graphql view
+
+
 def auth_required(fn, session):
     provider = flask.request.args.get('provider', PROVIDER)
+
     def wrapper(*args, **kwargs):
         pprint.pprint(session)
         if 'oauth_token' in flask.session:
             oauth_session = complinify(requests_oauthlib.OAuth2Session(
-                    client_id[provider],
-                    token=flask.session['oauth_token'],
-                    ))
+                client_id[provider],
+                token=flask.session['oauth_token'],
+            ))
             user_info = oauth_session.get(info_url[provider]).json()
             print("USER INFO")
             pprint.pprint(user_info)
@@ -450,16 +433,17 @@ def auth_required(fn, session):
                 username = user_info.get('profile', {}).get('email', '')
             else:
                 username = ''
-            team_info = oauth_session.get(team_info_url(username)[provider]).json()
+            team_info = oauth_session.get(
+                team_info_url(username)[provider]).json()
             team_id = team_info.get('team', {}).get('id', '')
             if team_id != os.environ.get('SLACK_SUNCAT_TEAM_ID'):
                 return flask.redirect(
-                        flask.url_for('.init')
-                        )
+                    flask.url_for('.init')
+                )
         else:
             return flask.redirect(
-                    flask.url_for('.init')
-                    )
+                flask.url_for('.init')
+            )
 
         return fn(*args, **kwargs)
     return wrapper
@@ -468,14 +452,15 @@ def auth_required(fn, session):
 @upload.route('/release', methods=['POST', 'GET'])
 def release():
     send_email(
-            subject='Dataset Ready for Release',
-            message='This is just a test.',
-            recipient_emails=['mjhoffmann@gmail.com'],
-            )
+        subject='Dataset Ready for Release',
+        message='This is just a test.',
+        recipient_emails=['mjhoffmann@gmail.com'],
+    )
     return auth_required(flask.jsonify({
         'status': 'ok',
         'message': 'Submission received. Should be online in a few days. Thanks.'
-        }), session=flask.session)
+    }), session=flask.session)
+
 
 @upload.route('/graphql', methods=['POST', 'GET'])
 def graphql_view():
@@ -487,72 +472,70 @@ def graphql_view():
             'session': db_session,
         })
 
-    ##def view(*args, **kwargs):
-        ##print(inspect.getargspec(raw_view))
-        ##print(flask.request)
-        ##print(flask.request.data)
-        ##print(flask.request.args)
-        ##return raw_view(*args, **kwargs)
-    ##return (view)()
+    # def view(*args, **kwargs):
+    # print(inspect.getargspec(raw_view))
+    # print(flask.request)
+    # print(flask.request.data)
+    # print(flask.request.args)
+    # return raw_view(*args, **kwargs)
+    # return (view)()
 
     return auth_required(raw_view, session=flask.session)()
 
-    #print("ARGS")
-    #print(flask.request.args)
-    #print("REQUEST")
-    #print(flask.request)
-    #print("MIMETYPE")
-    #print(flask.request.mimetype)
+    # print("ARGS")
+    # print(flask.request.args)
+    # print("REQUEST")
+    # print(flask.request)
+    # print("MIMETYPE")
+    # print(flask.request.mimetype)
     #print("REQUEST DATA")
-    #print(flask.request.data)
+    # print(flask.request.data)
     #print("REQUEST VALUES")
-    #print(flask.request.values)
+    # print(flask.request.values)
 
     #query = json.loads(flask.request.data.decode('utf8')).get('query', '')
-    #print("QUERY")
-    #print(query)
+    # print("QUERY")
+    # print(query)
     #print("TYPE QUERY")
-    #print(type(query))
+    # print(type(query))
 
+    # data = flask_graphql.GraphQLView.as_view(
+    # schema=api.schema,
+    ##context={ 'session': db_session, }
+    # ).parse_body(flask.request)
+    # print("DATA")
+    # print(data)
 
-    ##data = flask_graphql.GraphQLView.as_view(
-                ##schema=api.schema,
-                ##context={ 'session': db_session, }
-                ##).parse_body(flask.request)
-    ##print("DATA")
-    ##print(data)
-
-    #execution_results, all_params = graphql_server.run_http_query(
-                #schema=api.schema,
-                #request_method=flask.request.method.lower(),
-                #data={},
-                #query_data={'query': query},
-                ##operationName='dummy',
-                #)
+    # execution_results, all_params = graphql_server.run_http_query(
+    # schema=api.schema,
+    # request_method=flask.request.method.lower(),
+    # data={},
+    #query_data={'query': query},
+    # operationName='dummy',
+    #)
 
     #print("EXECUTION RESULTS")
-    #print(execution_results)
+    # print(execution_results)
 
-    #result, status_code = graphql_server.encode_execution_results(
-            #execution_results,
-            #is_batch=False,
-            #format_error=(graphql_server.default_format_error),
-            #encode=(graphql_server.json_encode),
-            #)
+    # result, status_code = graphql_server.encode_execution_results(
+    # execution_results,
+    # is_batch=False,
+    # format_error=(graphql_server.default_format_error),
+    # encode=(graphql_server.json_encode),
+    #)
 
-    #print("ARGS")
-    #print(flask.request.args)
+    # print("ARGS")
+    # print(flask.request.args)
     #print("EXECUTION RESULT")
-    #print(execution_results)
-    #print(dir(execution_results))
-    #print(result)
+    # print(execution_results)
+    # print(dir(execution_results))
+    # print(result)
 
-    #return flask.Response(result)
+    # return flask.Response(result)
 
 
-
-#upload.add_url_rule(
+# upload.add_url_rule(
     #'/graphql',
-    #view_func=graphql_view(),
+    # view_func=graphql_view(),
     #methods=['GET', 'POST'],
 #)
