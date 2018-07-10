@@ -191,6 +191,18 @@ def callback():
         state=flask.session.get('oauth_state', ''),
     ))
 
+    print("PROVIDER")
+    print(provider)
+
+    print("TOKENURL")
+    print(token_url[provider])
+
+    print("FLASK REQUEST URL")
+    print(flask.request.url)
+
+    print("CLIENT SECRET")
+    print(client_secret[provider])
+
     token = oauth_session.fetch_token(
         token_url[provider],
         authorization_response=flask.request.url,
