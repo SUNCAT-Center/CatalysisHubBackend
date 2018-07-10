@@ -393,7 +393,7 @@ def userify_request(request, userhandle):
 
 url = sqlalchemy.engine.url.URL('postgres',
                                 username='upload_admin',
-                                password=os.environ['UPLOAD_ADMIN_PASSWORD'],
+                                password=os.environ.get('UPLOAD_ADMIN_PASSWORD', ''),
                                 host='catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com',
                                 port=5432,
                                 database='catalysishub', )
