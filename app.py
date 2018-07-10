@@ -104,7 +104,15 @@ if not app.debug:
 
 app.json_encoder = NumpyEncoder
 
-cors = CORS(app)
+cors = CORS(app
+        origins=[
+            "http://localhost:3000",
+            "http://www.catalysis-hub.org",
+            ],
+        headers=['Content-Type'],
+        expose_headers=['Access-Control-Allow-Origin'],
+        supports_credentials=True
+        )
 
 # , resources={r"/graphql/*":
 #    {"origins":
