@@ -38,7 +38,7 @@ import sendgrid
 #ADMIN_EMAILS = ['maxjh@stanford.edu', 'winther@stanford.edu']
 ADMIN_EMAILS = ['maxjh@stanford.edu']
 API_ROOT = 'http://localhost:5000'
-API_ROOT = 'https://api.catalysis-hub.org'
+API_ROOT = 'https://www.catalysis-hub.org'
 
 upload = flask.Blueprint('upload', __name__)
 
