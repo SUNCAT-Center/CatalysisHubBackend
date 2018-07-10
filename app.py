@@ -104,7 +104,7 @@ if not app.debug:
 
 app.json_encoder = NumpyEncoder
 
-cors = CORS(app
+cors = CORS(app,
         origins=[
             "http://localhost:3000",
             "http://www.catalysis-hub.org",
