@@ -39,6 +39,7 @@ import sendgrid
 ADMIN_EMAILS = ['maxjh@stanford.edu']
 API_ROOT = 'http://localhost:5000'
 API_ROOT = 'https://api.catalysis-hub.org'
+API_ROOT = 'https://catappdatabase2-pr-63.herokuapp.com'
 
 upload = flask.Blueprint('upload', __name__)
 
