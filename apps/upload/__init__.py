@@ -154,6 +154,15 @@ def complinify(session, provider=None):
     return session
 
 
+@upload.after_request
+def after_request(response):
+  response.headers.add('Access-Control-Allow-Origin', '*')
+  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+  return response
+
+
+
 @upload.route('/', methods=['GET', 'POST', 'OPTIONS'])
 def init():
     # to be set by request in future
