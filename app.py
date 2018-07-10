@@ -158,6 +158,8 @@ if catlearn_blueprint is not None:
 if upload is not None:
     app.register_blueprint(upload, url_prefix='/apps/upload')
 
+app.secret_key = os.urandom(48)
+
 if __name__ == '__main__':
     import optparse
 
@@ -179,5 +181,4 @@ if __name__ == '__main__':
     # for local testing
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-    app.secret_key = os.urandom(48)
     app.run()
