@@ -154,7 +154,7 @@ def complinify(session, provider=None):
     return session
 
 
-@upload.route('/', methods=['GET', 'POST'])
+@upload.route('/', methods=['GET', 'POST', 'OPTIONS'])
 def init():
     # to be set by request in future
     provider = flask.request.args.get('provider', PROVIDER)
