@@ -358,11 +358,15 @@ The following noteboks demonstrate how make interactive use of the `Catalysis-Hu
 `Search Structures and Cut Slabs <http://nbviewer.jupyter.org/gist/mhoffman/e0e9edf6771c3c0c5838043a022e0857>`_
 ................................................................................................................
 
+`Get Spacegroup and Wyckoff Sites from Structure <http://nbviewer.jupyter.org/gist/mhoffman/c483dece941930fbb785f019893a1c15>`_
+................................................................................................................................
 
 
-Using CatKit & CatGen
----------------------
 
-Please refer to
+Partner Projects
+-------------------------
 
-    - `CatKit <http://catkit.readthedocs.io/en/latest/>`_
+The catalysis-hub.org database is large and its possibilities are manifold.
+Fortunately there are two partner projects that are best digested together:
+`CatKit <http://catkit.readthedocs.io/en/latest/>`_ and
+`CatLearn <http://catlearn.readthedocs.io/en/latest/>`_.
