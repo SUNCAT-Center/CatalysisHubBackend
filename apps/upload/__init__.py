@@ -154,7 +154,7 @@ def complinify(session, provider=None):
     return session
 
 
-@upload.route('/')
+@upload.route('/', methods=['GET', 'POST'])
 def init():
     # to be set by request in future
     provider = flask.request.args.get('provider', PROVIDER)
@@ -255,7 +255,7 @@ def info():
         )
 
 
-@upload.route('/submit')
+@upload.route('/submit', methods=['GET', 'POST'])
 def submit():
     if 'team_info' in flask.session:
         team_id = flask.session['team_info'].get('team', {}).get('id', '')
