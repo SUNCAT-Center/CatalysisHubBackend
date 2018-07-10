@@ -35,8 +35,10 @@ import api
 
 import sendgrid
 
-API_ROOT = 'https://api.catalysis-hub.org'
+#ADMIN_EMAILS = ['maxjh@stanford.edu', 'winther@stanford.edu']
+ADMIN_EMAILS = ['maxjh@stanford.edu']
 API_ROOT = 'http://localhost:5000'
+API_ROOT = 'https://api.catalysis-hub.org'
 
 upload = flask.Blueprint('upload', __name__)
 
@@ -83,6 +85,7 @@ info_url = {
     'slack': 'https://slack.com/api/users.profile.get',
 }
 
+SG = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY', '').strip())
 
 def send_email(
         subject="Hello from Catalysis-Hub.Org",
@@ -91,7 +94,6 @@ def send_email(
 ):
 
     recipient_emails.insert(0, 'no-reply@catalysis-hub.org')
-    sg = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY'))
     recipients = [{'email': _x}
                   for _x in recipient_emails
                   ]
@@ -112,7 +114,8 @@ def send_email(
             }
         ]
     }
-    response = sg.client.mail.send.post(request_body=data)
+    response = SG.client.mail.send.post(request_body=data)
+    print(response.status_code)
 
 
 def team_info_url(username):
@@ -258,10 +261,10 @@ def submit():
 
         if team_id and team_id == os.environ.get('SLACK_SUNCAT_TEAM_ID', ''):
             flask.session['LOGGED_IN'] = True
-            return flask.redirect('https://www.catalysis-hub.org/upload?login=success')
+            return flask.redirect('http://localhost:3000/upload?login=success')
         else:
             flask.session['LOGGED_IN'] = False
-            return flask.redirect('https://www.catalysis-hub.org/upload?login=error')
+            return flask.redirect('http://localhost:3000/upload?login=error')
 
     else:
         return flask.redirect(
@@ -428,17 +431,37 @@ def auth_required(fn, session):
     return wrapper
 
 
+def f():
+    return True
+
 @upload.route('/release', methods=['POST', 'GET'])
 def release():
+    pprint.pprint(flask.request.values)
     send_email(
-        subject='Dataset Ready for Release',
+        subject='Catalysis-Hub.Org: Dataset Ready for Release',
         message='This is just a test.',
-        recipient_emails=['mjhoffmann@gmail.com'],
+        recipient_emails=ADMIN_EMAILS,
     )
-    return auth_required(flask.jsonify({
-        'status': 'ok',
-        'message': 'Submission received. Should be online in a few days. Thanks.'
-    }), session=flask.session)
+    if auth_required(f, session=flask.session):
+        return flask.jsonify({
+            'status': 'ok',
+            'message': 'Submission received. Should be online in a few days. Thanks.'
+        })
+
+@upload.route('/endorse', methods=['POST', 'GET'])
+def endorse():
+    pprint.pprint(flask.request.values)
+    send_email(
+        subject='Catalysis-Hub.Org: Dataset Was Endorsed',
+        message='This is just a test.',
+        recipient_emails=ADMIN_EMAILS,
+    )
+    if auth_required(f, session=flask.session):
+        return flask.jsonify({
+            'status': 'ok',
+            'message': 'Submission received. Should be online in a few days. Thanks.'
+        })
+
 
 
 @upload.route('/graphql', methods=['POST', 'GET'])
