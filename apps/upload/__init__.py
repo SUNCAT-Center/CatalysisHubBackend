@@ -270,7 +270,7 @@ def submit():
                     # login_ip=flask.request.remote_addr,
                     #)
             flask.session['LOGGED_IN'] = True
-            return flask.redirect('http://localhost:3000/upload?login=success')
+            return flask.redirect('/upload?login=success')
 
             # return flask.jsonify({
             #'message': 'Ok, you are on the SUNCAT team',
@@ -282,7 +282,7 @@ def submit():
 
         else:
             flask.session['LOGGED_IN'] = False
-            return flask.redirect('http://localhost:3000/upload?login=error')
+            return flask.redirect('/upload?login=error')
 
     else:
         return flask.redirect(
