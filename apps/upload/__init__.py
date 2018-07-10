@@ -257,32 +257,11 @@ def submit():
         team_id = flask.session['team_info'].get('team', {}).get('id', '')
 
         if team_id and team_id == os.environ.get('SLACK_SUNCAT_TEAM_ID', ''):
-            # user = get_or_create(
-                    # models.User,
-                    #username=flask.session.get('user_info', {})\
-                            #.get('profile', {}) \
-                            #.get('display_name', ''),
-                    #email=flask.session.get('user_info', {}) \
-                            #.get('profile', {}) \
-                            #.get('email', ''),
-                    #token=flask.session.get('oauth_token', {}) \
-                            #.get('access_token', ''),
-                    # login_ip=flask.request.remote_addr,
-                    #)
             flask.session['LOGGED_IN'] = True
-            return flask.redirect('/upload?login=success')
-
-            # return flask.jsonify({
-            #'message': 'Ok, you are on the SUNCAT team',
-            #'user': str(user),
-            #'username': user.username,
-            #'email': user.email,
-            #'access_token': user.token,
-            #})
-
+            return flask.redirect('https://www.catalysis-hub.org/upload?login=success')
         else:
             flask.session['LOGGED_IN'] = False
-            return flask.redirect('/upload?login=error')
+            return flask.redirect('https://www.catalysis-hub.org/upload?login=error')
 
     else:
         return flask.redirect(
