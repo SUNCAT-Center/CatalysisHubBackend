@@ -156,9 +156,12 @@ def complinify(session, provider=None):
 
 @upload.after_request
 def after_request(response):
-  response.headers.add('Access-Control-Allow-Origin', '*')
-  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+  white = ['http://localhost:3000', 'https://www.catalysis-hub.org']
+  for r in white:
+      response.headers.add('Access-Control-Allow-Origin', r)
+      response.headers.add('Access-Control-Allow-Credentials', 'true')
+      response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-Width')
+      response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
   return response
 
 
