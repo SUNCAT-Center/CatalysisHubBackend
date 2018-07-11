@@ -177,6 +177,8 @@ def init():
 
     print("FLASK HEADERS")
     print(flask.request.headers)
+    print("FLASK SESSION")
+    print(flask.session)
     print("FLASK REQUEST")
     print(flask.request.url_root)
 
