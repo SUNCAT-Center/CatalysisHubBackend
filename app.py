@@ -107,7 +107,8 @@ app.json_encoder = NumpyEncoder
 cors = CORS(app,
         origins=[
             "http://localhost:3000",
-            "http://www.catalysis-hub.org",
+            "https://www.catalysis-hub.org",
+            "https://slack.com",
             ],
         headers=['Content-Type'],
         expose_headers=['Access-Control-Allow-Origin'],
