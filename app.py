@@ -88,9 +88,9 @@ app = flask.Flask(__name__)
 
 if os.environ.get('DB_PASSWORD', ''):
     app.config.update({
-        'SESSION_COOKIE_SECURE': True,
+        #'SESSION_COOKIE_SECURE': True,
         'CORS_SUPPORTS_CREDENTIALS': True,
-        'CORS_HEADERS': 'Content-Type',
+        'CORS_HEADERS': 'Content-Type, X-Pingother',
         'SQLALCHEMY_DATABASE_URI': f'postgres://catvisitor:{os.environ["DB_PASSWORD"]}@catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com:5432/catalysishub', })
 else:
     # for Travis CI

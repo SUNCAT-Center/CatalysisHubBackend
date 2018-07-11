@@ -171,6 +171,7 @@ def complinify(session, provider=None):
 @upload.route('/', methods=['GET', 'POST', 'OPTIONS'])
 @flask_cors.cross_origin(supports_credentials=True)
 def init():
+    print("@@@ UPLOAD ROOT ROUTE")
     print("FLASK HEADERS")
     print(flask.request.headers)
     print("FLASK SESSION")
@@ -204,6 +205,7 @@ def init():
 
 @upload.route('/callback')
 def callback():
+    print("@@@ CALLBACK ROUTE")
 
     # to be set by request in future
     provider = flask.session.get('oauth_provider', PROVIDER)
@@ -238,6 +240,7 @@ def callback():
 
     flask.session['oauth_token'] = token
 
+    print("Trying to redirect to .info")
     return flask.redirect(
         flask.url_for('.info')
     )
@@ -245,6 +248,9 @@ def callback():
 
 @upload.route('/info')
 def info():
+    print("@@@ INFO ROUTE")
+    print("SESSION")
+    print(flask.session)
 
     # to be set by request in future
     provider = flask.session.get('oauth_provider', PROVIDER)
@@ -296,6 +302,7 @@ def info():
 
 @upload.route('/submit', methods=['GET', 'POST'])
 def submit():
+    print("@@@ SUBMIT ROUTE")
     if 'team_info' in flask.session:
         team_id = flask.session['team_info'].get('team', {}).get('id', '')
 
@@ -314,6 +321,7 @@ def submit():
 
 @upload.route('/logout', methods=['GET', 'POST'])
 def logout():
+    print("@@@ LOGOUT ROUTE")
     flask.session.clear()
     return flask.jsonify({
         'message': 'Logged out',
@@ -322,6 +330,7 @@ def logout():
 
 @upload.route('/user_info', methods=['GET', 'POST'])
 def user_info():
+    print("@@@ USER_INFO ROUTE")
     provider = flask.request.args.get('provider', PROVIDER)
     authorization_url = authorization_base_url[provider]
 
