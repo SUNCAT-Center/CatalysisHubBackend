@@ -166,6 +166,7 @@ if catlearn_blueprint is not None:
 if upload is not None:
     app.register_blueprint(upload, url_prefix='/apps/upload')
 
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 app.secret_key = os.urandom(48)
 
 if __name__ == '__main__':
@@ -187,6 +188,5 @@ if __name__ == '__main__':
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
     # for local testing
-    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
     app.run()
