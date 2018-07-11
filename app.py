@@ -105,14 +105,14 @@ if not app.debug:
 app.json_encoder = NumpyEncoder
 
 cors = CORS(app,
-        origins=[
-            "http://localhost:3000",
-            "https://www.catalysis-hub.org",
-            "https://slack.com",
-            "https://slac-suncat.slack.com",
-            ],
-        headers=['Content-Type'],
-        expose_headers=['Access-Control-Allow-Origin'],
+        #origins=[
+            #"http://localhost:3000",
+            #"https://www.catalysis-hub.org",
+            #"https://slack.com",
+            #"https://slac-suncat.slack.com",
+            #],
+        #headers=['Content-Type'],
+        #expose_headers=['Access-Control-Allow-Origin'],
         supports_credentials=True
         )
 
