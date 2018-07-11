@@ -156,7 +156,8 @@ def complinify(session, provider=None):
 
 @upload.after_request
 def after_request(response):
-  white = ['http://localhost:3000', 'https://www.catalysis-hub.org']
+  #white = ['http://localhost:3000', 'https://www.catalysis-hub.org']
+  white = ['http://localhost:3000']
   for r in white:
       response.headers.add('Access-Control-Allow-Origin', r)
       response.headers.add('Access-Control-Allow-Credentials', 'true')
