@@ -38,9 +38,6 @@ import sendgrid
 
 #ADMIN_EMAILS = ['maxjh@stanford.edu', 'winther@stanford.edu']
 ADMIN_EMAILS = ['maxjh@stanford.edu']
-API_ROOT = 'http://localhost:5000'
-API_ROOT = 'https://api.catalysis-hub.org'
-API_ROOT = 'https://catappdatabase2-pr-63.herokuapp.com'
 
 upload = flask.Blueprint('upload', __name__)
 
@@ -72,11 +69,6 @@ authorization_base_url = {
     'slack': 'https://slack.com/oauth/authorize',
 }
 
-redirect_uri = {
-    'github': f'{API_ROOT}/apps/upload/callback',
-    'slack': f'{API_ROOT}/apps/upload/callback',
-}
-
 token_url = {
     'github': 'https://github.com/login/oauth/access_token',
     'slack': 'https://slack.com/api/oauth.access',
@@ -88,6 +80,13 @@ info_url = {
 }
 
 SG = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY', '').strip())
+
+def redirect_uri(url_root):
+    res =  f'{url_root}apps/upload/callback'
+    print("REDIRECT URI")
+    print(res)
+    return res
+
 
 def send_email(
         subject="Hello from Catalysis-Hub.Org",
@@ -175,10 +174,13 @@ def init():
     provider = flask.request.args.get('provider', PROVIDER)
     flask.session['oauth_provider'] = provider
 
+    print("FLASK REQUEST")
+    print(flask.request.url_root)
+
     oauth_session = complinify(requests_oauthlib.OAuth2Session(
         client_id[provider],
         scope=scope[provider],
-        redirect_uri=redirect_uri[provider]
+        redirect_uri=redirect_uri(flask.request.url_root)
     ))
 
     authorization_url, state = oauth_session.authorization_url(
@@ -202,7 +204,7 @@ def callback():
     print(flask.session)
 
     oauth_session = complinify(requests_oauthlib.OAuth2Session(
-        client=client_id[provider],
+        client_id=client_id[provider],
         state=flask.session.get('oauth_state', ''),
     ), provider=provider)
 
