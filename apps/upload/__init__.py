@@ -171,16 +171,16 @@ def complinify(session, provider=None):
 @upload.route('/', methods=['GET', 'POST', 'OPTIONS'])
 @flask_cors.cross_origin(supports_credentials=True)
 def init():
-    # to be set by request in future
-    provider = flask.request.args.get('provider', PROVIDER)
-    flask.session['oauth_provider'] = provider
-
     print("FLASK HEADERS")
     print(flask.request.headers)
     print("FLASK SESSION")
     print(flask.session)
     print("FLASK REQUEST")
     print(flask.request.url_root)
+    # to be set by request in future
+    provider = flask.request.args.get('provider', PROVIDER)
+    flask.session['oauth_provider'] = provider
+
 
     oauth_session = complinify(requests_oauthlib.OAuth2Session(
         client_id[provider],
