@@ -180,11 +180,11 @@ def init():
     )
     flask.session['oauth_state'] = state
 
-    # return flask.redirect(authorization_url)
-    return flask.jsonify({
-        'message': 'Please login first',
-        'location': authorization_url,
-    })
+     return flask.redirect(authorization_url)
+    #return flask.jsonify({
+        #'message': 'Please login first',
+        #'location': authorization_url,
+    #})
 
 
 @upload.route('/callback')
