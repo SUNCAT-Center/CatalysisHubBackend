@@ -22,6 +22,7 @@ import flask
 import sqlalchemy
 import graphql
 import flask_graphql
+import flask_cors
 import requests_oauthlib
 import requests_oauthlib.compliance_fixes
 import graphql_server
@@ -154,17 +155,17 @@ def complinify(session, provider=None):
     return session
 
 
-@upload.after_request
-def after_request(response):
-  #white = ['http://localhost:3000', 'https://www.catalysis-hub.org']
-  #white = ['https://slac-suncat.slack.com']
-  white = ['http://localhost:3000']
-  for r in white:
-      response.headers.add('Access-Control-Allow-Origin', r)
-      response.headers.add('Access-Control-Allow-Credentials', 'true')
-      response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-Width')
-      response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-  return response
+#@upload.after_request
+#def after_request(response):
+  ##white = ['http://localhost:3000', 'https://www.catalysis-hub.org']
+  ##white = ['https://slac-suncat.slack.com']
+  #white = ['http://localhost:3000']
+  #for r in white:
+      #response.headers.add('Access-Control-Allow-Origin', r)
+      #response.headers.add('Access-Control-Allow-Credentials', 'true')
+      #response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-Width')
+      #response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+  #return response
 
 
 
@@ -185,11 +186,11 @@ def init():
     )
     flask.session['oauth_state'] = state
 
-    return flask.redirect(authorization_url)
-    #return flask.jsonify({
-        #'message': 'Please login first',
-        #'location': authorization_url,
-    #})
+    #return flask.redirect(authorization_url)
+    return flask.jsonify({
+        'message': 'Please login first',
+        'location': authorization_url,
+    })
 
 
 @upload.route('/callback')

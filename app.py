@@ -89,6 +89,7 @@ app = flask.Flask(__name__)
 if os.environ.get('DB_PASSWORD', ''):
     app.config.update({
         'CORS_SUPPORTS_CREDENTIALS': True,
+        'CORS_HEADERS': 'Content-Type',
         'SQLALCHEMY_DATABASE_URI': f'postgres://catvisitor:{os.environ["DB_PASSWORD"]}@catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com:5432/catalysishub', })
 else:
     # for Travis CI
@@ -106,15 +107,7 @@ if not app.debug:
 app.json_encoder = NumpyEncoder
 
 cors = CORS(app,
-        #origins=[
-            #"http://localhost:3000",
-            #"https://www.catalysis-hub.org",
-            #"https://slack.com",
-            #"https://slac-suncat.slack.com",
-            #],
-        #headers=['Content-Type'],
-        #expose_headers=['Access-Control-Allow-Origin'],
-        #supports_credentials=True
+        supports_credentials=True
         )
 logging.getLogger('flask_cors').level = logging.DEBUG
 
