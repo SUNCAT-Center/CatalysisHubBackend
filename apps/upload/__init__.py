@@ -175,6 +175,8 @@ def init():
     provider = flask.request.args.get('provider', PROVIDER)
     flask.session['oauth_provider'] = provider
 
+    print("FLASK HEADERS")
+    print(flask.request.headers)
     print("FLASK REQUEST")
     print(flask.request.url_root)
 
