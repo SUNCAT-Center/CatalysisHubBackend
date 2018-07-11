@@ -5,6 +5,7 @@
 import numpy as np
 import os
 import json
+import logging
 import flask
 import flask_graphql
 import flask_sqlalchemy
@@ -113,8 +114,9 @@ cors = CORS(app,
             #],
         #headers=['Content-Type'],
         #expose_headers=['Access-Control-Allow-Origin'],
-        supports_credentials=True
+        #supports_credentials=True
         )
+logging.getLogger('flask_cors').level = logging.DEBUG
 
 # , resources={r"/graphql/*":
 #    {"origins":
