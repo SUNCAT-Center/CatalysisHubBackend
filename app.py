@@ -165,6 +165,7 @@ if upload is not None:
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 app.secret_key = os.urandom(48)
+print(app.secret_key)
 app.debug = True
 
 if __name__ == '__main__':
