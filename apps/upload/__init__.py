@@ -163,7 +163,7 @@ def after_request(response):
 
 
 
-@upload.route('/', methods=['GET', 'POST', 'OPTIONS'])
+@upload.route('/', methods=['GET'])
 def init():
     # to be set by request in future
     provider = flask.request.args.get('provider', PROVIDER)
