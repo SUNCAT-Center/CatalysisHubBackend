@@ -230,6 +230,7 @@ def callback():
 
     oauth_session = complinify(requests_oauthlib.OAuth2Session(
         client_id=client_id[provider],
+        redirect_uri=redirect_uri(flask.request.url_root)
         state=flask.session.get('oauth_state', ''),
     ), provider=provider)
 
@@ -246,12 +247,14 @@ def callback():
     print('auto_refresh_kwargs', oauth_session.auto_refresh_kwargs)
     print('token_updater', oauth_session.token_updater)
 
+    #return flask.jsonify({
+        #'message': 'Go, fish',
+        #})
 
     token = oauth_session.fetch_token(
         token_url[provider],
         authorization_response=flask.request.url,
         client_secret=client_secret[provider],
-        auth=False,
     )
 
     flask.session['oauth_token'] = token
