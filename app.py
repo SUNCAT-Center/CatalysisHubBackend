@@ -178,6 +178,7 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', '')
 print(app.secret_key)
 app.debug = True
+logging.getLogger('requests_oauthlib.oauth2_session').setLevel(logging.INFO)
 
 if __name__ == '__main__':
     import optparse
