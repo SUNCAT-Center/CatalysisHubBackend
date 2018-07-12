@@ -38,6 +38,7 @@ import sendgrid
 
 #ADMIN_EMAILS = ['maxjh@stanford.edu', 'winther@stanford.edu']
 ADMIN_EMAILS = ['maxjh@stanford.edu']
+FRONTEND_URL = 'https://www.catalysis-hub.org'
 
 upload = flask.Blueprint('upload', __name__)
 
@@ -152,20 +153,6 @@ def complinify(session, provider=None):
         return requests_oauthlib.compliance_fixes.slack_compliance_fix(session)
 
     return session
-
-
-#@upload.after_request
-#def after_request(response):
-  ##white = ['http://localhost:3000', 'https://www.catalysis-hub.org']
-  ##white = ['https://slac-suncat.slack.com']
-  #white = ['http://localhost:3000']
-  #for r in white:
-      #response.headers.add('Access-Control-Allow-Origin', r)
-      #response.headers.add('Access-Control-Allow-Credentials', 'true')
-      #response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-Width')
-      #response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-  #return response
-
 
 
 @upload.route('/', methods=['GET', 'POST', 'OPTIONS'])
@@ -330,10 +317,10 @@ def submit():
 
         if team_id and team_id == os.environ.get('SLACK_SUNCAT_TEAM_ID', ''):
             flask.session['LOGGED_IN'] = True
-            return flask.redirect('http://localhost:3000/upload?login=success')
+            return flask.redirect(FRONTEND_URL + '/upload?login=success')
         else:
             flask.session['LOGGED_IN'] = False
-            return flask.redirect('http://localhost:3000/upload?login=error')
+            return flask.redirect(FRONTEND_URL + '/upload?login=error')
 
     else:
         return flask.redirect(
