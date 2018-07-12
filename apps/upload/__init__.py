@@ -240,6 +240,7 @@ def callback():
         token_url[provider],
         authorization_response=flask.request.url,
         client_secret=client_secret[provider],
+        auth=False,
     )
 
     flask.session['oauth_token'] = token
