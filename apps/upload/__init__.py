@@ -230,7 +230,7 @@ def callback():
 
     oauth_session = complinify(requests_oauthlib.OAuth2Session(
         client_id=client_id[provider],
-        redirect_uri=redirect_uri(flask.request.url_root)
+        redirect_uri=redirect_uri(flask.request.url_root),
         state=flask.session.get('oauth_state', ''),
     ), provider=provider)
 
