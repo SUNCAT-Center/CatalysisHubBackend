@@ -83,6 +83,7 @@ class NumpyEncoder(json.JSONEncoder):
         else:
             return super(NumpyEncoder, self).default(obj)
 
+
 app = flask.Flask(__name__)
 
 if os.environ.get('DB_PASSWORD', ''):
@@ -112,24 +113,9 @@ cors = CORS(app,
 
 @app.after_request
 def after_request(response):
-    #response.headers.add('Access-Control-Allow-Credentials', 'true')
     response.headers.add('Access-Control-Allow-Headers', 'X-PINGOTHER, Content-Type, Authorization, Accept')
     response.headers.add('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, HEAD, OPTIONS')
-    #response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
-    #response.headers.add('Access-Control-Allow-Origin', 'https://www.catalysis-hub.org')
     return response
-
-
-# , resources={r"/graphql/*":
-#    {"origins":
-#        ["localhost:.*",
-#            "catapp-browser.herokuapp.com",
-#            "*"
-
-#            ]
-#        }
-#    }
-#    )
 
 
 @app.route('/')
@@ -172,6 +158,7 @@ if catlearn_blueprint is not None:
 if upload is not None:
     app.register_blueprint(upload, url_prefix='/apps/upload')
 
+# Needed to set session cookies.
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', '')
 
@@ -193,7 +180,5 @@ if __name__ == '__main__':
         import logging
         logging.basicConfig()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
-
-    # for local testing
 
     app.run()
