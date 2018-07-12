@@ -86,11 +86,6 @@ info_url = {
 
 SG = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY', '').strip())
 
-def graphql_query(query):
-    response = requests.get(GRAPHQL_ROOT, query).json()
-    return response
-
-
 def get_corresponding_email(pubId):
     query = {'query': """{{
         reactions(pubId:"{pubId}", first:1) {{
@@ -518,13 +513,12 @@ def release():
         print("FLASK VALUES")
         print(flask.request.get_json())
         params = flask.request.get_json()
+        endorser = params.get('userInfo', {}).get('username', '')
+        endorser_email = params.get('userInfo',{}).get('email', '')
+        pub_id = params.get('dataset', {}).get('pubId', '')
+        title = params.get('dataset', {}).get('title', '')
+        corresponding_email = params.get('corresponding_email', '')
 
-        params = flask.request.get_json()
-        endorser = params['userInfo']['username']
-        endorser_email = params['userInfo']['email']
-        pub_id = params['dataset']['pubId']
-        title = params['dataset']['title']
-        corresponding_email = get_corresponding_email(pub_id)
         send_email(
             subject='[Catalysis-Hub.Org] Dataset {title} Was Released'.format(**locals()),
             message="""
@@ -550,11 +544,12 @@ def endorse():
         print("FLASK VALUES")
         print(flask.request.get_json())
         params = flask.request.get_json()
-        endorser = params['userInfo']['username']
-        endorser_email = params['userInfo']['email']
-        pub_id = params['dataset']['pubId']
-        title = params['dataset']['title']
-        corresponding_email = get_corresponding_email(pub_id)
+        endorser = params.get('userInfo', {}).get('username', '')
+        endorser_email = params.get('userInfo',{}).get('email', '')
+        pub_id = params.get('dataset', {}).get('pubId', '')
+        title = params.get('dataset', {}).get('title', '')
+        corresponding_email = params.get('corresponding_email', '')
+
         send_email(
             subject='[Catalysis-Hub.Org] Dataset {title} Was Endorsed'.format(**locals()),
             message="""
