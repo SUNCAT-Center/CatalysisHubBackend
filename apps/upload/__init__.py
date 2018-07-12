@@ -1,14 +1,15 @@
-import inspect
-import functools
 import copy
+import datetime
+import functools
+import inspect
 import json
 import logging
 import os
 import os.path
 import pprint
-import zipfile
+import requests
 import time
-import datetime
+import zipfile
 
 
 # workaround to work on both Python 2 and Python 3
@@ -84,6 +85,25 @@ info_url = {
 }
 
 SG = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY', '').strip())
+
+def graphql_query(query):
+    response = requests.get(GRAPHQL_ROOT, query).json()
+    return response
+
+
+def get_corresponding_email(pubId):
+    query = {'query': """{{
+        reactions(pubId:"{pubId}", first:1) {{
+          edges {{
+            node {{
+             username
+            }}
+          }}
+        }}}}
+    """.format(**locals()).replace('\n', '')}
+    response = requests.get(GRAPHQL_ROOT, query).json()
+    return response['data']['reactions']['edges'][0]['node']['username']
+
 
 def redirect_uri(url_root):
     res =  f'{url_root}apps/upload/callback'
@@ -494,14 +514,31 @@ def f():
 
 @upload.route('/release', methods=['POST', 'GET'])
 def release():
-    print("FLASK VALUES")
-    print(flask.request.get_json())
-    send_email(
-        subject='Catalysis-Hub.Org: Dataset Ready for Release',
-        message='This is just a test.',
-        recipient_emails=ADMIN_EMAILS,
-    )
     if auth_required(f, session=flask.session):
+        print("FLASK VALUES")
+        print(flask.request.get_json())
+        params = flask.request.get_json()
+
+        params = flask.request.get_json()
+        endorser = params['userInfo']['username']
+        endorser_email = params['userInfo']['email']
+        pub_id = params['dataset']['pubId']
+        title = params['dataset']['title']
+        corresponding_email = get_corresponding_email(pub_id)
+        send_email(
+            subject='[Catalysis-Hub.Org] Dataset {title} Was Released'.format(**locals()),
+            message="""
+Greeting from Catalysis-Hub.Org!
+
+{endorser} wants to release the dataset {title} ({pub_id}) to the public.
+
+Thanks {endorser} for your contribution!
+
+It should appear soon under https://www.catalysis-hub.org/publications/{pubId}.
+    """.format(**locals()),
+            recipient_emails=list(set([endorser_email, corresponding_email] + ADMIN_EMAILS)),
+        )
+
         return flask.jsonify({
             'status': 'ok',
             'message': 'Submission received. Should be online in a few days. Thanks.'
@@ -509,14 +546,27 @@ def release():
 
 @upload.route('/endorse', methods=['POST', 'GET'])
 def endorse():
-    print("FLASK VALUES")
-    print(flask.request.get_json())
-    #send_email(
-        #subject='Catalysis-Hub.Org: Dataset Was Endorsed',
-        #message='This is just a test.',
-        #recipient_emails=ADMIN_EMAILS,
-    #)
     if auth_required(f, session=flask.session):
+        print("FLASK VALUES")
+        print(flask.request.get_json())
+        params = flask.request.get_json()
+        endorser = params['userInfo']['username']
+        endorser_email = params['userInfo']['email']
+        pub_id = params['dataset']['pubId']
+        title = params['dataset']['title']
+        corresponding_email = get_corresponding_email(pub_id)
+        send_email(
+            subject='[Catalysis-Hub.Org] Dataset {title} Was Endorsed'.format(**locals()),
+            message="""
+Greetings from Catalysis-Hub.Org!
+
+{endorser} has shown interest in your dataset "{title}".
+
+Are you ready to release it?
+    """.format(**locals()),
+            recipient_emails=list(set([endorser_email, corresponding_email] + ADMIN_EMAILS)),
+        )
+
         return flask.jsonify({
             'status': 'ok',
             'message': 'Thanks for the endorsement, we will let the author know.'
