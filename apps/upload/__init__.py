@@ -169,7 +169,7 @@ def complinify(session, provider=None):
 
 
 @upload.route('/', methods=['GET', 'POST', 'OPTIONS'])
-@flask_cors.cross_origin(supports_credentials=True)
+@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def init():
     print("@@@ UPLOAD ROOT ROUTE")
     print("FLASK HEADERS")
@@ -204,6 +204,7 @@ def init():
 
 
 @upload.route('/callback')
+@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def callback():
     print("@@@ CALLBACK ROUTE")
 
@@ -247,6 +248,7 @@ def callback():
 
 
 @upload.route('/info')
+@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def info():
     print("@@@ INFO ROUTE")
     print("SESSION")
@@ -301,6 +303,7 @@ def info():
 
 
 @upload.route('/submit', methods=['GET', 'POST'])
+@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def submit():
     print("@@@ SUBMIT ROUTE")
     if 'team_info' in flask.session:
@@ -320,6 +323,7 @@ def submit():
 
 
 @upload.route('/logout', methods=['GET', 'POST'])
+@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def logout():
     print("@@@ LOGOUT ROUTE")
     flask.session.clear()
@@ -329,6 +333,7 @@ def logout():
 
 
 @upload.route('/user_info', methods=['GET', 'POST'])
+@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def user_info():
     print("@@@ USER_INFO ROUTE")
     provider = flask.request.args.get('provider', PROVIDER)
@@ -363,6 +368,7 @@ def user_info():
 
 
 @upload.route('/dataset/', methods=['GET', 'POST'])
+@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def upload_dataset(request=None):
     request = flask.request if request is None else request
     filename = request.files['file'].filename
@@ -386,6 +392,7 @@ def upload_dataset(request=None):
 
 
 @upload.route('/download_structure/', methods=['GET', 'POST'])
+@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def download_structure(request=None):
     request = flask.request if request is None else request
     if type(request.args) is str:
