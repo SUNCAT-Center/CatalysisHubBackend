@@ -40,8 +40,7 @@ import sendgrid
 
 log = logging.getLogger(__name__)
 
-#ADMIN_EMAILS = ['maxjh@stanford.edu', 'winther@stanford.edu']
-ADMIN_EMAILS = ['maxjh@stanford.edu']
+ADMIN_EMAILS = ['maxjh@stanford.edu', 'winther@stanford.edu']
 FRONTEND_URL = 'https://www.catalysis-hub.org'
 
 upload = flask.Blueprint('upload', __name__)
