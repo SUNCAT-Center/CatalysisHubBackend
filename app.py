@@ -175,7 +175,7 @@ if upload is not None:
     app.register_blueprint(upload, url_prefix='/apps/upload')
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-app.secret_key = os.urandom(48)
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', '')
 print(app.secret_key)
 app.debug = True
 
