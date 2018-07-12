@@ -174,15 +174,7 @@ if upload is not None:
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', '')
-print(app.secret_key)
-app.debug = True
 
-logging.basicConfig()
-logging.getLogger().setLevel(logging.DEBUG)
-logging.getLogger('requests_oauthlib').setLevel(logging.DEBUG)
-logging.getLogger('flask_cors').level = logging.DEBUG
-logging.getLogger('oauthlib').level = logging.DEBUG
-logging.getLogger('*').setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
     import optparse
