@@ -181,6 +181,7 @@ app.debug = True
 
 logging.basicConfig()
 logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger('requests_oauthlib').setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
     import optparse
