@@ -5,7 +5,6 @@
 import numpy as np
 import os
 import json
-import logging
 import flask
 import flask_graphql
 import flask_sqlalchemy
@@ -120,7 +119,6 @@ def after_request(response):
     #response.headers.add('Access-Control-Allow-Origin', 'https://www.catalysis-hub.org')
     return response
 
-logging.getLogger('flask_cors').level = logging.DEBUG
 
 # , resources={r"/graphql/*":
 #    {"origins":
@@ -182,6 +180,9 @@ app.debug = True
 logging.basicConfig()
 logging.getLogger().setLevel(logging.DEBUG)
 logging.getLogger('requests_oauthlib').setLevel(logging.DEBUG)
+logging.getLogger('flask_cors').level = logging.DEBUG
+logging.getLogger('oauthlib').level = logging.DEBUG
+logging.getLogger('*').setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
     import optparse
