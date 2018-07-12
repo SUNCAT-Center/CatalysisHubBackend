@@ -113,9 +113,10 @@ cors = CORS(app,
 
 @app.after_request
 def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    response.headers.add('Access-Control-Allow-Headers', 'X-PINGOTHER, Content-Type, Authorization, Accept')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,HEAD,OPTIONS')
+    response.headers.add('Access-Control-Allow-Origin', 'http://www.catalysis-hub.org, http://localhost:3000')
     return response
 
 logging.getLogger('flask_cors').level = logging.DEBUG
