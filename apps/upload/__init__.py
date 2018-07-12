@@ -213,11 +213,6 @@ def callback():
 
     print(flask.session)
 
-    oauth_session = complinify(requests_oauthlib.OAuth2Session(
-        client_id=client_id[provider],
-        state=flask.session.get('oauth_state', ''),
-    ), provider=provider)
-
     print("PROVIDER")
     print(provider)
 
@@ -233,9 +228,16 @@ def callback():
     print("SESSION")
     print(flask.session)
 
+    oauth_session = complinify(requests_oauthlib.OAuth2Session(
+        client_id=client_id[provider],
+        state=flask.session.get('oauth_state', ''),
+    ), provider=provider)
+
+    print("OAUTH SESSION")
+    print(oauth_session)
+
     token = oauth_session.fetch_token(
         token_url[provider],
-        code=flask.session.get('oauth_state', ''),
         authorization_response=flask.request.url,
         client_secret=client_secret[provider],
     )
