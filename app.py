@@ -113,7 +113,7 @@ cors = CORS(app,
 
 @app.after_request
 def after_request(response):
-    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    #response.headers.add('Access-Control-Allow-Credentials', 'true')
     response.headers.add('Access-Control-Allow-Headers', 'X-PINGOTHER, Content-Type, Authorization, Accept')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,HEAD,OPTIONS')
     #response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
