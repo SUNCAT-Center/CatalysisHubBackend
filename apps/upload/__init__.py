@@ -236,6 +236,17 @@ def callback():
     print("OAUTH SESSION")
     print(oauth_session)
 
+    print(oauth_session._client)
+    print(oauth_session.token)
+    print(oauth_session.scope)
+    print(oauth_session.redirect_uri)
+    print(oauth_session.state)
+    print(oauth_session._state)
+    print(oauth_session.auto_refresh_url)
+    print(oauth_session.auto_refresh_kwargs)
+    print(oauth_session.token_updater)
+
+
     token = oauth_session.fetch_token(
         token_url[provider],
         authorization_response=flask.request.url,
