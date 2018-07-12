@@ -234,6 +234,7 @@ def callback():
         state=flask.session.get('oauth_state', ''),
     ), provider=provider)
 
+
     print("OAUTH SESSION")
     print(oauth_session)
 
