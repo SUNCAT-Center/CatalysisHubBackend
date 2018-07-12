@@ -557,7 +557,7 @@ Greetings from Catalysis-Hub.Org!
 
 {endorser} has shown interest in your dataset "{title}".
 
-Are you ready to release it?
+Are you ready to release it? Please go to https://www.catalysis-hub.org/upload for the next steps.
     """.format(**locals()),
             recipient_emails=list(set([endorser_email, corresponding_email] + ADMIN_EMAILS)),
         )
