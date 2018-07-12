@@ -495,7 +495,7 @@ def f():
 @upload.route('/release', methods=['POST', 'GET'])
 def release():
     print("FLASK VALUES")
-    print(flask.request.values)
+    print(flask.request.get_json())
     send_email(
         subject='Catalysis-Hub.Org: Dataset Ready for Release',
         message='This is just a test.',
@@ -510,7 +510,7 @@ def release():
 @upload.route('/endorse', methods=['POST', 'GET'])
 def endorse():
     print("FLASK VALUES")
-    print(flask.request.values)
+    print(flask.request.get_json())
     #send_email(
         #subject='Catalysis-Hub.Org: Dataset Was Endorsed',
         #message='This is just a test.',
