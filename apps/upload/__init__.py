@@ -235,6 +235,7 @@ def callback():
 
     token = oauth_session.fetch_token(
         token_url[provider],
+        code=flask.session.get('oauth_state', ''),
         authorization_response=flask.request.url,
         client_secret=client_secret[provider],
     )
