@@ -2,6 +2,7 @@ import inspect
 import functools
 import copy
 import json
+import logging
 import os
 import os.path
 import pprint
@@ -35,6 +36,8 @@ import models
 import api
 
 import sendgrid
+
+log = logging.getLogger(__name__)
 
 #ADMIN_EMAILS = ['maxjh@stanford.edu', 'winther@stanford.edu']
 ADMIN_EMAILS = ['maxjh@stanford.edu']
@@ -84,8 +87,8 @@ SG = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY', '').st
 
 def redirect_uri(url_root):
     res =  f'{url_root}apps/upload/callback'
-    print("REDIRECT URI")
-    print(res)
+    log.debug("REDIRECT URI")
+    log.debug(res)
     return res
 
 
@@ -117,7 +120,7 @@ def send_email(
         ]
     }
     response = SG.client.mail.send.post(request_body=data)
-    print(response.status_code)
+    log.debug(response.status_code)
 
 
 def team_info_url(username):
@@ -158,13 +161,13 @@ def complinify(session, provider=None):
 @upload.route('/', methods=['GET', 'POST', 'OPTIONS'])
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def init():
-    print("@@@ UPLOAD ROOT ROUTE")
-    print("FLASK HEADERS")
-    print(flask.request.headers)
-    print("FLASK SESSION")
-    print(flask.session)
-    print("FLASK REQUEST")
-    print(flask.request.url_root)
+    log.debug("@@@ UPLOAD ROOT ROUTE")
+    log.debug("FLASK HEADERS")
+    log.debug(flask.request.headers)
+    log.debug("FLASK SESSION")
+    log.debug(flask.session)
+    log.debug("FLASK REQUEST")
+    log.debug(flask.request.url_root)
     # to be set by request in future
     provider = flask.request.args.get('provider', PROVIDER)
     flask.session['oauth_provider'] = provider
@@ -181,8 +184,8 @@ def init():
     )
     flask.session['oauth_state'] = state
 
-    print("UPLOAD ROOT SESSION")
-    print(flask.session)
+    log.debug("UPLOAD ROOT SESSION")
+    log.debug(flask.session)
 
     return flask.jsonify({
         'message': 'Please login first',
@@ -193,27 +196,27 @@ def init():
 @upload.route('/callback')
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def callback():
-    print("@@@ CALLBACK ROUTE")
+    log.debug("@@@ CALLBACK ROUTE")
 
     # to be set by request in future
     provider = flask.session.get('oauth_provider', PROVIDER)
 
-    print(flask.session)
+    log.debug(flask.session)
 
-    print("PROVIDER")
-    print(provider)
+    log.debug("PROVIDER")
+    log.debug(provider)
 
-    print("TOKENURL")
-    print(token_url[provider])
+    log.debug("TOKENURL")
+    log.debug(token_url[provider])
 
-    print("FLASK REQUEST URL")
-    print(flask.request.url)
+    log.debug("FLASK REQUEST URL")
+    log.debug(flask.request.url)
 
-    print("CLIENT SECRET")
-    print(client_secret[provider])
+    log.debug("CLIENT SECRET")
+    log.debug(client_secret[provider])
 
-    print("SESSION")
-    print(flask.session)
+    log.debug("SESSION")
+    log.debug(flask.session)
 
     oauth_session = complinify(requests_oauthlib.OAuth2Session(
         client_id=client_id[provider],
@@ -222,22 +225,18 @@ def callback():
     ), provider=provider)
 
 
-    print("OAUTH SESSION")
-    print(oauth_session)
+    log.debug("OAUTH SESSION")
+    log.debug(oauth_session)
 
-    print('_client', oauth_session._client)
-    print('token', oauth_session.token)
-    print('scope', oauth_session.scope)
-    print('redirect_uri', oauth_session.redirect_uri)
-    print('state', oauth_session.state)
-    print('_state', oauth_session._state)
-    print('auto_refresh_url', oauth_session.auto_refresh_url)
-    print('auto_refresh_kwargs', oauth_session.auto_refresh_kwargs)
-    print('token_updater', oauth_session.token_updater)
-
-    #return flask.jsonify({
-        #'message': 'Go, fish',
-        #})
+    log.debug('_client', oauth_session._client)
+    log.debug('token', oauth_session.token)
+    log.debug('scope', oauth_session.scope)
+    log.debug('redirect_uri', oauth_session.redirect_uri)
+    log.debug('state', oauth_session.state)
+    log.debug('_state', oauth_session._state)
+    log.debug('auto_refresh_url', oauth_session.auto_refresh_url)
+    log.debug('auto_refresh_kwargs', oauth_session.auto_refresh_kwargs)
+    log.debug('token_updater', oauth_session.token_updater)
 
     token = oauth_session.fetch_token(
         token_url[provider],
@@ -247,7 +246,6 @@ def callback():
 
     flask.session['oauth_token'] = token
 
-    print("Trying to redirect to .info")
     return flask.redirect(
         flask.url_for('.info')
     )
@@ -256,9 +254,9 @@ def callback():
 @upload.route('/info')
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def info():
-    print("@@@ INFO ROUTE")
-    print("SESSION")
-    print(flask.session)
+    log.debug("@@@ INFO ROUTE")
+    log.debug("SESSION")
+    log.debug(flask.session)
 
     # to be set by request in future
     provider = flask.session.get('oauth_provider', PROVIDER)
@@ -272,8 +270,6 @@ def info():
         return flask.redirect(
             flask.url_for('.init')
         )
-
-    pprint.pprint(oauth_session)
 
     if provider == 'github':
         user_info = oauth_session.get(info_url[provider]).json()
@@ -311,7 +307,7 @@ def info():
 @upload.route('/submit', methods=['GET', 'POST'])
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def submit():
-    print("@@@ SUBMIT ROUTE")
+    log.debug("@@@ SUBMIT ROUTE")
     if 'team_info' in flask.session:
         team_id = flask.session['team_info'].get('team', {}).get('id', '')
 
@@ -331,7 +327,7 @@ def submit():
 @upload.route('/logout', methods=['GET', 'POST'])
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def logout():
-    print("@@@ LOGOUT ROUTE")
+    log.debug("@@@ LOGOUT ROUTE")
     flask.session.clear()
     return flask.jsonify({
         'message': 'Logged out',
@@ -341,11 +337,11 @@ def logout():
 @upload.route('/user_info', methods=['GET', 'POST'])
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def user_info():
-    print("@@@ USER_INFO ROUTE")
+    log.debug("@@@ USER_INFO ROUTE")
     provider = flask.request.args.get('provider', PROVIDER)
     authorization_url = authorization_base_url[provider]
 
-    print(flask.session)
+    log.debug(flask.session)
     if 'team_info' in flask.session:
         team_id = flask.session['team_info'].get('team', {}).get('id', '')
         if team_id and team_id == os.environ.get('SLACK_SUNCAT_TEAM_ID', ''):
@@ -464,15 +460,15 @@ def auth_required(fn, session):
     provider = flask.request.args.get('provider', PROVIDER)
 
     def wrapper(*args, **kwargs):
-        pprint.pprint(session)
+        log.debug(session)
         if 'oauth_token' in flask.session:
             oauth_session = complinify(requests_oauthlib.OAuth2Session(
                 client_id[provider],
                 token=flask.session['oauth_token'],
             ))
             user_info = oauth_session.get(info_url[provider]).json()
-            print("USER INFO")
-            pprint.pprint(user_info)
+            log.debug("USER INFO")
+            log.debug(user_info)
             if provider == 'slack':
                 username = user_info.get('profile', {}).get('email', '')
             else:
@@ -498,7 +494,8 @@ def f():
 
 @upload.route('/release', methods=['POST', 'GET'])
 def release():
-    pprint.pprint(flask.request.values)
+    print("FLASK VALUES")
+    log.debug(flask.request.values)
     send_email(
         subject='Catalysis-Hub.Org: Dataset Ready for Release',
         message='This is just a test.',
@@ -512,16 +509,17 @@ def release():
 
 @upload.route('/endorse', methods=['POST', 'GET'])
 def endorse():
-    pprint.pprint(flask.request.values)
-    send_email(
-        subject='Catalysis-Hub.Org: Dataset Was Endorsed',
-        message='This is just a test.',
-        recipient_emails=ADMIN_EMAILS,
-    )
+    print("FLASK VALUES")
+    log.debug(flask.request.values)
+    #send_email(
+        #subject='Catalysis-Hub.Org: Dataset Was Endorsed',
+        #message='This is just a test.',
+        #recipient_emails=ADMIN_EMAILS,
+    #)
     if auth_required(f, session=flask.session):
         return flask.jsonify({
             'status': 'ok',
-            'message': 'Submission received. Should be online in a few days. Thanks.'
+            'message': 'Thanks for the endorsement, we will let the author know.'
         })
 
 
@@ -536,70 +534,4 @@ def graphql_view():
             'session': db_session,
         })
 
-    # def view(*args, **kwargs):
-    # print(inspect.getargspec(raw_view))
-    # print(flask.request)
-    # print(flask.request.data)
-    # print(flask.request.args)
-    # return raw_view(*args, **kwargs)
-    # return (view)()
-
     return auth_required(raw_view, session=flask.session)()
-
-    # print("ARGS")
-    # print(flask.request.args)
-    # print("REQUEST")
-    # print(flask.request)
-    # print("MIMETYPE")
-    # print(flask.request.mimetype)
-    #print("REQUEST DATA")
-    # print(flask.request.data)
-    #print("REQUEST VALUES")
-    # print(flask.request.values)
-
-    #query = json.loads(flask.request.data.decode('utf8')).get('query', '')
-    # print("QUERY")
-    # print(query)
-    #print("TYPE QUERY")
-    # print(type(query))
-
-    # data = flask_graphql.GraphQLView.as_view(
-    # schema=api.schema,
-    ##context={ 'session': db_session, }
-    # ).parse_body(flask.request)
-    # print("DATA")
-    # print(data)
-
-    # execution_results, all_params = graphql_server.run_http_query(
-    # schema=api.schema,
-    # request_method=flask.request.method.lower(),
-    # data={},
-    #query_data={'query': query},
-    # operationName='dummy',
-    #)
-
-    #print("EXECUTION RESULTS")
-    # print(execution_results)
-
-    # result, status_code = graphql_server.encode_execution_results(
-    # execution_results,
-    # is_batch=False,
-    # format_error=(graphql_server.default_format_error),
-    # encode=(graphql_server.json_encode),
-    #)
-
-    # print("ARGS")
-    # print(flask.request.args)
-    #print("EXECUTION RESULT")
-    # print(execution_results)
-    # print(dir(execution_results))
-    # print(result)
-
-    # return flask.Response(result)
-
-
-# upload.add_url_rule(
-    #'/graphql',
-    # view_func=graphql_view(),
-    #methods=['GET', 'POST'],
-#)
