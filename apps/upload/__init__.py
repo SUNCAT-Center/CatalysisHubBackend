@@ -300,14 +300,6 @@ def info():
             flask.url_for('.submit')
         )
 
-        # return flask.jsonify({
-        #'user': user_info,
-        #'organization': team_info,
-        #'org_id': organization,
-        #'teams': teams_info,
-        #'teams_url': f'https://api.github.com/orgs/{organization}/teams',
-
-        #})
     elif provider == 'slack':
         user_info = oauth_session.get(info_url[provider]).json()
         team_info = oauth_session.get(team_info_url('')[provider]).json()
