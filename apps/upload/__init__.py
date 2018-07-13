@@ -38,6 +38,8 @@ import api
 
 import sendgrid
 
+from catkit.hub.postgresql import CathubPostgreSQL
+
 log = logging.getLogger(__name__)
 
 ADMIN_EMAILS = ['maxjh@stanford.edu', 'winther@stanford.edu']
