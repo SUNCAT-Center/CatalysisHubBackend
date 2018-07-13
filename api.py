@@ -158,7 +158,6 @@ import six
 
 # local imports
 import models
-from models import hybrid_prop_parameters
 
 
 class CountableConnection(graphene.relay.Connection):
@@ -411,7 +410,7 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                     continue
                 else:
                     if name[0].isupper():  # hybrid property
-                        names = hybrid_prop_parameters(name)
+                        names = models.hybrid_prop_parameters(name)
                         if 'all' in names:
                             print('all')
                             include_all = True

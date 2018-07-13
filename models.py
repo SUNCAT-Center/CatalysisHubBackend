@@ -41,55 +41,10 @@ class JsonEncodedDict(sqla.TypeDecorator):
     def process_result_value(self, value, dialect):
         return json.loads(value)
 
-# set to local database path
 
-
-if os.environ.get('DB_PASSWORD', ''):
-    url = sqlalchemy.engine.url.URL('postgres',
-                                    username='catvisitor',
-                                    password=os.environ['DB_PASSWORD'],
-                                    host='catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com',
-                                    port=5432,
-                                    database='catalysishub')
-    PRODUCTION = True
-else:
-    url = sqlalchemy.engine.url.URL('postgres',
-                                    username='postgres',
-                                    host='localhost',
-                                    #port=5432,
-                                    database='travis_ci_test')
-    
-    #url = sqlalchemy.engine.url.URL('sqlite', database='./test_database.db')
-    PRODUCTION = False
-
-
-if PRODUCTION:
-    SCHEMA = 'public'
-else:
-    SCHEMA = 'public'
-
-engine = sqlalchemy.create_engine(
-    url,
-    convert_unicode=True)
-
-
-# work-around needed for testing
-# api locally w/o postgreSQL available:
-# simply JSON dictionaries as String
-
-if engine.driver != 'psycopg2':
-    JSONB = sqla.String
-
-db_session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine,
-))
-
+SCHEMA = 'public'
 
 Base = sqlalchemy.ext.declarative.declarative_base()
-Base.query = db_session.query_property()
-
 
 association_pubsys = \
     sqlalchemy.Table('publication_system',

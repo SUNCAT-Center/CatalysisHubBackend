@@ -3,9 +3,11 @@
 # global imports
 
 import numpy as np
+import os
 import json
 import flask
 import flask_graphql
+import flask_sqlalchemy
 from flask_cors import CORS
 import logging
 from raven.contrib.flask import Sentry
@@ -60,6 +62,13 @@ except ImportError as e:
     traceback.print_exc()
     catKitDemo = None
 
+try:
+    from apps.upload import upload
+except ImportError as e:
+    print('upload not available: {e}'.format(e=e))
+    traceback.print_exc()
+    upload = None
+
 
 # NumpyEncoder: useful for JSON serializing
 # Dictionaries that contain Numpy Arrays
@@ -77,6 +86,20 @@ class NumpyEncoder(json.JSONEncoder):
 
 app = flask.Flask(__name__)
 
+if os.environ.get('DB_PASSWORD', ''):
+    app.config.update({
+        #'SESSION_COOKIE_SECURE': True,
+        'CORS_SUPPORTS_CREDENTIALS': True,
+        'CORS_HEADERS': 'Content-Type, X-Pingother',
+        'SQLALCHEMY_DATABASE_URI': f'postgres://catvisitor:{os.environ["DB_PASSWORD"]}@catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com:5432/catalysishub', })
+else:
+    # for Travis CI
+    app.config.update({
+        'CORS_SUPPORTS_CREDENTIALS': True,
+        'SQLALCHEMY_DATABASE_URI': f'postgres://postgres@localhost:5432/travis_ci_test', })
+
+db = flask_sqlalchemy.SQLAlchemy(app)
+
 app.debug = False
 
 if not app.debug:
@@ -84,18 +107,15 @@ if not app.debug:
 
 app.json_encoder = NumpyEncoder
 
-cors = CORS(app)
+cors = CORS(app,
+        supports_credentials=True
+        )
 
-# , resources={r"/graphql/*":
-#    {"origins":
-#        ["localhost:.*",
-#            "catapp-browser.herokuapp.com",
-#            "*"
-
-#            ]
-#        }
-#    }
-#    )
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Headers', 'X-PINGOTHER, Content-Type, Authorization, Accept')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, HEAD, OPTIONS')
+    return response
 
 
 @app.route('/')
@@ -122,21 +142,8 @@ app.add_url_rule('/graphql',
                          'graphql',
                          schema=api.schema,
                          graphiql=True,
-                         context={'session': models.db_session}
-                         )
-                 )
-
-# Graphql view
-# app.add_url_rule('/qmdb_graphql',
-#        view_func=flask_graphql.GraphQLView.as_view(
-#            'qmdb_graphql',
-#            schema=qmdb_api.schema,
-#            graphiql=True,
-#            context={
-#                'session': qmdb_api.db_session,
-#                }
-#            )
-#        )
+                         context={'session': db.session}
+                         ))
 
 
 if pourbaix is not None:
@@ -147,6 +154,13 @@ if prototypeSearch is not None:
     app.register_blueprint(prototypeSearch, url_prefix='/apps/prototypeSearch')
 if catlearn_blueprint is not None:
     app.register_blueprint(catlearn_blueprint, url_prefix='/apps/catlearn')
+
+if upload is not None:
+    app.register_blueprint(upload, url_prefix='/apps/upload')
+
+# Needed to set session cookies.
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', '')
 
 
 if __name__ == '__main__':
