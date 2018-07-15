@@ -548,7 +548,7 @@ Greeting from Catalysis-Hub.Org!
 
 Thanks {endorser} for your contribution!
 
-It should appear soon under https://www.catalysis-hub.org/publications/{pubId}.
+It should appear soon under https://www.catalysis-hub.org/publications/{pub_id}.
     """.format(**locals()),
             recipient_emails=list(set([endorser_email, corresponding_email] + ADMIN_EMAILS)),
         )
