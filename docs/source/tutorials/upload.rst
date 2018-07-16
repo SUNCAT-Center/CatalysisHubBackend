@@ -129,11 +129,11 @@ This will create a template (txt) file, that you should update with your publica
 	products: [NHstar@hollow]
     -   reactants: [0.5N2gas, star]
 	products: [Nstar@hollow]
-    bulk_compositions: [Co, Pt]
+    bulk_compositions: [Co]
     crystal_structures: [fcc]
     facets: ['111']
 
-consult :code:`cathub make_folders --help` again for detailed instructions on how to specify the types of reactions and surfaces.
+Consult :code:`cathub make_folders --help` again for detailed instructions on how to specify the types of reactions and surfaces.
 
 Then type::
 
@@ -142,7 +142,7 @@ Then type::
 And your folders will be created. You can check that they look right with :code:`tree -F <FOLDER>`. The template above will produce the following folder tree::
 
   $tree -F MontoyaChallenge2015/
- 
+
   MontoyaChallenge2015
   ├── Quantum\ Espresso/
   │   └── BEEF-vdW/
