@@ -38,7 +38,7 @@ CatKit is set of computational tools for catalysis, that comes with a cli tool `
   pip install --upgrade --user git+https://gitlab.com/ase/ase.git@database_lesstables#egg=ase-3.16.3b1
   pip install --upgrade --user git+https://github.com/kirstenwinther/CatKit.git#egg=catkit
 
-which will install a developer version of ASE, CatKit and all their dependencies.
+which will install a developer version of ASE with an enhanced database module, CatKit and all their dependencies.
 
 To test that the cathub cli is working, start by typing::
 
@@ -185,7 +185,7 @@ After adding all your structure files (or after running cathub organize), read y
 
   cathub folder2db <FOLDER> --userhandle <slack-username or gmail-address>
 
-Remember your ``userhandle`` since it will be used to log in at http://www.catalysis-hub.org later (to be implemented).
+Remember your ``userhandle`` since it will be used to log in at http://www.catalysis-hub.org/upload later (to be implemented).
 
 If anything is wrong with your files, or anything is missing, you should receive appropriate error messages. When reading of the folder is complete, a table with a summary with reaction energies will be printed in you terminal. Please verify that everything looks right. Also, a database file has been written at ``<FOLDER>/<DBNAME>.db``.
 
