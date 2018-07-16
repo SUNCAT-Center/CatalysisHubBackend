@@ -73,7 +73,7 @@ This will generate an organized folder named ``<FOLDER>.organized``. Please open
     volume: 8
     publisher: Wiley
     doi: 10.1002/cssc.201500322
-    title: The Challenge of Electrochemical Ammonia Synthesis: A New Perspective on the Role of Nitrogen Scaling Relations
+    title: "The Challenge of Electrochemical Ammonia Synthesis: A New Perspective on the Role of Nitrogen Scaling Relations"
     journal: ChemSusChem
     authors: [Montoya, Joseph H., Tsai, Charlie, Vojvodic, Aleksandra, Norskov, Jens K.]
     year: 2015
@@ -103,7 +103,7 @@ Then create a folder in your user-name, 'cd' into it and type::
 
 This will create a template (txt) file, that you should update with your publication and reaction info. The template should look similar to this::
 
-    title: The Challenge of Electrochemical Ammonia Synthesis: A New Perspective on the Role of Nitrogen Scaling Relations
+    title: "The Challenge of Electrochemical Ammonia Synthesis: A New Perspective on the Role of Nitrogen Scaling Relations"
     authors: [Montoya, Joseph H., Tsai, Charlie, Vojvodic, Aleksandra, Norskov, Jens K.]
     journal: ChemSusChem
     volume: 8
