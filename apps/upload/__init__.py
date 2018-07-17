@@ -519,7 +519,7 @@ def delete():
                  'message': "You don't have permission to delete this dataset"
              })
 
-        cathub_db.delete(pub_id)
+        cathub_db.delete_publication(pub_id)
 
         return flask.jsonify({
                  'status': 'ok',
