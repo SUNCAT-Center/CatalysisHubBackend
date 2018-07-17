@@ -412,8 +412,8 @@ class FilteringConnectionField(graphene_sqlalchemy.SQLAlchemyConnectionField):
                     if name[0].isupper():  # hybrid property
                         names = models.hybrid_prop_parameters(name)
                         if 'all' in names:
-                            print('all')
                             include_all = True
+                            fields = None
                             continue
                     else:
                         names = [name]

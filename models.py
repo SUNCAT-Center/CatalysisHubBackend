@@ -25,6 +25,8 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 # more unstable imports
 import ase.atoms
+from ase.constraints import dict2constraint
+from ase.calculators.singlepoint import SinglePointCalculator
 import ase.db.sqlite
 import ase.db.core
 import ase.io
@@ -239,7 +241,12 @@ class System(Base):
                  pbc=(self.pbc & np.array([1, 2, 4])).astype(bool),
              )
         
-        from ase.calculators.singlepoint import SinglePointCalculator
+        if self.constraints:
+            constraints = json.loads(self.constraints)
+            if len(constraints[0]['kwargs']['indices']) > 0:
+                constraints = [dict2constraint(d) for d in constraints]
+        else:
+            constraints = None
         atoms = ase.atoms.Atoms(self.numbers,
                                 self.positions,
                                 cell=self.cell,
@@ -249,7 +256,7 @@ class System(Base):
                                 tags=self.tags,
                                 masses=self.masses,
                                 momenta=self.momenta,
-                                constraint=self.constraints)
+                                constraint=constraints)
 
         if not self.calculator == "unknown":
             params = self.get('calculator_parameters', {})
@@ -291,7 +298,7 @@ class System(Base):
     @hybrid_property
     def _trajdata(self):
         mem_file = StringIO.StringIO()
-        ase.io.write(mem_file, self._toatoms(include_results=True))
+        ase.io.write(mem_file, self._toatoms(include_results=True), 'json')
         return mem_file.getvalue()
 
     @hybrid_property
