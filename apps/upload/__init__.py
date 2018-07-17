@@ -38,6 +38,8 @@ import api
 
 import sendgrid
 
+from catkit.hub.postgresql import CathubPostgreSQL
+
 log = logging.getLogger(__name__)
 
 ADMIN_EMAILS = ['maxjh@stanford.edu', 'winther@stanford.edu']
@@ -498,6 +500,33 @@ def auth_required(fn, session):
 def f():
     return True
 
+
+@upload.route('/delete', methods=['POST', 'GET'])
+def delete():
+    if auth_required(f, session=flask.session):
+        params = flask.request.get_json()
+        endorser = params.get('userInfo', {}).get('username', '')
+        endorser_email = params.get('userInfo',{}).get('email', '')
+        pub_id = params.get('dataset', {}).get('pubId', '')
+
+        cathub_db = CathubPostgreSQL(user='upload_admin',
+                                     password=os.environ.get('UPLOAD_ADMIN_PASSWORD'))
+        userhandle = cathub_db.get_pub_id_owner(pub_id)
+
+        if not userhandle == endorser:
+            return flask.jsonify({
+                 'status': 'Failed',
+                 'message': "You don't have permission to delete this dataset"
+             })
+
+        cathub_db.delete_publication(pub_id)
+
+        return flask.jsonify({
+                 'status': 'ok',
+                 'message': "The dataset '{}' was succesfully deleted".format(pub_id)
+             })
+
+
 @upload.route('/release', methods=['POST', 'GET'])
 def release():
     if auth_required(f, session=flask.session):
@@ -528,6 +557,7 @@ It should appear soon under https://www.catalysis-hub.org/publications/{pubId}.
             'status': 'ok',
             'message': 'Submission received. Should be online in a few days. Thanks.'
         })
+
 
 @upload.route('/endorse', methods=['POST', 'GET'])
 def endorse():
