@@ -513,7 +513,7 @@ def delete():
                                      password=os.environ.get('UPLOAD_ADMIN_PASSWORD'))
         userhandle = cathub_db.get_pub_id_owner(pub_id)
 
-        if not userhandle == endorser:
+        if not userhandle == endorser_email:
             return flask.jsonify({
                  'status': 'Failed',
                  'message': "You don't have permission to delete this dataset"
