@@ -41,6 +41,7 @@ import sendgrid
 from catkit.hub.postgresql import CathubPostgreSQL
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 ADMIN_EMAILS = ['maxjh@stanford.edu', 'winther@stanford.edu']
 FRONTEND_URL = 'https://www.catalysis-hub.org'
@@ -50,19 +51,23 @@ upload = flask.Blueprint('upload', __name__)
 # Not secret, just needed to identify App.
 client_id = {
     'github': '94895cb9f588ac74ab9d',
-    'slack': '7745294259.330986790417'
+    'slack': '7745294259.330986790417',
+    'google': '777817018775-mm6afmmpfcqtf8kso934elsslqqoludi.apps.googleusercontent.com',
 }
 
 
 scope = {
     'slack': ['users.profile:read', 'team:read'],
     'github': ['user:read'],
+    'google': ["https://www.googleapis.com/auth/userinfo.email",
+               "https://www.googleapis.com/auth/userinfo.profile"]
 }
 
 # Should be secret and only stored safely
 client_secret = {
     'github': os.environ.get('GITHUB_CLIENT_SECRET', ''),
     'slack': os.environ.get('SLACK_CLIENT_SECRET', ''),
+    'google': os.environ.get('GOOGLE_OAUTH_SECRET', ''),
 }
 
 for key, value in client_secret.items():
@@ -73,16 +78,19 @@ for key, value in client_secret.items():
 authorization_base_url = {
     'github': 'https://github.com/login/oauth/authorize',
     'slack': 'https://slack.com/oauth/authorize',
+    'google': 'https://accounts.google.com/o/oauth2/v2/auth',
 }
 
 token_url = {
     'github': 'https://github.com/login/oauth/access_token',
     'slack': 'https://slack.com/api/oauth.access',
+    'google': 'https://www.googleapis.com/oauth2/v4/token',
 }
 
 info_url = {
     'github': 'https://api.github.com/user',
     'slack': 'https://slack.com/api/users.profile.get',
+    'google': 'https://www.googleapis.com/oauth2/v1/userinfo',
 }
 
 SG = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY', '').strip())
@@ -103,8 +111,8 @@ def get_corresponding_email(pubId):
 
 def redirect_uri(url_root):
     res =  f'{url_root}apps/upload/callback'
-    log.debug("REDIRECT URI")
-    log.debug(res)
+    print("REDIRECT URI")
+    print(res)
     return res
 
 
@@ -136,7 +144,7 @@ def send_email(
         ]
     }
     response = SG.client.mail.send.post(request_body=data)
-    log.debug(response.status_code)
+    print(response.status_code)
 
 
 def team_info_url(username):
@@ -177,13 +185,13 @@ def complinify(session, provider=None):
 @upload.route('/', methods=['GET', 'POST', 'OPTIONS'])
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def init():
-    log.debug("@@@ UPLOAD ROOT ROUTE")
-    log.debug("FLASK HEADERS")
-    log.debug(flask.request.headers)
-    log.debug("FLASK SESSION")
-    log.debug(flask.session)
-    log.debug("FLASK REQUEST")
-    log.debug(flask.request.url_root)
+    print("@@@ UPLOAD ROOT ROUTE")
+    print("FLASK HEADERS")
+    print(flask.request.headers)
+    print("FLASK SESSION")
+    print(flask.session)
+    print("FLASK REQUEST")
+    print(flask.request.url_root)
     # to be set by request in future
     provider = flask.request.args.get('provider', PROVIDER)
     flask.session['oauth_provider'] = provider
@@ -200,8 +208,8 @@ def init():
     )
     flask.session['oauth_state'] = state
 
-    log.debug("UPLOAD ROOT SESSION")
-    log.debug(flask.session)
+    print("UPLOAD ROOT SESSION")
+    print(flask.session)
 
     return flask.jsonify({
         'message': 'Please login first',
@@ -212,27 +220,27 @@ def init():
 @upload.route('/callback')
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def callback():
-    log.debug("@@@ CALLBACK ROUTE")
+    print("@@@ CALLBACK ROUTE")
 
     # to be set by request in future
     provider = flask.session.get('oauth_provider', PROVIDER)
 
-    log.debug(flask.session)
+    print(flask.session)
 
-    log.debug("PROVIDER")
-    log.debug(provider)
+    print("PROVIDER")
+    print(provider)
 
-    log.debug("TOKENURL")
-    log.debug(token_url[provider])
+    print("TOKENURL")
+    print(token_url[provider])
 
-    log.debug("FLASK REQUEST URL")
-    log.debug(flask.request.url)
+    print("FLASK REQUEST URL")
+    print(flask.request.url)
 
-    log.debug("CLIENT SECRET")
-    log.debug(client_secret[provider])
+    print("CLIENT SECRET")
+    print(client_secret[provider])
 
-    log.debug("SESSION")
-    log.debug(flask.session)
+    print("SESSION")
+    print(flask.session)
 
     oauth_session = complinify(requests_oauthlib.OAuth2Session(
         client_id=client_id[provider],
@@ -241,18 +249,18 @@ def callback():
     ), provider=provider)
 
 
-    log.debug("OAUTH SESSION")
-    log.debug(oauth_session)
+    print("OAUTH SESSION")
+    print(oauth_session)
 
-    log.debug('_client', oauth_session._client)
-    log.debug('token', oauth_session.token)
-    log.debug('scope', oauth_session.scope)
-    log.debug('redirect_uri', oauth_session.redirect_uri)
-    log.debug('state', oauth_session.state)
-    log.debug('_state', oauth_session._state)
-    log.debug('auto_refresh_url', oauth_session.auto_refresh_url)
-    log.debug('auto_refresh_kwargs', oauth_session.auto_refresh_kwargs)
-    log.debug('token_updater', oauth_session.token_updater)
+    print('_client', oauth_session._client)
+    print('token', oauth_session.token)
+    print('scope', oauth_session.scope)
+    print('redirect_uri', oauth_session.redirect_uri)
+    print('state', oauth_session.state)
+    print('_state', oauth_session._state)
+    print('auto_refresh_url', oauth_session.auto_refresh_url)
+    print('auto_refresh_kwargs', oauth_session.auto_refresh_kwargs)
+    print('token_updater', oauth_session.token_updater)
 
     token = oauth_session.fetch_token(
         token_url[provider],
@@ -270,9 +278,9 @@ def callback():
 @upload.route('/info')
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def info():
-    log.debug("@@@ INFO ROUTE")
-    log.debug("SESSION")
-    log.debug(flask.session)
+    print("@@@ INFO ROUTE")
+    print("SESSION")
+    print(flask.session)
 
     # to be set by request in future
     provider = flask.session.get('oauth_provider', PROVIDER)
@@ -311,11 +319,17 @@ def info():
             flask.url_for('.submit')
         )
 
+    elif provider == 'google':
+        user_info = oauth_session.get(info_url[provider]).json()
+        flask.session['user_info'] = user_info
+        return flask.redirect(
+            flask.url_for('.submit')
+        )
 
 @upload.route('/submit', methods=['GET', 'POST'])
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def submit():
-    log.debug("@@@ SUBMIT ROUTE")
+    print("@@@ SUBMIT ROUTE")
     if 'team_info' in flask.session:
         team_id = flask.session['team_info'].get('team', {}).get('id', '')
 
@@ -335,7 +349,7 @@ def submit():
 @upload.route('/logout', methods=['GET', 'POST'])
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def logout():
-    log.debug("@@@ LOGOUT ROUTE")
+    print("@@@ LOGOUT ROUTE")
     flask.session.clear()
     return flask.jsonify({
         'message': 'Logged out',
@@ -345,11 +359,11 @@ def logout():
 @upload.route('/user_info', methods=['GET', 'POST'])
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def user_info():
-    log.debug("@@@ USER_INFO ROUTE")
+    print("@@@ USER_INFO ROUTE")
     provider = flask.request.args.get('provider', PROVIDER)
     authorization_url = authorization_base_url[provider]
 
-    log.debug(flask.session)
+    print(flask.session)
     if 'team_info' in flask.session:
         team_id = flask.session['team_info'].get('team', {}).get('id', '')
         if team_id and team_id == os.environ.get('SLACK_SUNCAT_TEAM_ID', ''):
@@ -468,15 +482,15 @@ def auth_required(fn, session):
     provider = flask.request.args.get('provider', PROVIDER)
 
     def wrapper(*args, **kwargs):
-        log.debug(session)
+        print(session)
         if 'oauth_token' in flask.session:
             oauth_session = complinify(requests_oauthlib.OAuth2Session(
                 client_id[provider],
                 token=flask.session['oauth_token'],
             ))
             user_info = oauth_session.get(info_url[provider]).json()
-            log.debug("USER INFO")
-            log.debug(user_info)
+            print("USER INFO")
+            print(user_info)
             if provider == 'slack':
                 username = user_info.get('profile', {}).get('email', '')
             else:
