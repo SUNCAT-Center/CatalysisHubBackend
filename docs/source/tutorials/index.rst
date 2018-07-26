@@ -351,6 +351,10 @@ The following noteboks demonstrate how make interactive use of the `Catalysis-Hu
 ................................................................................................
 
 
+`Retrieve ASE Atoms object through GraphQL <https://gist.github.com/mhoffman/c418acb6b3f928eb4ef71f4001d120d9>`_
+................................................................................................................
+
+
 `Prototype Search <http://nbviewer.jupyter.org/gist/mhoffman/2f680eb90a5531fe6e3e588f2c835775>`_
 .................................................................................................
 
@@ -358,9 +362,9 @@ The following noteboks demonstrate how make interactive use of the `Catalysis-Hu
 `Search Structures and Cut Slabs <http://nbviewer.jupyter.org/gist/mhoffman/e0e9edf6771c3c0c5838043a022e0857>`_
 ................................................................................................................
 
+
 `Get Spacegroup and Wyckoff Sites from Structure <http://nbviewer.jupyter.org/gist/mhoffman/c483dece941930fbb785f019893a1c15>`_
 ................................................................................................................................
-
 
 
 Partner Projects
