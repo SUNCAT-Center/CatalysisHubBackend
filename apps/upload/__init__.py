@@ -111,8 +111,8 @@ def get_corresponding_email(pubId):
 
 def redirect_uri(url_root):
     res =  f'{url_root}apps/upload/callback'
-    print("REDIRECT URI")
-    print(res)
+    log.debug("REDIRECT URI")
+    log.debug(res)
     return res
 
 
@@ -144,7 +144,7 @@ def send_email(
         ]
     }
     response = SG.client.mail.send.post(request_body=data)
-    print(response.status_code)
+    log.debug(response.status_code)
 
 
 def team_info_url(username):
@@ -185,13 +185,13 @@ def complinify(session, provider=None):
 @upload.route('/', methods=['GET', 'POST', 'OPTIONS'])
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def init():
-    print("@@@ UPLOAD ROOT ROUTE")
-    print("FLASK HEADERS")
-    print(flask.request.headers)
-    print("FLASK SESSION")
-    print(flask.session)
-    print("FLASK REQUEST")
-    print(flask.request.url_root)
+    log.debug("@@@ UPLOAD ROOT ROUTE")
+    log.debug("FLASK HEADERS")
+    log.debug(flask.request.headers)
+    log.debug("FLASK SESSION")
+    log.debug(flask.session)
+    log.debug("FLASK REQUEST")
+    log.debug(flask.request.url_root)
     # to be set by request in future
     provider = flask.request.args.get('provider', PROVIDER)
     flask.session['oauth_provider'] = provider
@@ -208,8 +208,8 @@ def init():
     )
     flask.session['oauth_state'] = state
 
-    print("UPLOAD ROOT SESSION")
-    print(flask.session)
+    log.debug("UPLOAD ROOT SESSION")
+    log.debug(flask.session)
 
     return flask.jsonify({
         'message': 'Please login first',
@@ -220,27 +220,27 @@ def init():
 @upload.route('/callback')
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def callback():
-    print("@@@ CALLBACK ROUTE")
+    log.debug("@@@ CALLBACK ROUTE")
 
     # to be set by request in future
     provider = flask.session.get('oauth_provider', PROVIDER)
 
-    print(flask.session)
+    log.debug(flask.session)
 
-    print("PROVIDER")
-    print(provider)
+    log.debug("PROVIDER")
+    log.debug(provider)
 
-    print("TOKENURL")
-    print(token_url[provider])
+    log.debug("TOKENURL")
+    log.debug(token_url[provider])
 
-    print("FLASK REQUEST URL")
-    print(flask.request.url)
+    log.debug("FLASK REQUEST URL")
+    log.debug(flask.request.url)
 
-    print("CLIENT SECRET")
-    print(client_secret[provider])
+    log.debug("CLIENT SECRET")
+    log.debug(client_secret[provider])
 
-    print("SESSION")
-    print(flask.session)
+    log.debug("SESSION")
+    log.debug(flask.session)
 
     oauth_session = complinify(requests_oauthlib.OAuth2Session(
         client_id=client_id[provider],
@@ -249,18 +249,18 @@ def callback():
     ), provider=provider)
 
 
-    print("OAUTH SESSION")
-    print(oauth_session)
+    log.debug("OAUTH SESSION")
+    log.debug(oauth_session)
 
-    print('_client', oauth_session._client)
-    print('token', oauth_session.token)
-    print('scope', oauth_session.scope)
-    print('redirect_uri', oauth_session.redirect_uri)
-    print('state', oauth_session.state)
-    print('_state', oauth_session._state)
-    print('auto_refresh_url', oauth_session.auto_refresh_url)
-    print('auto_refresh_kwargs', oauth_session.auto_refresh_kwargs)
-    print('token_updater', oauth_session.token_updater)
+    log.debug('_client ' + str(oauth_session._client))
+    log.debug('token ' + str(oauth_session.token))
+    log.debug('scope ' + str(oauth_session.scope))
+    log.debug('redirect_uri ' + str(oauth_session.redirect_uri))
+    log.debug('state ' + str(oauth_session.state))
+    log.debug('_state ' + str(oauth_session._state))
+    log.debug('auto_refresh_url ' + str(oauth_session.auto_refresh_url))
+    log.debug('auto_refresh_kwargs' + str(oauth_session.auto_refresh_kwargs))
+    log.debug('token_updater ' + str(oauth_session.token_updater))
 
     token = oauth_session.fetch_token(
         token_url[provider],
@@ -278,9 +278,9 @@ def callback():
 @upload.route('/info')
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def info():
-    print("@@@ INFO ROUTE")
-    print("SESSION")
-    print(flask.session)
+    log.debug("@@@ INFO ROUTE")
+    log.debug("SESSION")
+    log.debug(flask.session)
 
     # to be set by request in future
     provider = flask.session.get('oauth_provider', PROVIDER)
@@ -329,27 +329,15 @@ def info():
 @upload.route('/submit', methods=['GET', 'POST'])
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def submit():
-    print("@@@ SUBMIT ROUTE")
-    if 'team_info' in flask.session:
-        team_id = flask.session['team_info'].get('team', {}).get('id', '')
-
-        if team_id and team_id == os.environ.get('SLACK_SUNCAT_TEAM_ID', ''):
-            flask.session['LOGGED_IN'] = True
-            return flask.redirect(FRONTEND_URL + '/upload?login=success')
-        else:
-            flask.session['LOGGED_IN'] = False
-            return flask.redirect(FRONTEND_URL + '/upload?login=error')
-
-    else:
-        return flask.redirect(
-            flask.url_for('.init')
-        )
-
+    return auth_required(
+        flask.redirect(FRONTEND_URL + '/upload?login=success'),
+        session=flask.session
+            )
 
 @upload.route('/logout', methods=['GET', 'POST'])
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def logout():
-    print("@@@ LOGOUT ROUTE")
+    log.debug("@@@ LOGOUT ROUTE")
     flask.session.clear()
     return flask.jsonify({
         'message': 'Logged out',
@@ -359,15 +347,13 @@ def logout():
 @upload.route('/user_info', methods=['GET', 'POST'])
 @flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
 def user_info():
-    print("@@@ USER_INFO ROUTE")
+    log.debug("@@@ USER_INFO ROUTE")
     provider = flask.request.args.get('provider', PROVIDER)
     authorization_url = authorization_base_url[provider]
 
-    print(flask.session)
-    if 'team_info' in flask.session:
-        team_id = flask.session['team_info'].get('team', {}).get('id', '')
-        if team_id and team_id == os.environ.get('SLACK_SUNCAT_TEAM_ID', ''):
-            return flask.jsonify({
+    log.debug("#### SESSION BEFORE AUTH")
+    log.debug(flask.session)
+    return auth_required(flask.jsonify({
                 'username': flask.session.get('user_info', {})
                 .get('profile', {})
                 .get('display_name', ''),
@@ -376,19 +362,11 @@ def user_info():
                 .get('email', ''),
                 'token': flask.session.get('oauth_token', {})
                 .get('access_token', ''),
-            })
-        else:
-            return flask.jsonify({
-                'error': True,
-                'message': 'Please login first',
-                'location': authorization_url,
-            })
-    else:
-        return flask.jsonify({
-            'error': True,
-            'message': 'Please login first',
-            'location': authorization_url,
-        })
+                'picture': flask.session.get('user_info', {})
+                .get('profile')
+                .get('picture', '')
+            }), session=flask.session)
+
 
 
 @upload.route('/dataset/', methods=['GET', 'POST'])
@@ -479,26 +457,43 @@ db_session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(
 
 
 def auth_required(fn, session):
-    provider = flask.request.args.get('provider', PROVIDER)
+    provider = session.get('oauth_provider', PROVIDER)
 
     def wrapper(*args, **kwargs):
-        print(session)
+        log.debug("-> AUTH_REQUIRED")
+        log.debug(session)
         if 'oauth_token' in flask.session:
             oauth_session = complinify(requests_oauthlib.OAuth2Session(
                 client_id[provider],
                 token=flask.session['oauth_token'],
             ))
             user_info = oauth_session.get(info_url[provider]).json()
-            print("USER INFO")
-            print(user_info)
+            log.debug("USER INFO")
+            log.debug(user_info)
+            log.debug("PROVIDER")
+            log.debug(provider)
+            session['user_info'] = user_info
             if provider == 'slack':
                 username = user_info.get('profile', {}).get('email', '')
+                team_info = oauth_session.get(
+                    team_info_url(username)[provider]).json()
+                team_id = team_info.get('team', {}).get('id', '')
+                if team_id != os.environ.get('SLACK_SUNCAT_TEAM_ID'):
+                    return flask.redirect(
+                        flask.url_for('.init')
+                    )
+
+                session.setdefault('user_info', {}) \
+                       .setdefault('profile', {}) \
+                       .setdefault('picture', user_info.get('profile', {}).get('image_72'))
+
+
+
+            elif provider == 'google':
+                session.pop('user_info')
+                session.setdefault('user_info', {}) \
+                       .setdefault('profile', user_info)
             else:
-                username = ''
-            team_info = oauth_session.get(
-                team_info_url(username)[provider]).json()
-            team_id = team_info.get('team', {}).get('id', '')
-            if team_id != os.environ.get('SLACK_SUNCAT_TEAM_ID'):
                 return flask.redirect(
                     flask.url_for('.init')
                 )
@@ -544,8 +539,8 @@ def delete():
 @upload.route('/release', methods=['POST', 'GET'])
 def release():
     if auth_required(f, session=flask.session):
-        print("FLASK VALUES")
-        print(flask.request.get_json())
+        log.debug("FLASK VALUES")
+        log.debug(flask.request.get_json())
         params = flask.request.get_json()
         endorser = params.get('userInfo', {}).get('username', '')
         endorser_email = params.get('userInfo',{}).get('email', '')
@@ -576,8 +571,8 @@ It should appear soon under https://www.catalysis-hub.org/publications/{pub_id}.
 @upload.route('/endorse', methods=['POST', 'GET'])
 def endorse():
     if auth_required(f, session=flask.session):
-        print("FLASK VALUES")
-        print(flask.request.get_json())
+        log.debug("FLASK VALUES")
+        log.debug(flask.request.get_json())
         params = flask.request.get_json()
         endorser = params.get('userInfo', {}).get('username', '')
         endorser_email = params.get('userInfo',{}).get('email', '')
