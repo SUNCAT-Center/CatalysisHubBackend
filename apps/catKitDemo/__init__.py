@@ -31,6 +31,8 @@ import apps.utils.gas_phase_references
 
 import catkit
 import catkit.gen.surface
+from apps.catlearn.atomistic import predict_catkit_demo
+
 
 catKitDemo = flask.Blueprint('catKitDemo', __name__)
 
@@ -61,6 +63,7 @@ VALID_OUT_FORMATS = [
     "nwchem",
     "proteindatabank",
     "py",
+    "traj",
     "turbomole",
     "v-sim",
     "vasp",
@@ -198,7 +201,7 @@ def generate_slab_cif(request=None, return_atoms=False):
                       ],
         layers=layers,
         fixed=fixed,
-        #fix_stoichiometry=stoichiometry,
+        # fix_stoichiometry=stoichiometry,
         attach_graph=False,
     )
     terminations = Gen.get_unique_terminations()
@@ -234,7 +237,8 @@ def generate_slab_cif(request=None, return_atoms=False):
     return flask.jsonify({
         'version': VERSION,
         'images': [mem_file.getvalue() for mem_file in mem_files],
-        'input': [input_mem_file.getvalue() for input_mem_file in input_mem_files],
+        'input': [input_mem_file.getvalue() for
+                  input_mem_file in input_mem_files],
         'n_terminations': n_terminations,
     })
 
@@ -426,6 +430,11 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
     molecule_images = []
 
     if return_atoms:
+
+        # Gaussian process regression model predictions.
+        gp_mean, gp_sigma = predict_catkit_demo(atoms_objects)
+        print("atomistic catlearn performed.")
+
         return ({
             'version': VERSION,
             'data': (sites_list),
@@ -435,7 +444,9 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
             'site_types': site_types,
             'site_names': site_names,
             'altLabels': alt_labels,
-            'error': error_message
+            'error': error_message,
+            'gp_mean': gp_mean,
+            'gp_sigma': gp_sigma,
         })
     else:
         return flask.jsonify({

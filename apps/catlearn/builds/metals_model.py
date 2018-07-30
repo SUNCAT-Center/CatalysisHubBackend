@@ -5,11 +5,19 @@ from __future__ import division
 import time
 import numpy as np
 
+from sklearn.preprocessing import Imputer
+
 from catlearn.preprocess.clean_data import clean_infinite, clean_variance
 from catlearn.regression import GaussianProcess
 from catlearn.regression.gpfunctions import io as gp_io
 
-data = np.load('apps/catlearn/raw_data/metals_train.npy')
+
+data_fname = 'apps/catlearn/raw_data/metals_train.npy'
+model_fname = 'apps/catlearn/models/metals_catlearn_gp'
+clean_index_name = 'apps/catlearn/train_data/metals_clean_index.npy'
+clean_median = 'apps/catlearn/train_data/metals_clean_feature_median.npy'
+
+data = np.load(data_fname)
 train_target = data[:, -1]
 
 finite = clean_infinite(data[:, :-1])
@@ -20,6 +28,10 @@ clean_index = np.intersect1d(finite['index'],
 
 train_data = data[:, clean_index]
 
+impute = Imputer(missing_values="NaN", strategy='median')
+impute.fit(train_data)
+clean_feature_median = np.save(clean_median, impute.statistics_)
+
 print(np.shape(train_data), np.shape(train_target))
 
 kdict = {'gk': {'type': 'gaussian',
@@ -29,15 +41,16 @@ kdict = {'gk': {'type': 'gaussian',
 
 
 st = time.time()
-print('train model')
+print('Training model...')
 gp = GaussianProcess(
-    train_fp=train_data[:50, :], train_target=train_target[:50],
+    train_fp=train_data[:300, :], train_target=train_target[:300],
     kernel_dict=kdict,
     regularization=1e-1, optimize_hyperparameters=True, scale_data=True)
-print('trained {}'.format(time.time() - st))
+print('Trained model in {}'.format(time.time() - st))
 
 gp.update_data(train_data, train_target=train_target)
 
-gp.clean_index = clean_index
 
-gp_io.write('metals_catlearn_gp', gp)
+clean_index = np.save(clean_index_name, clean_index)
+
+gp_io.write(model_fname, gp)

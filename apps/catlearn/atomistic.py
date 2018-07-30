@@ -1,16 +1,21 @@
 """
 Attach CatLearn adsorption energy predictions to CatKitDemo.
 """
+import numpy as np
+
 from sklearn.preprocessing import Imputer
 
-from apps.catKitDemo import get_adsorption_sites
 from catlearn.fingerprint.adsorbate_prep import autogen_info
 from catlearn.fingerprint.setup import FeatureGenerator, default_fingerprinters
 from catlearn.regression.gpfunctions import io as gp_io
 
 
-def predict_catkit_demo(images,
-                        model='apps/catlearn/models/catkit_catlearn_gp'):
+model_fname = 'apps/catlearn/models/metals_catlearn_gp'
+clean_index_name = 'apps/catlearn/train_data/metals_clean_index.npy'
+clean_median = 'apps/catlearn/train_data/metals_clean_feature_median.npy'
+
+
+def predict_catkit_demo(images):
     """Return a prediction of adsorption energies for structures generated with
     CatKitDemo.
 
@@ -21,11 +26,6 @@ def predict_catkit_demo(images,
     model : str
         Path and filename of Catlearn model pickle.
     """
-    data = get_adsorption_sites(request=None,
-                                return_atoms=True,
-                                place_holder=None)
-
-    images = data['images']
     images = autogen_info(images)
 
     gen = FeatureGenerator(nprocs=1)
@@ -53,13 +53,15 @@ def predict_catkit_demo(images,
                  gen.delta_energy]
     matrix = gen.return_vec(images, train_fpv)
 
-    gp = gp_io.read(model)
-    feature_index = gp.feature_index
+    gp = gp_io.read(model_fname)
+    feature_index = np.load(clean_index_name)
+    clean_feature_median = np.load(clean_median)
 
-    impute = Imputer(missing_values="NaN", strategy='mean')
-    impute.transform(matrix[:, feature_index])
+    impute = Imputer(missing_values="NaN", strategy='median')
+    impute.statistics_ = clean_feature_median
+    new_data = impute.transform(matrix[:, feature_index])
 
-    prediction = gp.predict(matrix[:, feature_index],
+    prediction = gp.predict(new_data,
                             get_validation_error=False,
                             get_training_error=False,
                             uncertainty=True)
