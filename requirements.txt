@@ -1,7 +1,7 @@
 # DO NOT EDIT requirements.txt DIRECTLY OR ADD IT TO VERSION CONTROL
 # It will be overwritten in the install progress
 # Add new packages in requirements.template instead.
-ase==3.15.0
+ase==3.16.0
 backports.functools-lru-cache==1.4
 git+https://github.com/kirstenwinther/CatKit.git@72847fea61ec7828e1eea710da96e227cb8e8617#egg=catkit
 git+https://github.com/SUNCAT-Center/CatLearn.git@5093b5673772d5ef63ce1221e87040b3f2843b87#egg=catlearn
@@ -48,5 +48,6 @@ singledispatch==3.4.0.3
 six==1.11.0
 SQLAlchemy==1.1.14
 typing==3.6.2
+tqdm==4.19.5
 urwid==1.3.1
 Werkzeug==0.12.2
