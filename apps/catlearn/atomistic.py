@@ -12,7 +12,7 @@ from catlearn.regression.gpfunctions import io as gp_io
 
 model_fname = 'apps/catlearn/models/metals_catlearn_gp'
 clean_index_name = 'apps/catlearn/train_data/metals_clean_index.npy'
-clean_median = 'apps/catlearn/train_data/metals_clean_feature_median.npy'
+clean_mean = 'apps/catlearn/train_data/metals_clean_feature_mean.npy'
 
 
 def predict_catkit_demo(images):
@@ -55,10 +55,10 @@ def predict_catkit_demo(images):
 
     gp = gp_io.read(model_fname)
     feature_index = np.load(clean_index_name)
-    clean_feature_median = np.load(clean_median)
+    clean_feature_mean = np.load(clean_mean)
 
-    impute = Imputer(missing_values="NaN", strategy='median')
-    impute.statistics_ = clean_feature_median
+    impute = Imputer(missing_values="NaN", strategy='mean')
+    impute.statistics_ = clean_feature_mean
     new_data = impute.transform(matrix[:, feature_index])
 
     prediction = gp.predict(new_data,
