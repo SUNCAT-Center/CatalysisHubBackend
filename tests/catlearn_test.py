@@ -8,6 +8,7 @@ def catlearn_test():
     images = []
     atoms = fcc111('Pt', (2, 2, 3))
     add_adsorbate(atoms, 'C', 2.)
+    atoms.info['key_value_pairs'] = {'species': 'C'}
     tags = atoms.get_tags()
     tags[-1] = -1
     tags = atoms.set_tags(tags)
@@ -15,6 +16,7 @@ def catlearn_test():
     images.append(atoms)
     atoms = fcc111('Ag', (2, 2, 3))
     add_adsorbate(atoms, 'C', 2.)
+    atoms.info['key_value_pairs'] = {'species': 'C'}
     tags = atoms.get_tags()
     tags[-1] = -1
     tags = atoms.set_tags(tags)

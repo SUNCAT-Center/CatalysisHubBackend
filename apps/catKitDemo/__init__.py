@@ -322,7 +322,6 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None,
 
     in_mem_files = []
     sites_list = []
-    alt_labels = []
     cif_images = []
     input_images = []
     equations = []
@@ -388,7 +387,6 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None,
         old_n_bonds = n_bonds
         site_types.append(n_bonds)
         site_names.append(n_bonds)
-        alt_labels.append({})
         site_name = '{_site_name}{site_counter}'.format(**locals())
         equation = 'star@{site_name}_{reactants}__' + \
             '{adsorbate}star@{site_name}'.format(**locals())
@@ -416,6 +414,7 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None,
     else:
         predictions = {}
 
+    alt_labels = [{}]
     if return_atoms:
         dictionary = {
             'version': VERSION,
