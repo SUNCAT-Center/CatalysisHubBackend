@@ -23,7 +23,7 @@ def catlearn_test():
     images.append(atoms)
 
     # Make prediction.
-    y, sigma = predict_catkit_demo(images)
+    dictionary = predict_catkit_demo(images)
 
-    assert not np.isnan(y).all()
-    assert not np.isnan(sigma).all()
+    assert not np.isnan(dictionary['mean']).all()
+    assert not np.isnan(dictionary['uncertainty']).all()
