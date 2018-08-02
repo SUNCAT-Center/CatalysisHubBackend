@@ -5,6 +5,8 @@ import numpy as np
 
 from sklearn.preprocessing import Imputer
 
+import ase.atoms
+
 from catlearn.fingerprint.adsorbate_prep import autogen_info
 from catlearn.fingerprint.setup import FeatureGenerator, default_fingerprinters
 from catlearn.regression.gpfunctions import io as gp_io
@@ -13,6 +15,8 @@ from catlearn.regression.gpfunctions import io as gp_io
 model_fname = 'apps/catlearn/models/metals_catlearn_gp'
 clean_index_name = 'apps/catlearn/train_data/metals_clean_index.npy'
 clean_mean = 'apps/catlearn/train_data/metals_clean_feature_mean.npy'
+
+gp = gp_io.read(model_fname)
 
 
 def predict_catkit_demo(images):
@@ -53,7 +57,6 @@ def predict_catkit_demo(images):
                  gen.delta_energy]
     matrix = gen.return_vec(images, train_fpv)
 
-    gp = gp_io.read(model_fname)
     feature_index = np.load(clean_index_name)
     clean_feature_mean = np.load(clean_mean)
 
@@ -66,4 +69,21 @@ def predict_catkit_demo(images):
                             get_training_error=False,
                             uncertainty=True)
 
-    return prediction['prediction'], prediction['uncertainty']
+    model_ref = {'H': 'H2',
+                 'O': 'H2O, H2',
+                 'C': 'CH4, H2',
+                 'S': 'H2S, H2',
+                 'Cl': 'Cl2'}
+
+    # Make list of strings showing the references.
+    display_ref = []
+    for atoms in images:
+        initial_state = [model_ref[s] for s in
+                         ase.atoms.string2symbols(
+                                 atoms.info['key_value_pairs']['species'])]
+        display_ref.append('*, ' + ', '.join(list(np.unique(initial_state))))
+
+    output = {'mean': list(prediction['prediction']),
+              'uncertainty': list(prediction['uncertainty']),
+              'references': display_ref}
+    return output
