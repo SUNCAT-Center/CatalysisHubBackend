@@ -71,17 +71,19 @@ def predict_catkit_demo(images):
 
     model_ref = {'H': 'H2',
                  'O': 'H2O, H2',
-                 'C': 'CH4, H2',
-                 'S': 'H2S, H2',
-                 'Cl': 'Cl2'}
+                 'C': 'CH4, H2'}
 
     # Make list of strings showing the references.
     display_ref = []
     for atoms in images:
-        initial_state = [model_ref[s] for s in
-                         ase.atoms.string2symbols(
-                                 atoms.info['key_value_pairs']['species'])]
-        display_ref.append('*, ' + ', '.join(list(np.unique(initial_state))))
+        try:
+            initial_state = [model_ref[s] for s in
+                             ase.atoms.string2symbols(
+                                     atoms.info['key_value_pairs']['species'])]
+            display_ref.append(
+                    '*, ' + ', '.join(list(np.unique(initial_state))))
+        except KeyError:
+            return {}
 
     output = {'mean': list(prediction['prediction']),
               'uncertainty': list(prediction['uncertainty']),
