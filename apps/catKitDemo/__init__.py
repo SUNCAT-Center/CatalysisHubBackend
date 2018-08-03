@@ -248,7 +248,8 @@ def generate_slab_cif(request=None, return_atoms=False):
 @catKitDemo.route('/get_adsorption_sites', methods=['GET', 'POST'])
 def get_adsorption_sites(request=None, return_atoms=False, place_holder=None,
                          make_predictions=False):
-    """Returns a dictionary containing slab-adsorbate structures and metadata.
+    """Attach adsorbates to a slab and return a dictionary with structures and
+    meta data.
     """
     request = flask.request if request is None else request
     request.values = dict((request.get_json() or {}),
@@ -309,16 +310,46 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None,
         vacuum=vacuum,
         # fix_stoichiometry=stoichiometry,
     )
+
+    # Define slab parameters.
     slab = gen.get_slab(size=(unit_cell_size, unit_cell_size))
+
+    # Enumerate sites.
     sites = gen.adsorption_sites(
             slab,
             symmetry_reduced=True)
     sites = [list(sites[0]), list(sites[1])]
 
+    # Attach adsorbates.
     builder = catkit.gen.adsorption.Builder(slab)
     adsorbate = catkit.build.molecule(species)[0]
     adsorbate.set_tags([-1])
     atoms_objects = builder.add_adsorbate(adsorbate, index=-1)
+
+    # Create gas phase reference structures.
+    symbols = apps.utils.gas_phase_references.molecules2symbols(
+        [species])
+    references = \
+        apps.utils.gas_phase_references.construct_reference_system(
+                symbols)
+    stoichiometry = \
+        apps.utils.gas_phase_references.get_atomic_stoichiometry(
+            references)
+    stoichiometry_factors = \
+        apps.utils.gas_phase_references.get_stoichiometry_factors(
+            [species], references)
+
+    reference_molecules = {}
+    molecules = []
+    for molecule_name in [x[1] for x in references]:
+        molecule = ase.build.molecule(molecule_name)
+        molecule.cell = np.diag(GAS_PHASE_CELL)
+
+        with StringIO.StringIO() as f:
+            #  Castep file writer needs name
+            f.name = 'Catalysis-Hub.Org Structure'
+            ase.io.write(f, molecule, format=input_format)
+            reference_molecules[molecule_name] = f.getvalue()
 
     in_mem_files = []
     sites_list = []
@@ -338,37 +369,12 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None,
         if site_type != sites[1][atoms_i] and site_type != 'all':
             continue
 
-        reference_molecules = {}
-
         # Structures for DFT calculations.
         with StringIO.StringIO() as f:
             #  Castep file writer needs name
             f.name = 'Catalysis-Hub.Org Structure'
             ase.io.write(f, atoms, format=input_format)
             input_images.append(f.getvalue())
-
-        symbols = apps.utils.gas_phase_references.molecules2symbols(
-            [species])
-        references = \
-            apps.utils.gas_phase_references.construct_reference_system(
-                    symbols)
-        stoichiometry = \
-            apps.utils.gas_phase_references.get_atomic_stoichiometry(
-                references)
-        stoichiometry_factors = \
-            apps.utils.gas_phase_references.get_stoichiometry_factors(
-                [species], references)
-
-        molecules = []
-        for molecule_name in [x[1] for x in references]:
-            molecule = ase.build.molecule(molecule_name)
-            molecule.cell = np.diag(GAS_PHASE_CELL)
-
-            with StringIO.StringIO() as f:
-                #  Castep file writer needs name
-                f.name = 'Catalysis-Hub.Org Structure'
-                ase.io.write(f, molecule, format=input_format)
-                reference_molecules[molecule_name] = f.getvalue()
 
         reactants = []
         gas_phase_molecules = set()
@@ -468,7 +474,6 @@ def generate_dft_input(request=None, return_data=False):
         '"year": "",\n'
         '"number": "",\n'
         '"pages": ""}\n')
-#
 
     data = []
 

@@ -16,6 +16,7 @@ model_fname = 'apps/catlearn/models/metals_catlearn_gp'
 clean_index_name = 'apps/catlearn/train_data/metals_clean_index.npy'
 clean_mean = 'apps/catlearn/train_data/metals_clean_feature_mean.npy'
 
+# Load pickled Gaussian process regression model.
 gp = gp_io.read(model_fname)
 
 
@@ -30,6 +31,22 @@ def predict_catkit_demo(images):
     model : str
         Path and filename of Catlearn model pickle.
     """
+    model_ref = {'H': 'H2',
+                 'O': 'H2O, H2',
+                 'C': 'CH4, H2'}
+
+    # Make list of strings showing the references.
+    display_ref = []
+    for atoms in images:
+        try:
+            initial_state = [model_ref[s] for s in
+                             ase.atoms.string2symbols(
+                                     atoms.info['key_value_pairs']['species'])]
+        except KeyError:
+            return {}
+        display_ref.append(
+                '*, ' + ', '.join(list(np.unique(initial_state))))
+
     images = autogen_info(images)
 
     gen = FeatureGenerator(nprocs=1)
@@ -68,22 +85,6 @@ def predict_catkit_demo(images):
                             get_validation_error=False,
                             get_training_error=False,
                             uncertainty=True)
-
-    model_ref = {'H': 'H2',
-                 'O': 'H2O, H2',
-                 'C': 'CH4, H2'}
-
-    # Make list of strings showing the references.
-    display_ref = []
-    for atoms in images:
-        try:
-            initial_state = [model_ref[s] for s in
-                             ase.atoms.string2symbols(
-                                     atoms.info['key_value_pairs']['species'])]
-            display_ref.append(
-                    '*, ' + ', '.join(list(np.unique(initial_state))))
-        except KeyError:
-            return {}
 
     output = {'mean': list(prediction['prediction']),
               'uncertainty': list(prediction['uncertainty']),
