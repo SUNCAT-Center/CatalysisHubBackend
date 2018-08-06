@@ -20,17 +20,21 @@ import statistics
 
 import flask
 
+import mendeleev
+
 import ase.atoms
 import ase.io
 import ase.build
 import ase.io.formats
-import mendeleev
+import ase.data
 
+import catkit.build
+import catkit.gen.adsorption
+import catkit.gen.surface
 
 import apps.utils.gas_phase_references
+from apps.catlearn.atomistic import predict_catkit_demo
 
-import catkit
-import catkit.gen.surface
 
 catKitDemo = flask.Blueprint('catKitDemo', __name__)
 
@@ -61,6 +65,7 @@ VALID_OUT_FORMATS = [
     "nwchem",
     "proteindatabank",
     "py",
+    "traj",
     "turbomole",
     "v-sim",
     "vasp",
@@ -176,7 +181,7 @@ def generate_slab_cif(request=None, return_atoms=False):
     fixed = int(slab_params.get('fixed', 2))
     axis = int(slab_params.get('axis', 2))
     vacuum = float(slab_params.get('vacuum', 10.))
-    stoichiometry = bool(slab_params.get('stoichiometry', False))
+    # stoichiometry = bool(slab_params.get('stoichiometry', False))
     termination = int(slab_params.get('termination', 0))
     input_format = str(slab_params.get('format', 'cif') or 'cif')
     all_terminations = slab_params.get('termination', 'false') == 'true'
@@ -198,7 +203,7 @@ def generate_slab_cif(request=None, return_atoms=False):
                       ],
         layers=layers,
         fixed=fixed,
-        #fix_stoichiometry=stoichiometry,
+        # fix_stoichiometry=stoichiometry,
         attach_graph=False,
     )
     terminations = Gen.get_unique_terminations()
@@ -234,13 +239,18 @@ def generate_slab_cif(request=None, return_atoms=False):
     return flask.jsonify({
         'version': VERSION,
         'images': [mem_file.getvalue() for mem_file in mem_files],
-        'input': [input_mem_file.getvalue() for input_mem_file in input_mem_files],
+        'input': [input_mem_file.getvalue() for
+                  input_mem_file in input_mem_files],
         'n_terminations': n_terminations,
     })
 
 
 @catKitDemo.route('/get_adsorption_sites', methods=['GET', 'POST'])
-def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
+def get_adsorption_sites(request=None, return_atoms=False, place_holder=None,
+                         make_predictions=False):
+    """Attach adsorbates to a slab and return a dictionary with structures and
+    meta data.
+    """
     request = flask.request if request is None else request
     request.values = dict((request.get_json() or {}),
                           **request.values.to_dict(), )
@@ -265,9 +275,7 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
 
     bulk_cif = str(request.values.get(
         'bulk_cif', (json.loads(generate_bulk_cif(request).data)['cifdata'])))
-    cif_images = json.loads(generate_slab_cif(
-        request
-    ).data)['images']
+    # cif_images = json.loads(generate_slab_cif(request).data)['images']
 
     if isinstance(request.values.get('adsorbateParams', '{}'), str):
         adsorbate_params = json.loads(
@@ -278,9 +286,9 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
     if place_holder is None:
         place_holder = str(adsorbate_params.get('placeHolder', 'empty'))
 
-    adsorbate = str(adsorbate_params.get('adsorbate', 'O'))
-
+    species = str(adsorbate_params.get('adsorbate', 'O'))
     site_type = str(adsorbate_params.get('siteType', 'all'))
+    make_predictions = bool(adsorbate_params.get('callCatLearn', False))
 
     # create bulk atoms
     mem_file = StringIO.StringIO()
@@ -300,133 +308,121 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
         layers=layers,
         fixed=fixed,
         vacuum=vacuum,
-        #fix_stoichiometry=stoichiometry,
-        attach_graph=False,
+        # fix_stoichiometry=stoichiometry,
     )
 
+    # Define slab parameters.
+    slab = gen.get_slab(size=(unit_cell_size, unit_cell_size))
+
+    # Enumerate sites.
+    sites = gen.adsorption_sites(
+            slab,
+            symmetry_reduced=True)
+    sites = [list(sites[0]), list(sites[1])]
+
+    # Attach adsorbates.
+    builder = catkit.gen.adsorption.Builder(slab)
+    adsorbate = catkit.build.molecule(species)[0]
+    adsorbate.set_tags([-1])
+    atoms_objects = builder.add_adsorbate(adsorbate, index=-1)
+
+    # Create gas phase reference structures.
+    symbols = apps.utils.gas_phase_references.molecules2symbols(
+        [species])
+    references = \
+        apps.utils.gas_phase_references.construct_reference_system(
+                symbols)
+    stoichiometry = \
+        apps.utils.gas_phase_references.get_atomic_stoichiometry(
+            references)
+    stoichiometry_factors = \
+        apps.utils.gas_phase_references.get_stoichiometry_factors(
+            [species], references)
+
+    reference_molecules = {}
+    molecules = []
+    for molecule_name in [x[1] for x in references]:
+        molecule = ase.build.molecule(molecule_name)
+        molecule.cell = np.diag(GAS_PHASE_CELL)
+
+        with StringIO.StringIO() as f:
+            #  Castep file writer needs name
+            f.name = 'Catalysis-Hub.Org Structure'
+            ase.io.write(f, molecule, format=input_format)
+            reference_molecules[molecule_name] = f.getvalue()
+
     in_mem_files = []
-    images = []
-    for cif_image in cif_images:
-        mem_file = StringIO.StringIO()
-        mem_file.write(cif_image)
-        mem_file.seek(0)
-        atoms = ase.io.read(mem_file, format='cif')
-        images.append(atoms)
-
     sites_list = []
-
-    alt_labels = []
     cif_images = []
     input_images = []
     equations = []
     site_names = []
     site_types = []
     error_message = ''
-    atoms_objects = []
-    for atoms_i, atoms in enumerate(copy.deepcopy(images)):
-        gen = catkit.gen.surface.SlabGenerator(
-            bulk=bulk_atoms,
-            miller_index=[miller_x, miller_y, miller_z, ],
-            layers=layers,
-            fixed=fixed,
-            vacuum=vacuum,
-            #fix_stoichiometry=stoichiometry,
-            attach_graph=False,
-        )
-        atoms = gen.get_slab(size=(unit_cell_size, unit_cell_size))
-        sites = gen.adsorption_sites(
-            atoms,
-            symmetry_reduced=True,
-        )
+    old_n_bonds = ''
+    site_counter = 0
+    for atoms_i, atoms in enumerate(atoms_objects):
 
-        label_index = 0
-        alt_labels.append({})
-        sites = [list(sites[0]), list(sites[1])]
+        # Set adsorbate metadata for CatLearn.
+        atoms.info['key_value_pairs'] = {'species': species}
 
-        reference_molecules = {}
+        if site_type != sites[1][atoms_i] and site_type != 'all':
+            continue
 
-        old_connectivity = ''
-        site_counter = 0
-        for i, (site, connectivity) in enumerate(zip(*sites)):
+        # Structures for DFT calculations.
+        with StringIO.StringIO() as f:
+            #  Castep file writer needs name
+            f.name = 'Catalysis-Hub.Org Structure'
+            ase.io.write(f, atoms, format=input_format)
+            input_images.append(f.getvalue())
 
-            site_counter = site_counter + 1 if connectivity == old_connectivity else 0
-            old_connectivity = connectivity
+        reactants = []
+        gas_phase_molecules = set()
+        for molecule, factor in stoichiometry_factors[
+                species].items():
+            reactants.append(
+                '{factor}{molecule}gas'.format(**locals()))
+            gas_phase_molecules.add(molecule)
 
-            adsorbate_site_label = connectivity
-            site_types.append(adsorbate_site_label)
-            site_names.append(connectivity)
-            if site_type != 'all' and str(
-                    adsorbate_site_label) != str(site_type):
-                continue
-            atoms = gen.get_slab(size=(unit_cell_size, unit_cell_size))
-            atoms += ase.atom.Atom(adsorbate, site + [0., 0., 1.5])
-            if place_holder != 'empty':
-                for place_holder_index in range(len(sites[0])):
-                    if place_holder_index != i:
-                        atoms += ase.atom.Atom(
-                            place_holder,
-                            sites[0][place_holder_index] + [0.,
-                                                            0.,
-                                                            1.5])
+        reactants = '_'.join(reactants)
+        n_bonds = sites[1][atoms_i]
+        _site_name = SITE_NAMES[n_bonds]
 
-            if return_atoms:
-                atoms_objects.append(atoms)
-            else:
+        if n_bonds != old_n_bonds:
+            site_counter += 1
+        old_n_bonds = n_bonds
+        site_types.append(n_bonds)
+        site_names.append(n_bonds)
+        site_name = '{_site_name}{site_counter}'.format(**locals())
+        equation = 'star@{site_name}_{reactants}__' + \
+            '{adsorbate}star@{site_name}'.format(**locals())
+        equations.append(equation)
 
-                symbols = apps.utils.gas_phase_references.molecules2symbols(
-                    [adsorbate])
-                references = apps.utils.gas_phase_references.construct_reference_system(
-                    symbols)
-                stoichiometry = apps.utils.gas_phase_references.get_atomic_stoichiometry(
-                    references)
-                stoichiometry_factors = \
-                    apps.utils.gas_phase_references.get_stoichiometry_factors(
-                        [adsorbate], references)
+        # Add placeholders.
+        atoms = copy.deepcopy(atoms)
+        if place_holder != 'empty':
+            for i, (site, n_bonds) in enumerate(zip(*sites)):
+                if atoms_i != i:
+                    atoms += ase.atom.Atom(
+                        place_holder,
+                        sites[0][i] + [0., 0., 1.5])
+        # Structures for the viewer on catalysishub.
+        if not return_atoms:
+            with StringIO.StringIO() as f:
+                #  Castep file writer needs name
+                f.name = 'Catalysis-Hub.Org Structure'
+                ase.io.write(f, atoms, format='cif')
+                cif_images.append(f.getvalue())
 
-                molecules = []
-                for molecule_name in [x[1] for x in references]:
-                    molecule = ase.build.molecule(molecule_name)
-                    molecule.cell = np.diag(GAS_PHASE_CELL)
+    if make_predictions:
+        # Gaussian process regression model predictions on adsorption energies.
+        predictions = predict_catkit_demo(atoms_objects)
+    else:
+        predictions = {}
 
-                    with StringIO.StringIO() as f:
-                        #  Castep file writer needs name
-                        f.name = 'Catalysis-Hub.Org Structure'
-                        ase.io.write(f, molecule, format=input_format)
-                        reference_molecules[molecule_name] = f.getvalue()
-
-                reactants = []
-                gas_phase_molecules = set()
-                for molecule, factor in stoichiometry_factors[
-                        adsorbate].items():
-                    reactants.append(
-                        '{factor}{molecule}gas'.format(**locals()))
-                    gas_phase_molecules.add(molecule)
-
-                reactants = '_'.join(reactants)
-                #site_name = site_names[image_i]
-                _site_name = SITE_NAMES[connectivity]
-                site_name = '{_site_name}{site_counter}'.format(**locals())
-                equation = 'star@{site_name}_{reactants}__{adsorbate}star@{site_name}'.format(
-                    **locals())
-
-                equations.append(equation)
-
-                with StringIO.StringIO() as f:
-                    #  Castep file writer needs name
-                    f.name = 'Catalysis-Hub.Org Structure'
-                    ase.io.write(f, atoms, format=input_format)
-                    input_images.append(f.getvalue())
-
-                with StringIO.StringIO() as f:
-                    #  Castep file writer needs name
-                    f.name = 'Catalysis-Hub.Org Structure'
-                    ase.io.write(f, atoms, format='cif')
-                    cif_images.append(f.getvalue())
-
-    molecule_images = []
-
+    alt_labels = [{}]
     if return_atoms:
-        return ({
+        dictionary = {
             'version': VERSION,
             'data': (sites_list),
             'images': atoms_objects,
@@ -435,21 +431,23 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None):
             'site_types': site_types,
             'site_names': site_names,
             'altLabels': alt_labels,
-            'error': error_message
-        })
+            'error': error_message}
+        dictionary.update(predictions)
+        return dictionary
     else:
-        return flask.jsonify({
+        dictionary = {
             'version': VERSION,
             'data': (sites_list),
-            'cifImages': cif_images,
+            'cifImages': cif_images,  # Used by the viewer.
             'inputImages': input_images,
             'equations': equations,
             'molecules': reference_molecules,
             'site_types': site_types,
             'site_names': site_names,
             'altLabels': alt_labels,
-            'error': error_message
-        })
+            'error': error_message}
+        dictionary.update(predictions)
+        return flask.jsonify(dictionary)
 
 
 @catKitDemo.route('/generate_dft_input', methods=['GET', 'POST'])
@@ -476,7 +474,6 @@ def generate_dft_input(request=None, return_data=False):
         '"year": "",\n'
         '"number": "",\n'
         '"pages": ""}\n')
-#
 
     data = []
 
@@ -561,16 +558,17 @@ def generate_dft_input(request=None, return_data=False):
 
             reactants = '_'.join(reactants)
             site_name = site_names[image_i]
-            equation = 'star@{site_name}_{reactants}__{adsorbate}star@{site_name}'.format(
-                **locals())
+            equation = 'star@{site_name}_{reactants}__' + \
+                '{adsorbate}star@{site_name}'.format(**locals())
             site_counter[site_name] = site_counter.get(site_name, 0) + 1
             count = site_counter[site_name]
             adsorbates = '{adsorbate}star{site_name}.{count}'.format(
                 **locals())
 
             adsorbates_strings.append(adsorbates)
-            slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{composition}__{structure}/{facet}/{equation}'.format(
-                **locals())
+            slab_path = '{calcstr}/{dft_params[calculator]}/' + \
+                '{dft_params[functional]}/{composition}__{structure}/' + \
+                '{facet}/{equation}'.format(**locals())
 
             if return_data:
                 calculation_data.setdefault(
@@ -611,12 +609,13 @@ def generate_dft_input(request=None, return_data=False):
                         '{factor}{molecule}gas'.format(**locals()))
                 reactants = '_'.join(reactants)
                 site_name = site_names[image_i]
-                equation = 'star{site_name}_{reactants}__{adsorbate}star{site_name}'.format(
-                    **locals())
+                equation = 'star{site_name}_{reactants}__' + \
+                    '{adsorbate}star{site_name}'.format(**locals())
 
                 adsorbates = '{adsorbate}star{site_name}'.format(**locals())
-                slab_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{composition}__{structure}/{facet}/star.{SUFFIX}'.format(
-                    **locals())
+                slab_path = '{calcstr}/{dft_params[calculator]}/' + \
+                    '{dft_params[functional]}/{composition}__{structure}/' + \
+                    '{facet}/star.{SUFFIX}'.format(**locals())
 
                 if slab_path not in zf.namelist():
                     if return_data:
@@ -652,11 +651,12 @@ def generate_dft_input(request=None, return_data=False):
                 reactants.append('{factor}{molecule}gas'.format(**locals()))
             reactants = '_'.join(reactants)
             site_name = site_names[image_i]
-            equation = 'star{site_name}_{reactants}__{adsorbate}star{site_name}'.format(
-                **locals())
+            equation = 'star{site_name}_{reactants}__' + \
+                '{adsorbate}star{site_name}'.format(**locals())
 
-            bulk_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/{composition}__{structure}/bulk.{SUFFIX}'.format(
-                **locals())
+            bulk_path = '{calcstr}/{dft_params[calculator]}/' + \
+                '{dft_params[functional]}/{composition}__{structure}/' + \
+                'bulk.{SUFFIX}'.format(**locals())
 
             if bulk_path not in zf.namelist():
                 if return_data:
@@ -687,8 +687,9 @@ def generate_dft_input(request=None, return_data=False):
         for molecule_name in gas_phase_molecules:
             molecule = ase.build.molecule(molecule_name)
             molecule.cell = np.diag(GAS_PHASE_CELL)
-            molecule_path = '{calcstr}/{dft_params[calculator]}/{dft_params[functional]}/gas/{molecule_name}_gas.{SUFFIX}'.format(
-                **locals())
+            molecule_path = '{calcstr}/{dft_params[calculator]}/' + \
+                '{dft_params[functional]}/gas/' + \
+                '{molecule_name}_gas.{SUFFIX}'.format(**locals())
 
             if molecule_path not in zf.namelist():
                 if return_data:
@@ -742,9 +743,8 @@ def convert_atoms(request=None):
         out_format = 'cif'
     if out_format not in VALID_OUT_FORMATS:
         return {
-            "error": "outFormat {outformat} is invalid. Should be on of {VALID_OUT_FORMATS}".format(
-                **locals()),
-        }
+            "error": "outFormat {outformat} is invalid." +
+            " Should be on of {VALID_OUT_FORMATS}".format(**locals())}
 
     with StringIO.StringIO() as in_file:
         in_file.write(cif)
