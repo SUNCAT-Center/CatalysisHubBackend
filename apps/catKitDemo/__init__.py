@@ -319,6 +319,9 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None,
             slab,
             symmetry_reduced=True)
     sites = [list(sites[0]), list(sites[1])]
+    print(sites)
+    print(sites[1])
+    print(type(sites[1][0]), type(site_type))
 
     # Attach adsorbates.
     builder = catkit.gen.adsorption.Builder(slab)
@@ -366,7 +369,7 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None,
         # Set adsorbate metadata for CatLearn.
         atoms.info['key_value_pairs'] = {'species': species}
 
-        if site_type != sites[1][atoms_i] and site_type != 'all':
+        if str(site_type) != str(sites[1][atoms_i]) and site_type != 'all':
             continue
 
         # Structures for DFT calculations.
@@ -388,11 +391,10 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None,
         n_bonds = sites[1][atoms_i]
         _site_name = SITE_NAMES[n_bonds]
 
+        # Prepare file names and display labels.
         if n_bonds != old_n_bonds:
             site_counter += 1
         old_n_bonds = n_bonds
-        site_types.append(n_bonds)
-        site_names.append(n_bonds)
         site_name = '{_site_name}{site_counter}'.format(**locals())
         equation = 'star@{site_name}_{reactants}__' + \
             '{adsorbate}star@{site_name}'.format(**locals())
@@ -428,8 +430,8 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None,
             'images': atoms_objects,
             'equations': equations,
             'molecules': reference_molecules,
-            'site_types': site_types,
-            'site_names': site_names,
+            'site_types': sites[1],
+            'site_names': sites[1],
             'altLabels': alt_labels,
             'error': error_message}
         dictionary.update(predictions)
@@ -442,8 +444,8 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None,
             'inputImages': input_images,
             'equations': equations,
             'molecules': reference_molecules,
-            'site_types': site_types,
-            'site_names': site_names,
+            'site_types': sites[1],
+            'site_names': sites[1],
             'altLabels': alt_labels,
             'error': error_message}
         dictionary.update(predictions)
