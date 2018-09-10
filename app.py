@@ -31,7 +31,7 @@ try:
 except ImportError as e:
     print('Catlearn not available: {e}'.format(e=e))
     traceback.print_exc()
-    atoml_blueprint = None
+    catlearn_blueprint = None
 
 try:
     from apps.activityMaps import activityMaps
