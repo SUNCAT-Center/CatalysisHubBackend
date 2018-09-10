@@ -1,15 +1,16 @@
 # DO NOT EDIT requirements.txt DIRECTLY OR ADD IT TO VERSION CONTROL
 # It will be overwritten in the install progress
 # Add new packages in requirements.template instead.
-ase==3.15.0
+ase==3.16.0
 backports.functools-lru-cache==1.4
 git+https://github.com/kirstenwinther/CatKit.git@72847fea61ec7828e1eea710da96e227cb8e8617#egg=catkit
-# git+https://github.com/SUNCAT-Center/CatLearn.git@beb84a3eabdab7912c7a2c345cd2e7804ec4a07b#egg=catlearn
+# git+https://github.com/SUNCAT-Center/CatLearn.git@06bbfd370306ae6ecbfee50fd48b5f0a6ff5ef31#egg=catlearn
 BulkEnumerator-0.0.2-cp36-cp36m-linux_x86_64.whl
 blinker==1.4
 click==6.7
 coverage==4.4.2
 cycler==0.10.0
+FireWorks==1.6.9
 Flask==0.12.2
 Flask-Cors==3.0.3
 Flask-GraphQL==1.4.1
@@ -21,6 +22,7 @@ graphql-core==2.0.dev20171009101843
 graphql-relay==0.4.5
 graphql-server-core==1.0.dev20170322001
 gunicorn==19.7.1
+h5py==2.7.1
 iso8601==0.1.12
 itsdangerous==0.24
 Jinja2==2.9.6
@@ -48,5 +50,6 @@ singledispatch==3.4.0.3
 six==1.11.0
 SQLAlchemy==1.1.14
 typing==3.6.2
+tqdm==4.19.5
 urwid==1.3.1
 Werkzeug==0.12.2
