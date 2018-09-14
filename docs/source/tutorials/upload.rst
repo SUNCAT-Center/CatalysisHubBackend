@@ -99,39 +99,32 @@ To learn about the make_folders command type::
 
 Then create a folder in your user-name, 'cd' into it and type::
 
-  cathub make_folders --create-template <TEMPLATE>
+  cathub make_folders --create-template TEMPLATE_NAME
 
-This will create a template (txt) file, that you should update with your publication and reaction info. The template should look similar to this::
+This will create a template (txt/yaml) file, that you should update with your publication and reaction info. The template should look similar to this::
 
-    title: "The Challenge of Electrochemical Ammonia Synthesis: A New Perspective on the Role of Nitrogen Scaling Relations"
-    authors: [Montoya, Joseph H., Tsai, Charlie, Vojvodic, Aleksandra, Norskov, Jens K.]
-    journal: ChemSusChem
-    volume: 8
-    number: 13
-    pages: 2140-2267
-    year: 2015
-    publisher: Wiley
-    doi: 10.1002/cssc.201500322
-    DFT_code: Quantum Espresso
-    DFT_functionals: [BEEF-vdW]
     reactions:
-    -   reactants: [0.5H2gas, star]
-	products: [Hstar@bridge]
-    -   reactants: [0.5H2gas, star]
-	products: [Hstar@fcc]
-    -   reactants: [0.5H2gas, star]
-	products: [Hstar@hollow]
-    -   reactants: [0.5H2gas, star]
-	products: [Hstar@ontop]
-    -   Reactants: [0.5N2gas, 0.5H2gas, star]
-	products: [NHstar@bridge]
-    -   reactants: [0.5N2gas, 0.5H2gas, star]
-	products: [NHstar@hollow]
-    -   reactants: [0.5N2gas, star]
-	products: [Nstar@hollow]
-    bulk_compositions: [Co]
-    crystal_structures: [fcc]
+    -   reactants: [2.0H2Ogas, -1.5H2gas, star]
+        products: [OOHstar@top]
+    -   reactants: [CCH3star@bridge]
+        products: [Cstar@hollow, CH3star@ontop]
+    -   reactants: [CH4gas, -0.5H2gas, star]
+        products: [CH3star@ontop]
+    journal: JACS
+    year: '2017'
+    number: '1'
+    crystal_structures: [fcc, hcp]
+    volume: '1'
+    DFT_functionals: [BEEF-vdW, HSE06]
+    authors: ['Doe, John', 'Einstein, Albert']
+    pages: 23-42
+    publisher: ACS
+    doi: 10.NNNN/....
+    title: Fancy title
+    bulk_compositions: [Pt]
+    DFT_code: Quantum Espresso
     facets: ['111']
+
 
 Consult :code:`cathub make_folders --help` again for detailed instructions on how to specify the types of reactions and surfaces.
 
