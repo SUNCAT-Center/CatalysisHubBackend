@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/mhoffman/CatAppBackend.svg?branch=feature_delete_dataset)](https://travis-ci.org/mhoffman/CatAppBackend)
-[![Coverage Status](https://coveralls.io/repos/github/mhoffman/CatAppBackend/badge.svg?branch=feature_delete_dataset)](https://coveralls.io/github/mhoffman/CatAppBackend?branch=feature_delete_dataset)
+[![Build Status](https://travis-ci.org/mhoffman/CatAppBackend.svg?branch=upstream.master)](https://travis-ci.org/mhoffman/CatAppBackend)
+[![Coverage Status](https://coveralls.io/repos/github/mhoffman/CatAppBackend/badge.svg?branch=upstream.master)](https://coveralls.io/github/mhoffman/CatAppBackend?branch=upstream.master)
 
 ## Flask GraphQL ASE DB Demo
 

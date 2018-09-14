@@ -48,11 +48,17 @@ And you should see a list of subcommands. If it's not working you probably have 
 
 Organizing data
 ....................
+
 You have two options for organizing your data:
 
 * cathub organize: For larger systematic datasets without reaction barriers, this approach will create folders and and arrange your data-files in the right location for you.
 
 * cathub make_folders: For smaller or more complicated datasets with reaction barriers, this method will only create your folders, and you will have to drop the files in the right location yourself.
+
+In either case no data will be uploaded to `catalysis-hub.org/publications <https://www.catalysis-hub.org/publications>`_ before you run `cathub db2server ...`.
+Once you uploaded data it will be held in a moderation stage which you can inspect yourself at `catalysis-hub.org/upload <https://www.catalysis-hub.org/upload>`_
+and delete yourself to iterate until all structures and energies look as expected. Once you are satisfied with your uploaded dataset there will be a "Release"
+button that will notify the platform administrator that the dataset is ready for release.
 
 cathub organize
 ................
