@@ -319,14 +319,11 @@ def get_adsorption_sites(request=None, return_atoms=False, place_holder=None,
             slab,
             symmetry_reduced=True)
     sites = [list(sites[0]), list(sites[1])]
-    print(sites)
-    print(sites[1])
-    print(type(sites[1][0]), type(site_type))
 
     # Attach adsorbates.
     builder = catkit.gen.adsorption.Builder(slab)
     adsorbate = catkit.build.molecule(species)[0]
-    adsorbate.set_tags([-1])
+    adsorbate.set_tags([-1] + [0] * (len(adsorbate) - 1))
     atoms_objects = builder.add_adsorbate(adsorbate, index=-1)
 
     # Create gas phase reference structures.
