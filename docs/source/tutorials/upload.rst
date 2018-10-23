@@ -14,31 +14,30 @@ If you're a member of the SUNCAT group, you can add your data to one of the fold
 
 Start by activating the corresponding virtualenv. On SHERLOCK2 ::
 
-  . /home/users/winther/data_catapp/CATKITENV/bin/activate
+  . /home/users/winther/data_catapp/CATHUBENV/bin/activate
 
 or on SUNCAT ::
 
-  . /nfs/slac/g/suncatfs/data_catapp/CATKITENV/bin/activate
+  . /nfs/slac/g/suncatfs/data_catapp/CATHUBENV/bin/activate
 
 
 
-to use the local installation of CatKit. You should see a `(CATKITENV)` at the beginning of your prompt now to indicate that all python script and libraries are first imported from the virtualenv. To return your shell to the previous state simply type::
+to use the local installation of CatHub. You should see a `(CATHUBENV)` at the beginning of your prompt now to indicate that all python script and libraries are first imported from the virtualenv. To return your shell to the previous state simply type::
 
   deactivate
 
 or log out. Now you can go straight to `cathub organize`_ .
 
-Alternatively you can install your own version of CatKit - see instructions below.
+Alternatively you can install your own version of CatHub - see instructions below.
 
 
-Installing CatKit
+Installing CatHub
 ...........................
-CatKit is set of computational tools for catalysis, that comes with a cli tool ``cathub`` that will be used to arrange your data into folders and submit your data to the server. To install CatKit, together with the ASE dependency, use pip::
+CatHub is a python module that is used to interface the Surface Reactions database of Catalysis-Hub, directly from a python script of the command line. CatHub will be used to arrange your data into folders and submit your data to the server. To install CatHub, together with the ASE dependency, use pip::
 
-  pip install --upgrade --user git+https://gitlab.com/ase/ase.git@database_lesstables#egg=ase-3.16.3b1
-  pip install --upgrade --user git+https://github.com/kirstenwinther/CatKit.git#egg=catkit
+  pip install git+https://github.com/kirstenwinther/CatHub.git#egg=cathub --upgrade --user --process-dependency-links
 
-which will install a developer version of ASE with an enhanced database module, CatKit and all their dependencies.
+which will install a developer version of ASE with an enhanced database module, CatHub and all their dependencies.
 
 To test that the cathub cli is working, start by typing::
 
