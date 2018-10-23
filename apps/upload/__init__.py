@@ -38,7 +38,7 @@ import api
 
 import sendgrid
 
-from catkit.hub.postgresql import CathubPostgreSQL
+from cathub.postgresql import CathubPostgreSQL
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
