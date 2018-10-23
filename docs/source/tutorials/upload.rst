@@ -96,7 +96,7 @@ If you, for example, have calculations with different facets, you can also split
 
 cathub make_folders
 ...................
-This tool will create the right folder structure for you, but you must dump your files yourself.
+An alternative to ``cathub organize``. This tool will create the right folder structure for you, but you must dump your files yourself.
 
 To learn about the make_folders command type::
 
