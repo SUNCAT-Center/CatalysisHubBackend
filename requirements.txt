@@ -4,7 +4,7 @@
 ase==3.16.0
 backports.functools-lru-cache==1.4
 catkit>=0.5.3
-git+https://github.com/SUNCAT-Center/CatLearn.git@be26b8fddff30aa54e703823b558ebb457dddb9f#egg=catlearn
+git+https://github.com/SUNCAT-Center/CatLearn.git@06bbfd370306ae6ecbfee50fd48b5f0a6ff5ef31#egg=catlearn
 git+https://github.com/SUNCAT-Center/CatHub.git#egg=cathub
 blinker==1.4
 click==6.7
