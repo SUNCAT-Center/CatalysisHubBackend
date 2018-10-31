@@ -27,6 +27,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 import ase.atoms
 from ase.constraints import dict2constraint
 from ase.calculators.singlepoint import SinglePointCalculator
+from ase.calculators.calculator import Calculator
 import ase.db.sqlite
 import ase.db.core
 import ase.io
@@ -240,7 +241,6 @@ class System(Base):
                  cell=self.cell,
                  pbc=(self.pbc & np.array([1, 2, 4])).astype(bool),
              )
-        
         if self.constraints:
             constraints = json.loads(self.constraints)
             if len(constraints[0]['kwargs']['indices']) > 0:
@@ -251,30 +251,12 @@ class System(Base):
                                 self.positions,
                                 cell=self.cell,
                                 pbc=(self.pbc & np.array([1, 2, 4])).astype(bool),
-                                magmoms=self.magmoms,
-                                charges=self.charges,
+                                magmoms=self.initial_magmoms,
+                                charges=self.initial_charges,
                                 tags=self.tags,
                                 masses=self.masses,
                                 momenta=self.momenta,
                                 constraint=constraints)
-
-        if not self.calculator == "unknown":
-            params = self.get('calculator_parameters', {})
-            atoms.calc = get_calculator(self.calculator)(**params)
-        else:
-            all_properties = ['energy', 'forces', 'stress', 'dipole',
-                              'charges', 'magmom', 'magmoms', 'free_energy']
-            results = {}
-            #print(getattr(self, 'energy'))
-            for prop in all_properties:
-                result = getattr(self, prop, None)
-                if result is not None:
-                    results[prop] = result
-               # print(results)
-            if results:
-                atoms.calc = SinglePointCalculator(atoms, **results)
-                atoms.calc.name = getattr(self, 'calculator', 'unknown')
-
         atoms.info = {}
         atoms.info['unique_id'] = self.unique_id
         atoms.info['key_value_pairs'] = self.key_value_pairs
@@ -282,7 +264,22 @@ class System(Base):
         data = self.data
         if data:
             atoms.info['data'] = data
-        
+
+        if not self.calculator == "unknown":
+            params = self.calculator_parameters
+            atoms.calc = Calculator(self.calculator, **params)
+            atoms.calc.name = self.calculator
+        else:
+            all_properties = ['energy', 'forces', 'stress', 'dipole',
+                              'charges', 'magmom', 'magmoms', 'free_energy']
+            results = {}
+            for prop in all_properties:
+                result = getattr(self, prop, None)
+                if result is not None:
+                    results[prop] = result
+            if results:
+                atoms.calc = SinglePointCalculator(atoms, **results)
+                atoms.calc.name = getattr(self, 'calculator', 'unknown')
         return atoms
 
     @hybrid_property
