@@ -9,7 +9,7 @@ import numpy as np
 from scipy.spatial import ConvexHull
 
 import ase.units as units
-from ase.atoms import string2symbols
+from ase.symbols import string2symbols
 from ase.utils import formula_hill, basestring
 
 _solvated = []
