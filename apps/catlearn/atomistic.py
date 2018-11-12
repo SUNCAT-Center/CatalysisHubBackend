@@ -40,7 +40,7 @@ def predict_catkit_demo(images):
     for atoms in images:
         try:
             initial_state = [model_ref[s] for s in
-                             ase.symbols.string2symbols(
+                             ase.atoms.string2symbols(
                                  atoms.info['key_value_pairs']['species'])]
         except KeyError:
             return {}

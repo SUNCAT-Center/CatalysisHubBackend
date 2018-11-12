@@ -23,7 +23,7 @@ except ImportError:
     import StringIO
 
 import numpy as np
-from ase.symbols import string2symbols
+from ase.atoms import string2symbols
 
 import flask
 from flask_cors import CORS
