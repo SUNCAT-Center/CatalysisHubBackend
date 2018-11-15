@@ -3,6 +3,7 @@ import ase.data
 import numpy as np
 from numpy import array
 
+from ase.atoms import string2symbols
 
 def molecules2symbols(molecules, add_hydrogen=True):
     """ 
@@ -12,8 +13,8 @@ def molecules2symbols(molecules, add_hydrogen=True):
 
     symbols = sorted(
         list(set(
-            ase.atoms.string2symbols(''.join(
-                map(lambda _x: ''.join(ase.atoms.string2symbols(_x)), molecules)
+            string2symbols(''.join(
+                map(lambda _x: ''.join(string2symbols(_x)), molecules)
             ))
         )),
         key=lambda _y: ase.data.atomic_numbers[_y])
@@ -38,7 +39,7 @@ def construct_reference_system(symbols, candidates=['H2', 'H2O', 'NH3', 'CH4', '
     for symbol in symbols:
         added_symbols.append(symbol)
         for candidate in candidates:
-            symbols = ase.atoms.string2symbols(candidate)
+            symbols = string2symbols(candidate)
 
             if set(added_symbols) == set(list(references.keys()) + symbols):
                 references[symbol] = candidate
@@ -69,7 +70,7 @@ def get_atomic_stoichiometry(references):
         species = species.split('_')[0]
 
         key_index[key] = i
-        composition = ase.atoms.string2symbols(species)
+        composition = string2symbols(species)
         for j, symbol in enumerate(composition):
             if symbol == key:
                 stoichiometry[i, i] += 1
@@ -97,7 +98,7 @@ def get_stoichiometry_factors(adsorbates, references):
     stoichiometry = get_atomic_stoichiometry(references)
     stoichiometry_factors = {}
     for adsorbate in adsorbates:
-        for symbol in ase.atoms.string2symbols(adsorbate):
+        for symbol in string2symbols(adsorbate):
             symbol_index = list(
                 map(lambda _x: _x[0], references)).index(symbol)
 

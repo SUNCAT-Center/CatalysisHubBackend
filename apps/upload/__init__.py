@@ -43,7 +43,7 @@ from cathub.postgresql import CathubPostgreSQL
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-ADMIN_EMAILS = ['maxjh@stanford.edu', 'winther@stanford.edu']
+ADMIN_EMAILS = ['winther@stanford.edu', 'bajdich@stanford.edu']
 FRONTEND_URL = 'https://www.catalysis-hub.org'
 
 upload = flask.Blueprint('upload', __name__)
