@@ -5,7 +5,7 @@ import sqlalchemy
 import sqlalchemy.types
 import sqlalchemy.ext.declarative
 from sqlalchemy import or_
-from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, BYTEA
 from sqlalchemy import String, Float, Integer
 from sqlalchemy.types import ARRAY
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -97,6 +97,20 @@ class ReactionSystem(Base):
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            sqlalchemy.ForeignKey('{}.reaction.id'.format(SCHEMA)),
                            primary_key=True)
+
+class Log(Base):
+    __tablename__ = 'log'
+    __table_args__ = ({'schema': SCHEMA})
+
+    ase_id = sqlalchemy.Column(sqlalchemy.String,
+                               sqlalchemy.ForeignKey('{}.systems.unique_id'.format(SCHEMA)),
+                               primary_key=True)
+    logfile = sqlalchemy.Column(sqlalchemy.String, )
+
+    @hybrid_property
+    def _logtext(self):
+        return bytes(self.logfile).decode('utf-8')
+
     
 class Reaction(Base):
     __tablename__ = 'reaction'
@@ -219,6 +233,11 @@ class System(Base):
     
     reaction_systems= sqlalchemy.orm.relationship(
         "ReactionSystem",
+        backref="systems",
+        uselist=True)
+
+    log = sqlalchemy.orm.relationship(
+        "Log",
         backref="systems",
         uselist=True)
 
@@ -393,7 +412,8 @@ def hybrid_prop_parameters(key):
                     'Ctime': ['id', 'ctime'],
                     'Mtime': ['id', 'mtime'],
                     'Pbc': ['id', 'pbc'],
-                    'Trajdata': ['all']}
+                    'Trajdata': ['all'],
+                    'Logtext': ['logfile']}
 
     if key not in h_parameters:
         return ['id', 'key_value_pairs']

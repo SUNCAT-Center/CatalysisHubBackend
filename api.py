@@ -240,6 +240,12 @@ class ReactionSystem(CustomSQLAlchemyObjectType):
     # name = graphene.InputField()
     # systems = graphene.List('api.Systems')
 
+class Log(CustomSQLAlchemyObjectType):
+
+    class Meta:
+        model = models.Log
+        interfaces = (graphene.relay.Node, )
+
 
 class System(CustomSQLAlchemyObjectType):
 
@@ -250,6 +256,7 @@ class System(CustomSQLAlchemyObjectType):
         interfaces = (graphene.relay.Node, )
 
     publication = graphene.List('api.Publication')
+    log = graphene.List('api.Log')
 
     @staticmethod
     def resolve__input_file(self, info, format="py"):
@@ -613,8 +620,10 @@ class Query(graphene.ObjectType):
         ReactionSystem, **get_filter_fields(models.ReactionSystem))
     publications = FilteringConnectionField(
         Publication, **get_filter_fields(models.Publication))
+    logs = FilteringConnectionField(
+        Log, **get_filter_fields(models.Log))
 
 
 schema = graphene.Schema(
-    query=Query, types=[System, Species, TextKeyValue, NumberKeyValue, Key, Reaction, ReactionSystem, Publication
+    query=Query, types=[System, Species, TextKeyValue, NumberKeyValue, Key, Reaction, ReactionSystem, Publication, Log
     ])
