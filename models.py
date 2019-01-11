@@ -5,7 +5,7 @@ import sqlalchemy
 import sqlalchemy.types
 import sqlalchemy.ext.declarative
 from sqlalchemy import or_
-from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, BYTEA
 from sqlalchemy import String, Float, Integer
 from sqlalchemy.types import ARRAY
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -97,6 +97,16 @@ class ReactionSystem(Base):
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            sqlalchemy.ForeignKey('{}.reaction.id'.format(SCHEMA)),
                            primary_key=True)
+
+class Log(Base):
+    __tablename__ = 'log'
+    __table_args__ = ({'schema': SCHEMA})
+
+    ase_id = sqlalchemy.Column(sqlalchemy.String,
+                               sqlalchemy.ForeignKey('{}.systems.unique_id'.format(SCHEMA)),
+                               primary_key=True)
+    logfile = sqlalchemy.Column(BYTEA, )
+
     
 class Reaction(Base):
     __tablename__ = 'reaction'
@@ -219,6 +229,11 @@ class System(Base):
     
     reaction_systems= sqlalchemy.orm.relationship(
         "ReactionSystem",
+        backref="systems",
+        uselist=True)
+
+    log = sqlalchemy.orm.relationship(
+        "Log",
         backref="systems",
         uselist=True)
 
