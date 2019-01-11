@@ -256,6 +256,7 @@ class System(CustomSQLAlchemyObjectType):
         interfaces = (graphene.relay.Node, )
 
     publication = graphene.List('api.Publication')
+    log = graphene.List('api.Log')
 
     @staticmethod
     def resolve__input_file(self, info, format="py"):
