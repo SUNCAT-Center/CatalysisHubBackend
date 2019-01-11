@@ -105,7 +105,11 @@ class Log(Base):
     ase_id = sqlalchemy.Column(sqlalchemy.String,
                                sqlalchemy.ForeignKey('{}.systems.unique_id'.format(SCHEMA)),
                                primary_key=True)
-    logfile = sqlalchemy.Column(BYTEA, )
+    logfile = sqlalchemy.Column(sqlalchemy.String, )
+
+    @hybrid_property
+    def _logtext(self):
+        return bytes(self.logfile).decode('utf-8')
 
     
 class Reaction(Base):
@@ -408,7 +412,8 @@ def hybrid_prop_parameters(key):
                     'Ctime': ['id', 'ctime'],
                     'Mtime': ['id', 'mtime'],
                     'Pbc': ['id', 'pbc'],
-                    'Trajdata': ['all']}
+                    'Trajdata': ['all'],
+                    'Logtext': ['logfile']}
 
     if key not in h_parameters:
         return ['id', 'key_value_pairs']
