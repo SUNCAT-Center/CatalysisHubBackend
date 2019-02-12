@@ -82,12 +82,13 @@ This will generate an organized folder named ``<FOLDER>.organized``. Please open
     journal: ChemSusChem
     authors: [Montoya, Joseph H., Tsai, Charlie, Vojvodic, Aleksandra, Norskov, Jens K.]
     year: 2015
+    email: winther@stanford.edu
     number: 13
     tags: []
     pages: 2140-2267
 
  
-Note that authors should be a list, with names in the form "lastname, firstname M.".
+Remember your ``email`` since it will be used to log in at http://www.catalysis-hub.org/upload. Note that authors should be a list, with names in the form "lastname, firstname M.".
 
 Please go through the created folder and rename folders to make your data easier to localize later. For example, a structure folder like Pt16_structure, could be changed to Pt16_fcc or Pt16_bcc respectively. Please do not use spaces in folders or file-names.
 
@@ -116,16 +117,17 @@ This will create a template (txt/yaml) file, that you should update with your pu
     -   reactants: [CH4gas, -0.5H2gas, star]
         products: [CH3star@ontop]
     journal: JACS
-    year: '2017'
-    number: '1'
+    year: 2017
+    email: winther@stanford.edu
+    number: 1
     crystal_structures: [fcc, hcp]
-    volume: '1'
+    volume: 1
     DFT_functionals: [BEEF-vdW, HSE06]
     authors: ['Doe, John', 'Einstein, Albert']
     pages: 23-42
     publisher: ACS
     doi: 10.NNNN/....
-    title: Fancy title
+    title: "Fancy title"
     bulk_compositions: [Pt]
     DFT_code: Quantum Espresso
     facets: ['111']
@@ -181,9 +183,7 @@ Reading into database
 ......................
 After adding all your structure files (or after running cathub organize), read your structures into a local database file with the command::
 
-  cathub folder2db <FOLDER> --userhandle <slack-username or gmail-address>
-
-Remember your ``userhandle`` since it will be used to log in at http://www.catalysis-hub.org/upload later (to be implemented).
+  cathub folder2db <FOLDER>
 
 If anything is wrong with your files, or anything is missing, you should receive appropriate error messages. When reading of the folder is complete, a table with a summary with reaction energies will be printed in you terminal. Please verify that everything looks right. Also, a database file has been written at ``<FOLDER>/<DBNAME>.db``.
 
@@ -191,4 +191,4 @@ Upload your data to the server by typing::
 
   cathub db2server <DBNAME>.db
 
-and follow the feedback in the terminal. Your data will not be made accessible from catalysis-hub.org before you have approved. Send an email to Kirsten Winther,  winther@stanford.edu, and request to have your data made public. Please include the ``userhandle`` you defined above in the email.
+and follow the feedback in the terminal. Your data will not be made accessible from catalysis-hub.org before you have approved. Send an email to Kirsten Winther,  winther@stanford.edu, and request to have your data made public. Please include the email you defined above.
