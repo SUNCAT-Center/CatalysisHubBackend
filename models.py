@@ -420,6 +420,7 @@ def hybrid_prop_parameters(key):
                     'Cifdata': ['id', 'numbers', 'positions', 'cell', 'pbc'],
                     'Ctime': ['id', 'ctime'],
                     'Mtime': ['id', 'mtime'],
+                    'Stime': ['id', 'stime'],
                     'Pbc': ['id', 'pbc'],
                     'Trajdata': ['all'],
                     'Logtext': ['logfile']}
