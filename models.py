@@ -85,6 +85,14 @@ class Publication(Base):
     systems = sqlalchemy.orm.relationship("System",
                                           secondary=association_pubsys, uselist=True)
     
+    @hybrid_property
+    def _stime(self):
+        return (
+                datetime.datetime(2000, 1, 1, 0, 0)
+                + datetime.timedelta(
+                    seconds=int(round(self.stime * ase.db.core.seconds['y'], 0))
+                    )
+                ).strftime('%c')
 
 class ReactionSystem(Base):
     __tablename__ = 'reaction_system'
