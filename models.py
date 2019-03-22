@@ -79,6 +79,7 @@ class Publication(Base):
     doi = sqlalchemy.Column(sqlalchemy.String, )
     tags = sqlalchemy.Column(JSONB, )
     pubtextsearch = sqlalchemy.Column(TSVECTOR, )
+    stime = sqlalchemy.Column(sqlalchemy.Float, )
     reactions = sqlalchemy.orm.relationship("Reaction", backref="publication", uselist=True)
     
     systems = sqlalchemy.orm.relationship("System",
@@ -107,6 +108,14 @@ class Log(Base):
                                primary_key=True)
     logfile = sqlalchemy.Column(sqlalchemy.String, )
 
+    @hybrid_property
+    def _ase_id(self):
+        print('HEP')
+        if not self.ase_id:
+            return 'None'
+        else:
+            return self.ase_id
+    
     @hybrid_property
     def _logtext(self):
         return bytes(self.logfile).decode('utf-8')
@@ -413,7 +422,8 @@ def hybrid_prop_parameters(key):
                     'Mtime': ['id', 'mtime'],
                     'Pbc': ['id', 'pbc'],
                     'Trajdata': ['all'],
-                    'Logtext': ['logfile']}
+                    'Logtext': ['logfile'],
+                    'AseId': ['ase_id']}
 
     if key not in h_parameters:
         return ['id', 'key_value_pairs']
