@@ -33,11 +33,11 @@ Alternatively you can install your own version of CatHub - see instructions belo
 
 Installing CatHub
 ...........................
-CatHub is a python module that is used to interface the Surface Reactions database of Catalysis-Hub, directly from a python script of the command line. CatHub will be used to arrange your data into folders and submit your data to the server. To install CatHub, together with the ASE dependency, use pip::
+CatHub is a python module that is used to interface the Surface Reactions database of Catalysis-Hub, directly from a python script of the command line. CatHub will be used to arrange your data into folders and submit your data to the server. To install CatHub, use pip::
 
-  pip install git+https://github.com/kirstenwinther/CatHub.git#egg=cathub --upgrade --user --process-dependency-links
+  pip install cathub --upgrade --user
 
-which will install a developer version of ASE with an enhanced database module, CatHub and all their dependencies.
+which will install CatHub and all their dependencies, including recent version of ASE with an enhanced database module
 
 To test that the cathub cli is working, start by typing::
 
@@ -55,7 +55,7 @@ You have two options for organizing your data:
 * cathub make_folders: For smaller or more complicated datasets with reaction barriers, this method will only create your folders, and you will have to drop the files in the right location yourself.
 
 In either case no data will be uploaded to `catalysis-hub.org/publications <https://www.catalysis-hub.org/publications>`_ before you run `cathub db2server ...`.
-Once you uploaded data it will be held in a moderation stage which you can inspect yourself at `catalysis-hub.org/upload <https://www.catalysis-hub.org/upload>`_
+Once you upload data it will be held in a moderation stage which you can inspect yourself at `catalysis-hub.org/upload <https://www.catalysis-hub.org/upload>`_
 and delete yourself to iterate until all structures and energies look as expected. Once you are satisfied with your uploaded dataset there will be a "Release"
 button that will notify the platform administrator that the dataset is ready for release.
 
@@ -178,6 +178,7 @@ And your folders will be created. You can check that they look right with :code:
 
 
 Then add your atomic structure output files to the right folders. The files can be in any format that ASE can read, and must contain the total potential energy from the calculation. ASE trajectory (.traj) files are generally preferred. If you're using Vasp, please add your OUTCAR files as ``<name>.OUTCAR``. Your structures will include the adsorbed atoms/molecules, empty slabs, and gas phase species for your reactions. Also, if you have done calculations for the bulk geometries, please include them as well. All gas phase species involved must be added to the ``<publication>/<dft code>/<dft functional>/gas/`` folder. Also, notice that dummy files named ``MISSING:..`` have been placed in the folders, to help you determine the right location for your files. It's recommended to write a script to transfer files from one folder-structure to another in a systematic way, for example using :code:`shutils.copyfile('/path/to/initial/file', '/path/to/final/file')`.
+
 
 Reading into database
 ......................
