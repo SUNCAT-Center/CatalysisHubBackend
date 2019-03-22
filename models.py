@@ -109,14 +109,6 @@ class Log(Base):
     logfile = sqlalchemy.Column(sqlalchemy.String, )
 
     @hybrid_property
-    def _ase_id(self):
-        print('HEP')
-        if not self.ase_id:
-            return 'None'
-        else:
-            return self.ase_id
-    
-    @hybrid_property
     def _logtext(self):
         return bytes(self.logfile).decode('utf-8')
 
@@ -422,8 +414,7 @@ def hybrid_prop_parameters(key):
                     'Mtime': ['id', 'mtime'],
                     'Pbc': ['id', 'pbc'],
                     'Trajdata': ['all'],
-                    'Logtext': ['logfile'],
-                    'AseId': ['ase_id']}
+                    'Logtext': ['logfile']}
 
     if key not in h_parameters:
         return ['id', 'key_value_pairs']
