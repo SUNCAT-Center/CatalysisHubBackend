@@ -87,6 +87,8 @@ class Publication(Base):
     
     @hybrid_property
     def _stime(self):
+        if not self.stime:
+            return None
         return (
                 datetime.datetime(2000, 1, 1, 0, 0)
                 + datetime.timedelta(
