@@ -79,6 +79,7 @@ class Publication(Base):
     doi = sqlalchemy.Column(sqlalchemy.String, )
     tags = sqlalchemy.Column(JSONB, )
     pubtextsearch = sqlalchemy.Column(TSVECTOR, )
+    stime = sqlalchemy.Column(sqlalchemy.Float, )
     reactions = sqlalchemy.orm.relationship("Reaction", backref="publication", uselist=True)
     
     systems = sqlalchemy.orm.relationship("System",
