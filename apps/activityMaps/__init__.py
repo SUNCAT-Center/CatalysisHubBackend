@@ -46,11 +46,16 @@ class ReactionModel(object):
 
 
 def graphql_query(products='products: "O"',
-                  reactants='', facet='', limit=5000):
+                  reactants='', facet='', pub_id=None, limit=5000):
+    publication = ''
+    if pub_id is not None:
+        publication = ' pubId: "{}"'.format(pub_id)
+
     query = {'query': """{{
-      reactions(first: {limit}, {reactants}{products}{facet}) {{
+      reactions(first: {limit}, {reactants}{products}{facet}{publication}) {{
         edges {{
           node {{
+            pubId
             reactionEnergy
             sites
             facet
@@ -119,6 +124,7 @@ def systems(request=None):
 
     # unpack arguments
     activityMap = str(request.args.get('activityMap', 'OER'))
+    pub_id = request.args.get('pubID', None)
     CACHE_FILE = 'reaction_systems_{activityMap}.json'.format(**locals())
 
     short_systems = []
@@ -146,12 +152,25 @@ def systems(request=None):
                 raw_systems = json.loads(infile.read())
         else:
             raw_systems = {}
-            for reactant in reactants:
-                raw_systems[reactant] = graphql_query(
-                    products='products: "' + reactant + '", ')
+
+            reactant = 'OOH'
+            raw_systems[reactant] = graphql_query(
+                products='products: "' + reactant + '", ', pub_id=pub_id)['data']['reactions']['edges']
+
+            OOH_pub_ids = []
+            for reactant in raw_systems:
+                for edge in raw_systems[reactant]['data']['reactions']['edges']:
+                    pub_id_sub = edge['node']['pubId']
+                    if not pub_id in OOH_pub_ids:
+                        OOH_pub_ids = [pub_id_sub]
+
+            for reactant in ['OH', 'O']:
+                for pub_id_sub in OOH_pub_ids:
+                    raw_systems[reactant] += graphql_query(
+                        products='products: "' + reactant + '", ',
+                        pub_id=pub_id_sub)['data']['reactions']['edges']
             with open(CACHE_FILE, 'w') as outfile:
                 outfile.write(json.dumps(raw_systems, ))
-
         systems = {}
         for reactant in raw_systems:
             for edge in raw_systems[reactant]['data']['reactions']['edges']:
@@ -206,7 +225,7 @@ def systems(request=None):
                     'facet': facet,
                     'x': dG_O__dG_OH,
                     'y': dG_OH,
-                    'z': - overpotential(dG_OH, dG_O, dG_OOH),
+                    'z': overpotential(dG_OH, dG_O, dG_OOH),
                 })
         labels.update({
             'xlabel': 'ΔG(O) - ΔG(OH) [eV]',
@@ -232,45 +251,50 @@ def systems(request=None):
 
     elif activityMap == 'NRR':
         def limiting_potential(dG_NNH, dG_NH2__dG_NH):
-            return -max(dG_NNH, dG_NH2__dG_NH)
+            return max(dG_NNH, dG_NH2__dG_NH)
 
         raw_systems = {}
-        raw_systems['NNH'] = list(map(
-            lambda x: x['node'],
-            graphql_query(
-                reactants='reactants: "star+H2gas+N2gas",',
-                products='products: "NNHstar" ,',
-                facet='facet: "' + '~111' + '", ',
-            )['data']['reactions']['edges']
-        ))
+        raw_systems['NNH'] = graphql_query(
+            reactants='reactants: "star+H2gas+N2gas",',
+            products='products: "NNHstar" ,',
+            facet='facet: "' + '~111' + '", ',
+            pub_id=pub_id
+        )
 
-        raw_systems['NH2'] = list(map(
-            lambda x: x['node'],
-            graphql_query(
+        NNH_pub_ids = []
+        for reactant in raw_systems:
+            for edge in raw_systems[reactant]['data']['reactions']['edges']:
+                pub_id_sub = edge['node']['pubId']
+                if not pub_id in NNH_pub_ids:
+                    NNH_pub_ids = [pub_id_sub]
+
+        raw_systems['NH2'] = {'data': {'reactions': {'edges': []}}}
+        raw_systems['NH'] = {'data': {'reactions': {'edges': []}}}
+
+        for pub_id_sub in NNH_pub_ids:
+            raw_systems['NH2']['data']['reactions']['edges'] += graphql_query(
                 reactants='reactants: "star+H2gas+N2gas",',
                 products=' products: "NH2star", ',
                 facet='facet: "' + '~111' + '", ',
+                pub_id=pub_id_sub
             )['data']['reactions']['edges']
-        ))
 
-        raw_systems['NH'] = list(map(
-            lambda x: x['node'],
-            graphql_query(
+            raw_systems['NH']['data']['reactions']['edges'] += graphql_query(
                 reactants='reactants: "star+H2gas+N2gas",',
                 products='products: "NHstar", ',
                 facet='facet: "' + '~111' + '", ',
+                pub_id=pub_id_sub
             )['data']['reactions']['edges']
-        ))
 
         systems = {}
         for reactant in raw_systems:
-            for raw_system in raw_systems[reactant]:
-                for geometry in raw_system.get('reactionSystems', {}):
+            for raw_system in raw_systems[reactant]['data']['reactions']['edges']:
+                for geometry in raw_system['node'].get('reactionSystems', {}):
                     if geometry['name'] == 'star':
                         site = list(json.loads(
-                            raw_system['sites']
-                            ).values())[0]
-                        formula = raw_system['chemicalComposition']
+                            raw_system['node']['sites']
+                        ).values())[0]
+                        formula = raw_system['node']['chemicalComposition']
 
                         # skip unstable sites by now
                         # to be removed.
@@ -281,16 +305,16 @@ def systems(request=None):
                                 ('NNH', 'Pd16', 'ontop'),
                                 ('NNH', 'Pt16', 'ontop'),
                                 ('NNH', 'Rh16', 'ontop'),
-                                ]:
+                        ]:
                             continue
 
                         system = systems.setdefault(geometry['aseId'], {})
                         energy = system.get('E', {})
                         energy.setdefault(reactant, {}) \
-                              .setdefault(site, raw_system['reactionEnergy'])
+                              .setdefault(site, raw_system['node']['reactionEnergy'])
                         system.update({
-                            'formula': raw_system['chemicalComposition'],
-                            'facet': raw_system['facet'],
+                            'formula': raw_system['node']['chemicalComposition'],
+                            'facet': raw_system['node']['facet'],
                             'uid': geometry['aseId'],
                             'E': energy,
                         })
@@ -314,7 +338,7 @@ def systems(request=None):
                 'x': dG_NNH,
                 'y': dG_NH2__dG_NH,
                 'z': U_L,
-                })
+            })
 
         short_systems = [
             system for system in
