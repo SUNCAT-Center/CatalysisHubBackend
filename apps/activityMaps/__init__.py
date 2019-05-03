@@ -344,7 +344,7 @@ def systems(request=None):
         labels.update({
             'xlabel': 'ΔG(NNH) [eV]',
             'ylabel': 'ΔG(NH2) - ΔG(NH) [eV]',
-            'zlabel': 'U(L) [V s. RHE]',
+            'zlabel': 'Limiting potential U(L) [V s. RHE]',
             'reference': ('Montoya, Joseph H., Charlie Tsai,'
                           ' Aleksandra Vojvodic, and Jens K. Nørskov.'
                           ' "The challenge of electrochemical ammonia'
