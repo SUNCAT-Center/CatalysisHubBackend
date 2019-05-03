@@ -124,9 +124,7 @@ def systems(request=None):
 
     # unpack arguments
     activityMap = str(request.args.get('activityMap', 'OER'))
-    pub_id = request.args.get('pubID', None)
-    CACHE_FILE = 'reaction_systems_{activityMap}.json'.format(**locals())
-
+    pub_id = request.args.get('pubId', None)
     short_systems = []
     raw_systems = {}
     labels = {}
@@ -147,30 +145,28 @@ def systems(request=None):
             return m - 1.23
 
         reactants = ['OOH', 'OH', 'O', ]
-        if os.path.exists(CACHE_FILE):
-            with open(CACHE_FILE) as infile:
-                raw_systems = json.loads(infile.read())
-        else:
-            raw_systems = {}
 
-            reactant = 'OOH'
-            raw_systems[reactant] = graphql_query(
-                products='products: "' + reactant + '", ', pub_id=pub_id)['data']['reactions']['edges']
+        raw_systems = {}
+        raw_systems['OH'] = {'data': {'reactions': {'edges': []}}}
+        raw_systems['O'] = {'data': {'reactions': {'edges': []}}}
 
-            OOH_pub_ids = []
-            for reactant in raw_systems:
-                for edge in raw_systems[reactant]['data']['reactions']['edges']:
-                    pub_id_sub = edge['node']['pubId']
-                    if not pub_id in OOH_pub_ids:
-                        OOH_pub_ids = [pub_id_sub]
+        reactant = 'OOH'
+        raw_systems[reactant] = graphql_query(
+            products='products: "' + reactant + '", ', pub_id=pub_id)
 
-            for reactant in ['OH', 'O']:
-                for pub_id_sub in OOH_pub_ids:
-                    raw_systems[reactant] += graphql_query(
-                        products='products: "' + reactant + '", ',
-                        pub_id=pub_id_sub)['data']['reactions']['edges']
-            with open(CACHE_FILE, 'w') as outfile:
-                outfile.write(json.dumps(raw_systems, ))
+        OOH_pub_ids = []
+        for reactant in raw_systems:
+            for edge in raw_systems[reactant]['data']['reactions']['edges']:
+                pub_id_sub = edge['node']['pubId']
+                if not pub_id in OOH_pub_ids:
+                    OOH_pub_ids = [pub_id_sub]
+
+        for reactant in ['OH', 'O']:
+            for pub_id_sub in OOH_pub_ids:
+                raw_systems[reactant]['data']['reactions']['edges'] += graphql_query(
+                    products='products: "' + reactant + '", ',
+                    pub_id=pub_id_sub)['data']['reactions']['edges']
+
         systems = {}
         for reactant in raw_systems:
             for edge in raw_systems[reactant]['data']['reactions']['edges']:
