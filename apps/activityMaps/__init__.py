@@ -247,7 +247,7 @@ def systems(request=None):
 
     elif activityMap == 'NRR':
         def limiting_potential(dG_NNH, dG_NH2__dG_NH):
-            return max(dG_NNH, dG_NH2__dG_NH)
+            return -max(dG_NNH, dG_NH2__dG_NH)
 
         raw_systems = {}
         raw_systems['NNH'] = graphql_query(
