@@ -103,13 +103,14 @@ db = flask_sqlalchemy.SQLAlchemy(app)
 app.debug = False
 
 if not app.debug:
-    sentry = Sentry(app, logging=True, level=logging.DEBUG)
+    sentry = Sentry(app, logging=True, level=logging.WARNING)
 
 app.json_encoder = NumpyEncoder
 
 cors = CORS(app,
-        supports_credentials=True
-        )
+            supports_credentials=True,
+            allow_headers=True,
+            resources={r"/apps/upload/*": {"origins": "*"}})
 
 @app.after_request
 def after_request(response):

@@ -184,7 +184,7 @@ def complinify(session, provider=None):
 
 
 @upload.route('/', methods=['GET', 'POST', 'OPTIONS'])
-@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
+@flask_cors.cross_origin(supports_credentials=True, headers=['Content-Type','Authorization'])
 def init():
     log.debug("@@@ UPLOAD ROOT ROUTE")
     log.debug("FLASK HEADERS")
@@ -219,7 +219,8 @@ def init():
 
 
 @upload.route('/callback')
-@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
+@flask_cors.cross_origin(supports_credentials=True,
+                         headers=['Content-Type','Authorization'])
 def callback():
     log.debug("@@@ CALLBACK ROUTE")
 
@@ -277,7 +278,8 @@ def callback():
 
 
 @upload.route('/info')
-@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
+@flask_cors.cross_origin(supports_credentials=True,
+                         headers=['Content-Type','Authorization'])
 def info():
     log.debug("@@@ INFO ROUTE")
     log.debug("SESSION")
@@ -328,7 +330,8 @@ def info():
         )
 
 @upload.route('/submit', methods=['GET', 'POST'])
-@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
+@flask_cors.cross_origin(supports_credentials=True,
+                         headers=['Content-Type','Authorization'])
 def submit():
     return auth_required(
         flask.redirect(FRONTEND_URL + '/upload?login=success'),
@@ -336,7 +339,8 @@ def submit():
             )
 
 @upload.route('/logout', methods=['GET', 'POST'])
-@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
+@flask_cors.cross_origin(supports_credentials=True,
+                         headers=['Content-Type','Authorization'])
 def logout():
     log.debug("@@@ LOGOUT ROUTE")
     flask.session.clear()
@@ -346,7 +350,8 @@ def logout():
 
 
 @upload.route('/user_info', methods=['GET', 'POST'])
-@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
+@flask_cors.cross_origin(supports_credentials=True,
+                         headers=['Content-Type','Authorization'])
 def user_info():
     log.debug("@@@ USER_INFO ROUTE")
     provider = flask.request.args.get('provider', PROVIDER)
@@ -371,7 +376,8 @@ def user_info():
 
 
 @upload.route('/dataset/', methods=['GET', 'POST'])
-@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
+@flask_cors.cross_origin(supports_credentials=True,
+                         headers=['Content-Type','Authorization'])
 def upload_dataset(request=None):
     request = flask.request if request is None else request
     filename = request.files['file'].filename
@@ -395,7 +401,8 @@ def upload_dataset(request=None):
 
 
 @upload.route('/download_structure/', methods=['GET', 'POST'])
-@flask_cors.cross_origin(supports_credentials=True,origin='*',headers=['Content-Type','Authorization'])
+@flask_cors.cross_origin(supports_credentials=True,
+                         headers=['Content-Type','Authorization'])
 def download_structure(request=None):
     request = flask.request if request is None else request
     if type(request.args) is str:
@@ -580,7 +587,6 @@ def endorse():
         pub_id = params.get('dataset', {}).get('pubId', '')
         title = params.get('dataset', {}).get('title', '')
         corresponding_email = params.get('corresponding_email', '')
-
         send_email(
             subject='[Catalysis-Hub.Org] Dataset {title} Was Endorsed'.format(**locals()),
             message="""
