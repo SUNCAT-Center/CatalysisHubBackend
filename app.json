@@ -1,5 +1,5 @@
 {
-  "stack": "heroku-18", 
+  "stack": "heroku-20", 
   "name": "CatalysisHubBackend",
   "scripts": {
   },
@@ -31,9 +31,6 @@
       "quantity": 1
     }
   },
-  "addons": [
-    "sentry"
-  ],
   "buildpacks": [
     {
       "url": "heroku/python"
