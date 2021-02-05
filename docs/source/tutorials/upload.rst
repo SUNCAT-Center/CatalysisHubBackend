@@ -5,39 +5,14 @@ Please submit your electronic structures calculations for surface reactions! Dat
 
 Your publication/dataset will be listed on the http://www.catalysis-hub.org/publications page, with a link to the publishers homepage (if already published). Your data will be easily accessible to other researchers, who will be able to browse through reaction energies and atomic structures from your publication.
 
-SUNCAT group members
-....................
-If you're a member of the SUNCAT group, you can add your data to one of the folders on the Sherlock or SUNCAT cluster:
-
-* SHERLOCK2 : /home/users/winther/data_catapp/
-* SUNCAT : /nfs/slac/g/suncatfs/data_catapp/
-
-Start by activating the corresponding virtualenv. On SHERLOCK2 ::
-
-  . /home/users/winther/data_catapp/CATHUBENV/bin/activate
-
-or on SUNCAT ::
-
-  . /nfs/slac/g/suncatfs/data_catapp/CATHUBENV/bin/activate
-
-
-
-to use the local installation of CatHub. You should see a `(CATHUBENV)` at the beginning of your prompt now to indicate that all python script and libraries are first imported from the virtualenv. To return your shell to the previous state simply type::
-
-  deactivate
-
-or log out. Now you can go straight to `cathub organize`_ .
-
-Alternatively you can install your own version of CatHub - see instructions below.
-
 
 Installing CatHub
 ...........................
 CatHub is a python module that is used to interface the Surface Reactions database of Catalysis-Hub, directly from a python script of the command line. CatHub will be used to arrange your data into folders and submit your data to the server. To install CatHub, use pip::
 
-  pip install cathub --upgrade --user
+  pip3 install git+https://github.com/SUNCAT-Center/CatHub.git --upgrade --user
 
-which will install CatHub and all their dependencies, including recent version of ASE with an enhanced database module
+which will install CatHub and all their dependencies.
 
 To test that the cathub cli is working, start by typing::
 
