@@ -31,9 +31,6 @@
       "quantity": 1
     }
   },
-  "addons": [
-    "sentry"
-  ],
   "buildpacks": [
     {
       "url": "heroku/python"
