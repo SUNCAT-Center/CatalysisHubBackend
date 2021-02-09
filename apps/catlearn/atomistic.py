@@ -77,7 +77,7 @@ def predict_catkit_demo(images):
     feature_index = np.load(clean_index_name)
     clean_feature_mean = np.load(clean_mean)
 
-    impute = SimpleImputer(missing_values="NaN", strategy='mean')
+    impute = SimpleImputer(strategy='mean')
     impute.statistics_ = clean_feature_mean
     new_data = impute.transform(matrix[:, feature_index])
 
