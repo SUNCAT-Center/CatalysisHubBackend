@@ -100,7 +100,7 @@ else:
 
 db = flask_sqlalchemy.SQLAlchemy(app)
 
-app.debug = True
+app.debug = False
 
 if not app.debug:
     sentry = Sentry(app, logging=True, level=logging.WARNING)
