@@ -38,7 +38,7 @@ mendeleev==0.6.1
 monty==4.0.2
 mpmath==1.2.1
 networkx==2.5
-numpy==1.20.1
+numpy
 oauthlib==3.1.0
 palettable==3.3.0
 pandas==0.23.4
