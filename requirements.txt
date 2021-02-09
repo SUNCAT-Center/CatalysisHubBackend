@@ -30,7 +30,7 @@ matplotlib==3.3.4
 mendeleev==0.6.1
 numpy==1.17.4
 oauthlib==3.1.0
-pandas==1.2.1
+pandas
 Pillow==8.1.0
 promise==2.3
 psycopg2==2.8.6
