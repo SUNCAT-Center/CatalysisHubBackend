@@ -38,7 +38,7 @@ mendeleev==0.6.1
 monty==4.0.2
 mpmath==1.2.1
 networkx==2.5
-numpy
+numpy==1.17.1
 oauthlib==3.1.0
 palettable==3.3.0
 pandas==0.23.4
@@ -50,6 +50,7 @@ psycopg2-binary==2.8.6
 pycodestyle==2.6.0
 PyDispatcher==2.0.5
 pyfiglet==0.8.post1
+pymatgen==2018.3.23
 pymongo==3.11.3
 pyparsing==2.4.7
 python-dateutil==2.8.1
