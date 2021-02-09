@@ -255,7 +255,7 @@ class ReactionBackendTestCase(unittest.TestCase):
 
     def test_magmoms_property(self):
         rv_data = self.get_data('{systems(uniqueId: "704635cfa5b954b4fd69a61b82cd1041") { edges { node { uniqueId magmoms } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['magmoms'] == '[4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 0.0, 0.0]', rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['magmoms'] == [4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 0.0, 0.0], rv_data
 
     def test_stress_property(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId stress } } }}')
@@ -267,7 +267,7 @@ class ReactionBackendTestCase(unittest.TestCase):
 
     def test_forces_property(self):
         rv_data = self.get_data('{systems(uniqueId: "2baa0dff53f6e374ec62a851f1519203") { edges { node { uniqueId forces } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['forces'] == "[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [-0.00614427004948372, 0.00449696949293127, -0.00986315727173091], [0.00879477058939808, 0.00917989376165844, 0.0352720011056403], [-0.00206053074046705, -0.0276901353694061, 0.0379683393499177], [0.0245038028154277, 0.0144735534975378, 0.017733582986786], [-0.00910656443668941, -0.00789937561938611, 0.014741863883181], [0.015184343620972, 0.00329439236786369, -0.0317452457101462]]", rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['forces'] == [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [-0.00614427004948372, 0.00449696949293127, -0.00986315727173091], [0.00879477058939808, 0.00917989376165844, 0.0352720011056403], [-0.00206053074046705, -0.0276901353694061, 0.0379683393499177], [0.0245038028154277, 0.0144735534975378, 0.017733582986786], [-0.00910656443668941, -0.00789937561938611, 0.014741863883181], [0.015184343620972, 0.00329439236786369, -0.0317452457101462]], rv_data
 
     def test_momenta_property(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId momenta } } }}')
@@ -275,7 +275,7 @@ class ReactionBackendTestCase(unittest.TestCase):
 
     def test_tags_property(self):
         rv_data = self.get_data('{systems(uniqueId: "2baa0dff53f6e374ec62a851f1519203") { edges { node { uniqueId tags } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['tags'] == "[7, 7, 7, 7, 6, 6, 6, 6, 5, 5, 5, 5, 3, 3, 3, 1, 0, 0]", rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['tags'] == [7, 7, 7, 7, 6, 6, 6, 6, 5, 5, 5, 5, 3, 3, 3, 1, 0, 0], rv_data
 
     def test_masses_property(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId masses } } }}')
@@ -287,7 +287,7 @@ class ReactionBackendTestCase(unittest.TestCase):
 
     def test_initial_magmom_sproperty(self):
         rv_data = self.get_data('{systems(uniqueId: "607a860f01f8c9efe82d41e14d0f564c") { edges { node { uniqueId initialMagmoms } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['initialMagmoms'] == "[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]", rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['initialMagmoms'] == [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], rv_data
 
     def test_pbc_sproperty(self):
         rv_data = self.get_data('{systems(last: 10) { edges { node { uniqueId Pbc } } }}')
@@ -295,15 +295,15 @@ class ReactionBackendTestCase(unittest.TestCase):
 
     def test_cell_sproperty(self):
         rv_data = self.get_data('{systems(uniqueId: "607a860f01f8c9efe82d41e14d0f564c") { edges { node { uniqueId cell } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['cell'] == "[[5.977315042726, 0.0, 0.0], [2.988657521363, 5.176506673424, 0.0], [0.0, 0.0, 31.320685943271]]", rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['cell'] == [[5.977315042726, 0.0, 0.0], [2.988657521363, 5.176506673424, 0.0], [0.0, 0.0, 31.320685943271]], rv_data
 
     def test_positions_sproperty(self):
         rv_data = self.get_data('{systems(uniqueId: "1c8b50a73d22bfd72b8b799a12b774fc") { edges { node { uniqueId positions } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['positions'] == "[[10.0, 10.763239, 10.5925363270631], [10.0, 11.5248997266606, 10.0018863364684], [10.0, 10.0015782733394, 10.0018863364684]]", rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['positions'] == [[10.0, 10.763239, 10.5925363270631], [10.0, 11.5248997266606, 10.0018863364684], [10.0, 10.0015782733394, 10.0018863364684]], rv_data
 
     def test_numbers_sproperty(self):
         rv_data = self.get_data('{systems(uniqueId: "1c8b50a73d22bfd72b8b799a12b774fc") { edges { node { uniqueId numbers } } }}')
-        assert rv_data['data']['systems']['edges'][0]['node']['numbers'] == "[8, 1, 1]", rv_data
+        assert rv_data['data']['systems']['edges'][0]['node']['numbers'] == [8, 1, 1], rv_data
 
     def test_equation_property(self):
         rv_data = self.get_data('{reactions(first: 1, reactants:"~H", distinct: false) { totalCount edges { node { id Equation } } }}')

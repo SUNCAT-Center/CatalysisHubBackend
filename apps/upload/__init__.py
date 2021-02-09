@@ -94,7 +94,7 @@ info_url = {
     'google': 'https://www.googleapis.com/oauth2/v1/userinfo',
 }
 
-SG = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY', '').strip())
+SG = sendgrid.SendGridAPIClient(os.environ.get('SENDGRID_API_KEY', '').strip())
 
 def get_corresponding_email(pubId):
     query = {'query': """{{

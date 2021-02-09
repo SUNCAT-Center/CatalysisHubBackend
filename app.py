@@ -49,7 +49,7 @@ except (ImportError, OperationalError) as e:
 
 try:
     from apps.bulkEnumerator import bulk_enumerator
-except ImportError:
+except ImportError as e:
     ('prototypeSearch not available: {e}'.format(e=e))
     print('prototypeSearch not available: {e}'.format(e=e))
     traceback.print_exc()
