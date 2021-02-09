@@ -3,7 +3,7 @@ Attach CatLearn adsorption energy predictions to CatKitDemo.
 """
 import numpy as np
 
-from sklearn.preprocessing import Imputer
+from sklearn.impute import SimpleImputer
 
 import ase.atoms
 
@@ -77,7 +77,7 @@ def predict_catkit_demo(images):
     feature_index = np.load(clean_index_name)
     clean_feature_mean = np.load(clean_mean)
 
-    impute = Imputer(missing_values="NaN", strategy='mean')
+    impute = SimpleImputer(missing_values="NaN", strategy='mean')
     impute.statistics_ = clean_feature_mean
     new_data = impute.transform(matrix[:, feature_index])
 
