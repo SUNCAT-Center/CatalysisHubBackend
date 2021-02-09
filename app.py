@@ -16,7 +16,6 @@ import models
 import api
 import traceback
 from sqlalchemy.exc import OperationalError
-# import qmdb_api
 
 
 try:
@@ -30,8 +29,9 @@ try:
     from apps.catlearn.run_catlearn import catlearn_blueprint
 except ImportError as e:
     print('Catlearn not available: {e}'.format(e=e))
+
     traceback.print_exc()
-    atoml_blueprint = None
+    catlearn_blueprint = None
 
 try:
     from apps.activityMaps import activityMaps
@@ -88,19 +88,19 @@ app = flask.Flask(__name__)
 
 if os.environ.get('DB_PASSWORD', ''):
     app.config.update({
-        #'SESSION_COOKIE_SECURE': True,
+        # 'SESSION_COOKIE_SECURE': True,
         'CORS_SUPPORTS_CREDENTIALS': True,
         'CORS_HEADERS': 'Content-Type, X-Pingother',
-        'SQLALCHEMY_DATABASE_URI': f'postgres://catvisitor:{os.environ["DB_PASSWORD"]}@catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com:5432/catalysishub', })
+        'SQLALCHEMY_DATABASE_URI': 'postgres://catvisitor:{}@catalysishub.c8gwuc8jwb7l.us-west-2.rds.amazonaws.com:5432/catalysishub'.format(os.environ["DB_PASSWORD"]), })
 else:
     # for Travis CI
     app.config.update({
         'CORS_SUPPORTS_CREDENTIALS': True,
-        'SQLALCHEMY_DATABASE_URI': f'postgres://postgres@localhost:5432/travis_ci_test', })
+        'SQLALCHEMY_DATABASE_URI': 'postgres://postgres@localhost:5432/travis_ci_test', })
 
 db = flask_sqlalchemy.SQLAlchemy(app)
 
-app.debug = False
+app.debug = True
 
 if not app.debug:
     sentry = Sentry(app, logging=True, level=logging.WARNING)
@@ -108,22 +108,23 @@ if not app.debug:
 app.json_encoder = NumpyEncoder
 
 cors = CORS(app,
-            supports_credentials=True,
-            allow_headers=True,
-            resources={r"/apps/upload/*": {"origins": "*"}})
+            supports_credentials=True)
+
 
 @app.after_request
 def after_request(response):
-    response.headers.add('Access-Control-Allow-Headers', 'X-PINGOTHER, Content-Type, Authorization, Accept')
-    response.headers.add('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, HEAD, OPTIONS')
+    response.headers.add('Access-Control-Allow-Headers',
+                         'X-PINGOTHER, Content-Type, Authorization, Accept')
+    response.headers.add('Access-Control-Allow-Methods',
+                         'GET, PUT, POST, DELETE, HEAD, OPTIONS')
     return response
 
 
 @app.route('/')
 def index():
     return flask.redirect(
-            "/graphql?query=%7B%0A%20%20reactions(first%3A%2010)%20%7B%0A%20%20%20%20edges%20%7B%0A%20%20%20%20%20%20node%20%7B%0A%20%20%20%20%20%20%20%20Equation%0A%20%20%20%20%20%20%20%20chemicalComposition%0A%20%20%20%20%20%20%20%20reactionEnergy%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%0A",
-            code=302)
+        "/graphql?query=%7B%0A%20%20reactions(first%3A%2010)%20%7B%0A%20%20%20%20edges%20%7B%0A%20%20%20%20%20%20node%20%7B%0A%20%20%20%20%20%20%20%20Equation%0A%20%20%20%20%20%20%20%20chemicalComposition%0A%20%20%20%20%20%20%20%20reactionEnergy%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%0A",
+        code=302)
 
 
 @app.route('/apps/')
@@ -140,11 +141,11 @@ if catKitDemo is not None:
 # Graphql view
 app.add_url_rule('/graphql',
                  view_func=flask_graphql.GraphQLView.as_view(
-                         'graphql',
-                         schema=api.schema,
-                         graphiql=True,
-                         context={'session': db.session}
-                         ))
+                     'graphql',
+                     schema=api.schema,
+                     graphiql=True,
+                     get_context=lambda: {'session': db.session}
+                 ))
 
 
 if pourbaix is not None:
@@ -155,7 +156,6 @@ if prototypeSearch is not None:
     app.register_blueprint(prototypeSearch, url_prefix='/apps/prototypeSearch')
 if catlearn_blueprint is not None:
     app.register_blueprint(catlearn_blueprint, url_prefix='/apps/catlearn')
-
 if upload is not None:
     app.register_blueprint(upload, url_prefix='/apps/upload')
 
