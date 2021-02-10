@@ -53,14 +53,16 @@ association_pubsys = \
     sqlalchemy.Table('publication_system',
                      Base.metadata,
                      sqlalchemy.Column('ase_id', sqlalchemy.String,
-                                       sqlalchemy.ForeignKey('{}.systems.unique_id'.format(SCHEMA)),
+                                       sqlalchemy.ForeignKey(
+                                           '{}.systems.unique_id'.format(SCHEMA)),
                                        # if PRODUCTION# else 'main.systems.pub_id'),
                                        primary_key=True),
                      sqlalchemy.Column('pub_id', sqlalchemy.String,
-                                       sqlalchemy.ForeignKey('{}.publication.pub_id'.format(SCHEMA)),
+                                       sqlalchemy.ForeignKey(
+                                           '{}.publication.pub_id'.format(SCHEMA)),
                                        # if PRODUCTION else 'main.publication.pub_id'),
                                        primary_key=True)
-    )
+                     )
 
 
 class Publication(Base):
@@ -80,21 +82,24 @@ class Publication(Base):
     tags = sqlalchemy.Column(JSONB, )
     pubtextsearch = sqlalchemy.Column(TSVECTOR, )
     stime = sqlalchemy.Column(sqlalchemy.Float, )
-    reactions = sqlalchemy.orm.relationship("Reaction", backref="publication", uselist=True)
-    
+    reactions = sqlalchemy.orm.relationship(
+        "Reaction", backref="publication", uselist=True)
+
     systems = sqlalchemy.orm.relationship("System",
                                           secondary=association_pubsys, uselist=True)
-    
+
     @hybrid_property
     def _stime(self):
         if not self.stime:
             return None
         return (
-                datetime.datetime(2000, 1, 1, 0, 0)
-                + datetime.timedelta(
-                    seconds=int(round(self.stime * ase.db.core.seconds['y'], 0))
-                    )
-                ).strftime('%c')
+            datetime.datetime(2000, 1, 1, 0, 0)
+            + datetime.timedelta(
+                seconds=int(
+                    round(self.stime * ase.db.core.seconds['y'], 0))
+            )
+        ).strftime('%c')
+
 
 class ReactionSystem(Base):
     __tablename__ = 'reaction_system'
@@ -103,18 +108,22 @@ class ReactionSystem(Base):
     name = sqlalchemy.Column(sqlalchemy.String, )
     energy_correction = sqlalchemy.Column(sqlalchemy.Float, )
     ase_id = sqlalchemy.Column(sqlalchemy.String,
-                               sqlalchemy.ForeignKey('{}.systems.unique_id'.format(SCHEMA)),
+                               sqlalchemy.ForeignKey(
+                                   '{}.systems.unique_id'.format(SCHEMA)),
                                primary_key=True)
     id = sqlalchemy.Column(sqlalchemy.Integer,
-                           sqlalchemy.ForeignKey('{}.reaction.id'.format(SCHEMA)),
+                           sqlalchemy.ForeignKey(
+                               '{}.reaction.id'.format(SCHEMA)),
                            primary_key=True)
+
 
 class Log(Base):
     __tablename__ = 'log'
     __table_args__ = ({'schema': SCHEMA})
 
     ase_id = sqlalchemy.Column(sqlalchemy.String,
-                               sqlalchemy.ForeignKey('{}.systems.unique_id'.format(SCHEMA)),
+                               sqlalchemy.ForeignKey(
+                                   '{}.systems.unique_id'.format(SCHEMA)),
                                primary_key=True)
     logfile = sqlalchemy.Column(sqlalchemy.String, )
 
@@ -122,7 +131,7 @@ class Log(Base):
     def _logtext(self):
         return bytes(self.logfile).decode('utf-8')
 
-    
+
 class Reaction(Base):
     __tablename__ = 'reaction'
     __table_args__ = ({'schema': SCHEMA})
@@ -145,18 +154,19 @@ class Reaction(Base):
     textsearch = sqlalchemy.Column(TSVECTOR, )
 
     reaction_systems = sqlalchemy.orm.relationship("ReactionSystem",
-                                                   #primaryjoin="""ReactionSystem.id==Reaction.id""",
-                                                   #uselist=False,
+                                                   # primaryjoin="""ReactionSystem.id==Reaction.id""",
+                                                   # uselist=False,
                                                    backref="reactions")
 
     systems = sqlalchemy.orm.relationship("System",
-            primaryjoin="""ReactionSystem.id==Reaction.id""",
-            secondaryjoin="ReactionSystem.ase_id==System.unique_id",
-            secondary=sqlalchemy.inspect(ReactionSystem).tables[0],
-            #lazy='joined',
-            uselist=True,
-            backref='reactions')
-    
+                                          primaryjoin="""ReactionSystem.id==Reaction.id""",
+                                          secondaryjoin="ReactionSystem.ase_id==System.unique_id",
+                                          secondary=sqlalchemy.inspect(
+                                              ReactionSystem).tables[0],
+                                          # lazy='joined',
+                                          uselist=True,
+                                          backref='reactions')
+
     @hybrid_property
     def _equation(self):
         equation = ''
@@ -167,9 +177,9 @@ class Reaction(Base):
             arrow += 1
             i = 0
             for key in sorted(column, key=len, reverse=True):
-                prefactor = column[key]#[1]
+                prefactor = column[key]  # [1]
                 #state = column[key][0]
-                
+
                 if 'gas' in key:
                     key = key.replace('gas', '(g)')
                 if 'star' in key:
@@ -187,7 +197,7 @@ class Reaction(Base):
                 i += 1
         return equation
 
-    
+
 class Information(Base):
     __tablename__ = 'information'
     __table_args__ = ({'schema': SCHEMA})
@@ -204,26 +214,26 @@ class System(Base):
     ctime = sqlalchemy.Column(sqlalchemy.Float, )
     mtime = sqlalchemy.Column(sqlalchemy.Float, )
     username = sqlalchemy.Column(sqlalchemy.String)
-    numbers = sqlalchemy.Column(ARRAY(Integer), )  # ARRAY
-    positions = sqlalchemy.Column(ARRAY(Float), )  # ARRAY
-    cell = sqlalchemy.Column(ARRAY(Float))  # ARRAY
+    numbers = sqlalchemy.Column(ARRAY(Integer), )
+    positions = sqlalchemy.Column(ARRAY(Float, dimensions=2))
+    cell = sqlalchemy.Column(ARRAY(Float, dimensions=2))
     pbc = sqlalchemy.Column(sqlalchemy.Integer,)
-    initial_magmoms = sqlalchemy.Column(ARRAY(Float),)  # ARRAY,
-    initial_charges = sqlalchemy.Column(ARRAY(Float),)  # ARRAY,
-    masses = sqlalchemy.Column(ARRAY(Float),)  # ARRAY,
-    tags = sqlalchemy.Column(ARRAY(String), )  # ARRAY
-    momenta = sqlalchemy.Column(ARRAY(String), )  # ARRAY,
-    constraints = sqlalchemy.Column(ARRAY(String), )  # ARRAY
+    initial_magmoms = sqlalchemy.Column(ARRAY(Float),)
+    initial_charges = sqlalchemy.Column(ARRAY(Float),)
+    masses = sqlalchemy.Column(ARRAY(Float),)
+    tags = sqlalchemy.Column(ARRAY(Float), )
+    momenta = sqlalchemy.Column(ARRAY(String), )
+    constraints = sqlalchemy.Column(sqlalchemy.String, )
     calculator = sqlalchemy.Column(sqlalchemy.String, )
     calculator_parameters = sqlalchemy.Column(sqlalchemy.String, )
     energy = sqlalchemy.Column(sqlalchemy.Float, )
     free_energy = sqlalchemy.Column(sqlalchemy.Float, )
-    forces = sqlalchemy.Column(ARRAY(Float))  # ARRAY
-    stress = sqlalchemy.Column(ARRAY(Float))  # ARRAY
-    dipole = sqlalchemy.Column(ARRAY(Float))  # ARRAY
-    magmoms = sqlalchemy.Column(ARRAY(Float))  # ARRAY
+    forces = sqlalchemy.Column(ARRAY(Float, dimensions=2))
+    stress = sqlalchemy.Column(ARRAY(Float))
+    dipole = sqlalchemy.Column(ARRAY(Float))
+    magmoms = sqlalchemy.Column(ARRAY(Float))
     magmom = sqlalchemy.Column(sqlalchemy.Float, )
-    charges = sqlalchemy.Column(ARRAY(Float))  # ARRAY
+    charges = sqlalchemy.Column(ARRAY(Float))
     key_value_pairs = sqlalchemy.Column(JSONB, )
     data = sqlalchemy.Column(JSONB,)
     natoms = sqlalchemy.Column(sqlalchemy.Integer,)
@@ -232,17 +242,17 @@ class System(Base):
     volume = sqlalchemy.Column(sqlalchemy.Float, )
     mass = sqlalchemy.Column(sqlalchemy.Float, )
     charge = sqlalchemy.Column(sqlalchemy.Float, )
-    
+
     keys = sqlalchemy.orm.relationship("Key", backref="systems", uselist=True)
-    
+
     species = sqlalchemy.orm.relationship(
         "Species", backref="systems", uselist=True)
     text_keys = sqlalchemy.orm.relationship(
         "TextKeyValue", backref="systems", uselist=True)
     number_keys = sqlalchemy.orm.relationship(
         "NumberKeyValue", backref="systems", uselist=True)
-    
-    reaction_systems= sqlalchemy.orm.relationship(
+
+    reaction_systems = sqlalchemy.orm.relationship(
         "ReactionSystem",
         backref="systems",
         uselist=True)
@@ -253,26 +263,28 @@ class System(Base):
         uselist=True)
 
     #reaction = sqlalchemy.orm.relationship("ReactionSystems", backref='systems', uselist=True)
-    
-    publication = sqlalchemy.orm.relationship("Publication",
-                                               secondary=association_pubsys,
-                                               uselist=True
-    )
 
-    
+    publication = sqlalchemy.orm.relationship("Publication",
+                                              secondary=association_pubsys,
+                                              uselist=True
+                                              )
+
     ###################################
     # GENERAL ATOMS FORMATS
     ###################################
+
     def _toatoms(self, include_results=False):
         if not include_results:
             return ase.atoms.Atoms(
-                 self.numbers,
-                 self.positions,
-                 cell=self.cell,
-                 pbc=(self.pbc & np.array([1, 2, 4])).astype(bool),
-             )
+                self.numbers,
+                self.positions,
+                cell=self.cell,
+                pbc=(self.pbc & np.array([1, 2, 4])).astype(bool),
+            )
         if self.constraints:
+            print(self.constraints)
             constraints = json.loads(self.constraints)
+            print(constraints)
             if len(constraints[0]['kwargs']['indices']) > 0:
                 constraints = [dict2constraint(d) for d in constraints]
         else:
@@ -280,7 +292,8 @@ class System(Base):
         atoms = ase.atoms.Atoms(self.numbers,
                                 self.positions,
                                 cell=self.cell,
-                                pbc=(self.pbc & np.array([1, 2, 4])).astype(bool),
+                                pbc=(self.pbc & np.array(
+                                    [1, 2, 4])).astype(bool),
                                 magmoms=self.initial_magmoms,
                                 charges=self.initial_charges,
                                 tags=self.tags,
@@ -315,7 +328,7 @@ class System(Base):
     @hybrid_property
     def _formula(self):
         return formula_metal(self.numbers)
-    
+
     @hybrid_property
     def _cifdata(self):
         mem_file = StringIO.StringIO()
@@ -335,20 +348,22 @@ class System(Base):
     @hybrid_property
     def _ctime(self):
         return (
-                datetime.datetime(2000, 1, 1, 0, 0)
-                + datetime.timedelta(
-                    seconds=int(round(self.ctime * ase.db.core.seconds['y'], 0))
-                    )
-                ).strftime('%c')
+            datetime.datetime(2000, 1, 1, 0, 0)
+            + datetime.timedelta(
+                seconds=int(
+                    round(self.ctime * ase.db.core.seconds['y'], 0))
+            )
+        ).strftime('%c')
 
     @hybrid_property
     def _mtime(self):
         return (
-                datetime.datetime(2000, 1, 1, 0, 0)
-                + datetime.timedelta(
-                    seconds=int(round(self.mtime * ase.db.core.seconds['y'], 0))
-                    )
-                ).strftime('%c')
+            datetime.datetime(2000, 1, 1, 0, 0)
+            + datetime.timedelta(
+                seconds=int(
+                    round(self.mtime * ase.db.core.seconds['y'], 0))
+            )
+        ).strftime('%c')
 
     @hybrid_property
     def _adsorbate(self):
@@ -378,11 +393,13 @@ class System(Base):
     def _dft_functional(self):
         return self.key_value_pairs.get('dft_functional', '')
 
+
 class Species(Base):
     __tablename__ = 'species'
     __table_args__ = ({'schema': SCHEMA})
     id = sqlalchemy.Column(sqlalchemy.Integer,
-                           sqlalchemy.ForeignKey('{}.systems.id'.format(SCHEMA)),
+                           sqlalchemy.ForeignKey(
+                               '{}.systems.id'.format(SCHEMA)),
                            primary_key=True)
     z = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
     n = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
@@ -392,7 +409,8 @@ class Key(Base):
     __tablename__ = 'keys'
     __table_args__ = ({'schema': SCHEMA})
     id = sqlalchemy.Column(sqlalchemy.Integer,
-                           sqlalchemy.ForeignKey('{}.systems.id'.format(SCHEMA)),
+                           sqlalchemy.ForeignKey(
+                               '{}.systems.id'.format(SCHEMA)),
                            primary_key=True)
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
 
@@ -401,7 +419,8 @@ class NumberKeyValue(Base):
     __tablename__ = 'number_key_values'
     __table_args__ = ({'schema': SCHEMA})
     id = sqlalchemy.Column(sqlalchemy.Integer,
-                           sqlalchemy.ForeignKey('{}.systems.id'.format(SCHEMA)),
+                           sqlalchemy.ForeignKey(
+                               '{}.systems.id'.format(SCHEMA)),
                            primary_key=True)
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.Float,)
@@ -411,10 +430,12 @@ class TextKeyValue(Base):
     __tablename__ = 'text_key_values'
     __table_args__ = ({'schema': SCHEMA})
     id = sqlalchemy.Column(sqlalchemy.Integer,
-                           sqlalchemy.ForeignKey('{}.systems.id'.format(SCHEMA)),
+                           sqlalchemy.ForeignKey(
+                               '{}.systems.id'.format(SCHEMA)),
                            primary_key=True)
     key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     value = sqlalchemy.Column(sqlalchemy.String,)
+
 
 def hybrid_prop_parameters(key):
     h_parameters = {'Formula': ['id', 'numbers'],
