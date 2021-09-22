@@ -620,8 +620,6 @@ def graphql_view():
         'apps/upload/graphql',
         schema=api.schema,
         graphiql=True,
-        context={
-            'session': db_session,
-        })
+        get_context=lambda: {'session': db_session})
 
     return auth_required(raw_view, session=flask.session)()
