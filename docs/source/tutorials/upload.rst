@@ -1,7 +1,7 @@
 Submitting data
 ---------------
 
-Please submit your electronic structures calculations for surface reactions! Data submissions will be part of the Surface Reactions app at http://www.catalysis-hub.org/energies (essentially CatApp v2.0) and is open to all institutions. Furthermore, the atomic structures that are part of your reaction can be utilized for other apps.
+Please submit your electronic structures calculations for surface reactions! Data submissions will be part of the Surface Reactions app at http://www.catalysis-hub.org/energies and is open to all institutions. Furthermore, the atomic structures that are part of your reaction can be utilized for other apps.
 
 Your publication/dataset will be listed on the http://www.catalysis-hub.org/publications page, with a link to the publishers homepage (if already published). Your data will be easily accessible to other researchers, who will be able to browse through reaction energies and atomic structures from your publication.
 
@@ -27,7 +27,7 @@ You have two options for organizing your data:
 
 * cathub organize: For larger systematic datasets without reaction barriers, this approach will create folders and and arrange your data-files in the right location for you.
 
-* cathub make_folders: For smaller or more complicated datasets with reaction barriers, this method will only create your folders, and you will have to drop the files in the right location yourself.
+* cathub make-folders: For smaller or more complicated datasets with reaction barriers, this method will only create your folders, and you will have to drop the files in the right location yourself.
 
 In either case no data will be uploaded to `catalysis-hub.org/publications <https://www.catalysis-hub.org/publications>`_ before you run `cathub db2server ...`.
 Once you upload data it will be held in a moderation stage which you can inspect yourself at `catalysis-hub.org/upload <https://www.catalysis-hub.org/upload>`_
@@ -62,7 +62,7 @@ This will generate an organized folder named ``<FOLDER>.organized``. Please open
     tags: []
     pages: 2140-2267
 
- 
+
 Remember your ``email`` since it will be used to log in at http://www.catalysis-hub.org/upload. Note that authors should be a list, with names in the form "lastname, firstname M.".
 
 Please go through the created folder and rename folders to make your data easier to localize later. For example, a structure folder like Pt16_structure, could be changed to Pt16_fcc or Pt16_bcc respectively. Please do not use spaces in folders or file-names.
@@ -70,17 +70,17 @@ Please go through the created folder and rename folders to make your data easier
 If you, for example, have calculations with different facets, you can also split them into separate folders, run ``cathub organize -f <facet>``, and them merge the organized folders together afterwards with :code:`cp -R organized1 organized2`.
 
 
-cathub make_folders
+cathub make-folders
 ...................
 An alternative to ``cathub organize``. This tool will create the right folder structure for you, but you must dump your files yourself.
 
-To learn about the make_folders command type::
+To learn about the make-folders command type::
 
-  cathub make_folders --help
+  cathub make-folders --help
 
 Then create a folder in your user-name, 'cd' into it and type::
 
-  cathub make_folders --create-template TEMPLATE_NAME
+  cathub make-folders --create-template TEMPLATE_NAME
 
 This will create a template (txt/yaml) file, that you should update with your publication and reaction info. The template should look similar to this::
 
@@ -108,11 +108,11 @@ This will create a template (txt/yaml) file, that you should update with your pu
     facets: ['111']
 
 
-Consult :code:`cathub make_folders --help` again for detailed instructions on how to specify the types of reactions and surfaces.
+Consult :code:`cathub make-folders --help` again for detailed instructions on how to specify the types of reactions and surfaces.
 
 Then type::
 
-   cathub make_folders <TEMPLATE>
+   cathub make-folders <TEMPLATE>
 
 And your folders will be created. You can check that they look right with :code:`tree -F <FOLDER>`. The template above will produce the following folder tree::
 
