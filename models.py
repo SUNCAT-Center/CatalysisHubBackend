@@ -126,6 +126,7 @@ class Log(Base):
                                    '{}.systems.unique_id'.format(SCHEMA)),
                                primary_key=True)
     logfile = sqlalchemy.Column(sqlalchemy.String, )
+    logtype = sqlalchemy.Column(sqlalchemy.String, )
 
     @hybrid_property
     def _logtext(self):
