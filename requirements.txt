@@ -6,7 +6,7 @@ cached-property==1.5.2
 Cathub @ git+https://github.com/SUNCAT-Center/CatHub.git@66cd81ba7e5d4736773c112c82bf8e510e6b936d
 CatKit==0.5.3
 CatLearn @ git+https://github.com/SUNCAT-Center/CatLearn.git@06bbfd370306ae6ecbfee50fd48b5f0a6ff5ef31
-certifi==2020.12.5
+certifi==2022.12.7
 chardet==4.0.0
 click==7.1.2
 colorama==0.4.4
