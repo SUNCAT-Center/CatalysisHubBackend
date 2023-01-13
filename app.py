@@ -9,6 +9,7 @@ import flask
 import flask_graphql
 import flask_sqlalchemy
 from flask_cors import CORS
+from flask import request, abort
 import logging
 from raven.contrib.flask import Sentry
 # local imports
@@ -110,6 +111,13 @@ app.json_encoder = NumpyEncoder
 cors = CORS(app,
             supports_credentials=True)
 
+ip_ban_list = ['3.17.216.10']
+
+@app.before_request
+def block_method():
+    ip = request.environ.get("REMOTE_ADDR")
+    if ip in ip_ban_list:
+        abort(403)
 
 @app.after_request
 def after_request(response):
