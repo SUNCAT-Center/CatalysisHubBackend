@@ -19,12 +19,12 @@ import traceback
 from sqlalchemy.exc import OperationalError
 
 
-try:
-    from apps.pourbaix.run_pourbaix import pourbaix
-except ImportError:
-    print('pourbaix diagrams not available.')
-    traceback.print_exc()
-    pourbaix = None
+#try:
+#    from apps.pourbaix.run_pourbaix import pourbaix
+#except ImportError:
+#    print('pourbaix diagrams not available.')
+#    traceback.print_exc()
+pourbaix = None
 
 #try:
 #    from apps.catlearn.run_catlearn import catlearn_blueprint
