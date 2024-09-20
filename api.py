@@ -372,7 +372,36 @@ class Reaction(CustomSQLAlchemyObjectType):
     #    return system_loader.load_many(
     #            [x.id for x in self.systems]
     #            )
+class PublicationExp(CustomSQLAlchemyObjectType):
+    class Meta:
+        model = models.PublicationExp
+        interfaces = (graphene.relay.Node, )
 
+class Material(CustomSQLAlchemyObjectType):
+    class Meta:
+        model = models.Material
+        interfaces = (graphene.relay.Node, )
+
+
+class Sample(CustomSQLAlchemyObjectType):
+    class Meta:
+        model = models.Sample
+        interfaces = (graphene.relay.Node, )
+
+class Xps(CustomSQLAlchemyObjectType):
+    class Meta:
+        model = models.Xps
+        interfaces = (graphene.relay.Node, )
+
+class Xrd(CustomSQLAlchemyObjectType):
+    class Meta:
+        model = models.Xrd
+        interfaces = (graphene.relay.Node, )
+
+class Echemical(CustomSQLAlchemyObjectType):
+    class Meta:
+        model = models.Echemical
+        interfaces = (graphene.relay.Node, )
 
 # class Search(CustomSQLAlchemyObjectType):
 #    class Meta:
@@ -560,6 +589,7 @@ def get_filter_fields(model):
     publication_keys = ['publisher', 'doi', 'title', 'journal', 'authors', 'year']
     filter_fields = {}
     for column_name in dir(model):
+        print(column_name)
         # print('FF {model} => {column_name}'.format(**locals()))
         if not column_name.startswith('_') \
                 and not column_name in ['metadata', 'query', 'cifdata']:
@@ -621,8 +651,23 @@ class Query(graphene.ObjectType):
         Publication, **get_filter_fields(models.Publication))
     logs = FilteringConnectionField(
         Log, **get_filter_fields(models.Log))
+    materials = FilteringConnectionField(
+        Material, **get_filter_fields(models.Material))
+    publications_exp = FilteringConnectionField(
+        PublicationExp, **get_filter_fields(models.PublicationExp))
+    samples = FilteringConnectionField(
+        Sample, **get_filter_fields(models.Sample))
+    xps = FilteringConnectionField(
+        Xps, **get_filter_fields(models.Xps))
 
+    print(get_filter_fields(models.Xrd))
+    xrd = FilteringConnectionField(
+        Xrd, **get_filter_fields(models.Xrd))
+    echemical = FilteringConnectionField(
+        Echemical, **get_filter_fields(models.Echemical))
 
 schema = graphene.Schema(
-    query=Query, types=[System, Species, TextKeyValue, NumberKeyValue, Key, Reaction, ReactionSystem, Publication, Log
+    query=Query, types=[System, Species, TextKeyValue, NumberKeyValue, Key,
+    Reaction, ReactionSystem, Publication, Log, Material, PublicationExp,
+    Sample, Xps, Xrd, Echemical
     ])
