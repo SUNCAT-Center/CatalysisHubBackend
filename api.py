@@ -589,7 +589,6 @@ def get_filter_fields(model):
     publication_keys = ['publisher', 'doi', 'title', 'journal', 'authors', 'year']
     filter_fields = {}
     for column_name in dir(model):
-        print(column_name)
         # print('FF {model} => {column_name}'.format(**locals()))
         if not column_name.startswith('_') \
                 and not column_name in ['metadata', 'query', 'cifdata']:
