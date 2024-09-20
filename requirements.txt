@@ -5,7 +5,6 @@ blinker==1.4
 cached-property==1.5.2
 Cathub @ git+https://github.com/SUNCAT-Center/CatHub.git@66cd81ba7e5d4736773c112c82bf8e510e6b936d
 CatKit==0.5.3
-CatLearn @ git+https://github.com/SUNCAT-Center/CatLearn.git@06bbfd370306ae6ecbfee50fd48b5f0a6ff5ef31
 certifi==2020.12.5
 chardet==4.0.0
 click==7.1.2
@@ -38,10 +37,9 @@ mendeleev==0.6.1
 monty==4.0.2
 mpmath==1.2.1
 networkx==2.5
-numpy==1.17.1
+numpy
 oauthlib==3.1.0
 palettable==3.3.0
-pandas==0.23.4
 pathlib2==2.3.5
 Pillow==8.1.0
 promise==2.3
@@ -50,7 +48,6 @@ psycopg2-binary==2.8.6
 pycodestyle==2.6.0
 PyDispatcher==2.0.5
 pyfiglet==0.8.post1
-pymatgen==2018.3.23
 pymongo==3.11.3
 pyparsing==2.4.7
 python-dateutil==2.8.1
