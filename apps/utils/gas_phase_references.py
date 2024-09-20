@@ -3,10 +3,10 @@ import ase.data
 import numpy as np
 from numpy import array
 
-from ase.atoms import string2symbols
+from ase.symbols import string2symbols
 
 def molecules2symbols(molecules, add_hydrogen=True):
-    """ 
+    """
     Take a list of molecules and return just a list of atomic
     symbols, possibly adding hydrogen
     """
