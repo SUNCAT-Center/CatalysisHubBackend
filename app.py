@@ -26,13 +26,13 @@ except ImportError:
     traceback.print_exc()
     pourbaix = None
 
-try:
-    from apps.catlearn.run_catlearn import catlearn_blueprint
-except ImportError as e:
-    print('Catlearn not available: {e}'.format(e=e))
+#try:
+#    from apps.catlearn.run_catlearn import catlearn_blueprint
+#except ImportError as e:
+#    print('Catlearn not available: {e}'.format(e=e))
 
-    traceback.print_exc()
-    catlearn_blueprint = None
+#    traceback.print_exc()
+catlearn_blueprint = None
 
 try:
     from apps.activityMaps import activityMaps
@@ -41,20 +41,20 @@ except ImportError as e:
     traceback.print_exc()
     activityMaps = None
 
-try:
-    from apps.prototypeSearch import app as prototypeSearch
-except (ImportError, OperationalError) as e:
-    print('prototypeSearch not available: {e}'.format(e=e))
-    traceback.print_exc()
-    prototypeSearch = None
+#try:
+#    from apps.prototypeSearch import app as prototypeSearch
+#except (ImportError, OperationalError) as e:
+#    print('prototypeSearch not available: {e}'.format(e=e))
+#    traceback.print_exc()
+prototypeSearch = None
 
-try:
-    from apps.bulkEnumerator import bulk_enumerator
-except ImportError as e:
-    ('prototypeSearch not available: {e}'.format(e=e))
-    print('prototypeSearch not available: {e}'.format(e=e))
-    traceback.print_exc()
-    bulk_enumerator = None
+#try:
+#    from apps.bulkEnumerator import bulk_enumerator
+#except ImportError as e:
+#    ('prototypeSearch not available: {e}'.format(e=e))
+#    print('prototypeSearch not available: {e}'.format(e=e))
+#    traceback.print_exc()
+bulk_enumerator = None
 
 try:
     from apps.catKitDemo import catKitDemo
@@ -111,13 +111,6 @@ app.json_encoder = NumpyEncoder
 cors = CORS(app,
             supports_credentials=True)
 
-ip_ban_list = ['3.17.216.10']
-
-@app.before_request
-def block_method():
-    ip = request.environ.get("REMOTE_ADDR")
-    if ip in ip_ban_list:
-        abort(403)
 
 @app.after_request
 def after_request(response):
