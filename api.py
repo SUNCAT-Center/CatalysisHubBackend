@@ -658,8 +658,6 @@ class Query(graphene.ObjectType):
         Sample, **get_filter_fields(models.Sample))
     xps = FilteringConnectionField(
         Xps, **get_filter_fields(models.Xps))
-
-    print(get_filter_fields(models.Xrd))
     xrd = FilteringConnectionField(
         Xrd, **get_filter_fields(models.Xrd))
     echemical = FilteringConnectionField(
