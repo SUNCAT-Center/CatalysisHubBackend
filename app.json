@@ -1,5 +1,5 @@
 {
-  "stack": "heroku-20",
+  "stack": "heroku-20", 
   "name": "CatalysisHubBackend",
   "scripts": {
   },
@@ -33,7 +33,7 @@
   },
   "buildpacks": [
     {
-      "url": "heroku/python"
+      "url": "https://github.com/heroku/heroku-buildpack-python.git#v201"
     }
   ]
 }

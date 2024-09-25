@@ -36,7 +36,7 @@ from ase.utils import formula_metal
 
 class JsonEncodedDict(sqla.TypeDecorator):
     """Enables JSON storage by encoding and decoding on the fly."""
-
+    impl = sqla.String
 
     def process_bind_param(self, value, dialect):
         return json.dumps(value)
@@ -52,12 +52,12 @@ Base = sqlalchemy.ext.declarative.declarative_base()
 association_pubsys = \
     sqlalchemy.Table('publication_system',
                      Base.metadata,
-                     sqlalchemy.Column('ase_id', String,
+                     sqlalchemy.Column('ase_id', sqlalchemy.String,
                                        sqlalchemy.ForeignKey(
                                            '{}.systems.unique_id'.format(SCHEMA)),
                                        # if PRODUCTION# else 'main.systems.pub_id'),
                                        primary_key=True),
-                     sqlalchemy.Column('pub_id', String,
+                     sqlalchemy.Column('pub_id', sqlalchemy.String,
                                        sqlalchemy.ForeignKey(
                                            '{}.publication.pub_id'.format(SCHEMA)),
                                        # if PRODUCTION else 'main.publication.pub_id'),
@@ -68,20 +68,20 @@ association_pubsys = \
 class Publication(Base):
     __tablename__ = 'publication'
     __table_args__ = ({'schema': SCHEMA})
-    id = sqlalchemy.Column(Integer, primary_key=True)
-    pub_id = sqlalchemy.Column(String, unique=True)
-    title = sqlalchemy.Column(String, )
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    pub_id = sqlalchemy.Column(sqlalchemy.String, unique=True)
+    title = sqlalchemy.Column(sqlalchemy.String, )
     authors = sqlalchemy.Column(JSONB, )
-    journal = sqlalchemy.Column(String, )
-    volume = sqlalchemy.Column(String, )
-    number = sqlalchemy.Column(String, )
-    pages = sqlalchemy.Column(String, )
-    year = sqlalchemy.Column(Integer, )
-    publisher = sqlalchemy.Column(String, )
-    doi = sqlalchemy.Column(String, )
+    journal = sqlalchemy.Column(sqlalchemy.String, )
+    volume = sqlalchemy.Column(sqlalchemy.String, )
+    number = sqlalchemy.Column(sqlalchemy.String, )
+    pages = sqlalchemy.Column(sqlalchemy.String, )
+    year = sqlalchemy.Column(sqlalchemy.Integer, )
+    publisher = sqlalchemy.Column(sqlalchemy.String, )
+    doi = sqlalchemy.Column(sqlalchemy.String, )
     tags = sqlalchemy.Column(JSONB, )
     pubtextsearch = sqlalchemy.Column(TSVECTOR, )
-    stime = sqlalchemy.Column(Float, )
+    stime = sqlalchemy.Column(sqlalchemy.Float, )
     reactions = sqlalchemy.orm.relationship(
         "Reaction", backref="publication", uselist=True)
 
@@ -105,13 +105,13 @@ class ReactionSystem(Base):
     __tablename__ = 'reaction_system'
     __table_args__ = ({'schema': SCHEMA})
 
-    name = sqlalchemy.Column(String, )
-    energy_correction = sqlalchemy.Column(Float, )
-    ase_id = sqlalchemy.Column(String,
+    name = sqlalchemy.Column(sqlalchemy.String, )
+    energy_correction = sqlalchemy.Column(sqlalchemy.Float, )
+    ase_id = sqlalchemy.Column(sqlalchemy.String,
                                sqlalchemy.ForeignKey(
                                    '{}.systems.unique_id'.format(SCHEMA)),
                                primary_key=True)
-    id = sqlalchemy.Column(Integer,
+    id = sqlalchemy.Column(sqlalchemy.Integer,
                            sqlalchemy.ForeignKey(
                                '{}.reaction.id'.format(SCHEMA)),
                            primary_key=True)
@@ -121,12 +121,12 @@ class Log(Base):
     __tablename__ = 'log'
     __table_args__ = ({'schema': SCHEMA})
 
-    ase_id = sqlalchemy.Column(String,
+    ase_id = sqlalchemy.Column(sqlalchemy.String,
                                sqlalchemy.ForeignKey(
                                    '{}.systems.unique_id'.format(SCHEMA)),
                                primary_key=True)
-    logfile = sqlalchemy.Column(String, )
-    logtype = sqlalchemy.Column(String, )
+    logfile = sqlalchemy.Column(sqlalchemy.String, )
+    logtype = sqlalchemy.Column(sqlalchemy.String, )
 
     @hybrid_property
     def _logtext(self):
@@ -136,21 +136,21 @@ class Log(Base):
 class Reaction(Base):
     __tablename__ = 'reaction'
     __table_args__ = ({'schema': SCHEMA})
-    id = sqlalchemy.Column(Integer, primary_key=True)
-    #rowid = sqlalchemy.sqlalchemy.Column(Integer)
-    chemical_composition = sqlalchemy.Column(String, )
-    surface_composition = sqlalchemy.Column(String, )
-    facet = sqlalchemy.Column(String, )
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    #rowid = sqlalchemy.sqlalchemy.Column(sqlalchemy.Integer)
+    chemical_composition = sqlalchemy.Column(sqlalchemy.String, )
+    surface_composition = sqlalchemy.Column(sqlalchemy.String, )
+    facet = sqlalchemy.Column(sqlalchemy.String, )
     sites = sqlalchemy.Column(JSONB, )
     coverages = sqlalchemy.Column(JSONB, )
     reactants = sqlalchemy.Column(JSONB, )
     products = sqlalchemy.Column(JSONB, )
-    reaction_energy = sqlalchemy.Column(Float, )
-    activation_energy = sqlalchemy.Column(Float, )
-    dft_code = sqlalchemy.Column(String, )
-    dft_functional = sqlalchemy.Column(String, )
-    username = sqlalchemy.Column(String, )
-    pub_id = sqlalchemy.Column(String,  sqlalchemy.ForeignKey(
+    reaction_energy = sqlalchemy.Column(sqlalchemy.Float, )
+    activation_energy = sqlalchemy.Column(sqlalchemy.Float, )
+    dft_code = sqlalchemy.Column(sqlalchemy.String, )
+    dft_functional = sqlalchemy.Column(sqlalchemy.String, )
+    username = sqlalchemy.Column(sqlalchemy.String, )
+    pub_id = sqlalchemy.Column(sqlalchemy.String,  sqlalchemy.ForeignKey(
         '{}.publication.pub_id'.format(SCHEMA)))
     textsearch = sqlalchemy.Column(TSVECTOR, )
 
@@ -202,47 +202,47 @@ class Reaction(Base):
 class Information(Base):
     __tablename__ = 'information'
     __table_args__ = ({'schema': SCHEMA})
-    name = sqlalchemy.Column(String, primary_key=True)
-    value = sqlalchemy.Column(String, )
+    name = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
+    value = sqlalchemy.Column(sqlalchemy.String, )
 
 
 class System(Base):
     __tablename__ = 'systems'
     __table_args__ = ({'schema': SCHEMA})
-    id = sqlalchemy.Column(Integer, primary_key=True)
-    #rowid = sqlalchemy.Column(Integer, )
-    unique_id = sqlalchemy.Column(String, )
-    ctime = sqlalchemy.Column(Float, )
-    mtime = sqlalchemy.Column(Float, )
-    username = sqlalchemy.Column(String)
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    #rowid = sqlalchemy.Column(sqlalchemy.Integer, )
+    unique_id = sqlalchemy.Column(sqlalchemy.String, )
+    ctime = sqlalchemy.Column(sqlalchemy.Float, )
+    mtime = sqlalchemy.Column(sqlalchemy.Float, )
+    username = sqlalchemy.Column(sqlalchemy.String)
     numbers = sqlalchemy.Column(ARRAY(Integer), )
     positions = sqlalchemy.Column(ARRAY(Float, dimensions=2))
     cell = sqlalchemy.Column(ARRAY(Float, dimensions=2))
-    pbc = sqlalchemy.Column(Integer,)
+    pbc = sqlalchemy.Column(sqlalchemy.Integer,)
     initial_magmoms = sqlalchemy.Column(ARRAY(Float),)
     initial_charges = sqlalchemy.Column(ARRAY(Float),)
     masses = sqlalchemy.Column(ARRAY(Float),)
     tags = sqlalchemy.Column(ARRAY(Float), )
     momenta = sqlalchemy.Column(ARRAY(String), )
-    constraints = sqlalchemy.Column(String, )
-    calculator = sqlalchemy.Column(String, )
-    calculator_parameters = sqlalchemy.Column(String, )
-    energy = sqlalchemy.Column(Float, )
-    free_energy = sqlalchemy.Column(Float, )
+    constraints = sqlalchemy.Column(sqlalchemy.String, )
+    calculator = sqlalchemy.Column(sqlalchemy.String, )
+    calculator_parameters = sqlalchemy.Column(sqlalchemy.String, )
+    energy = sqlalchemy.Column(sqlalchemy.Float, )
+    free_energy = sqlalchemy.Column(sqlalchemy.Float, )
     forces = sqlalchemy.Column(ARRAY(Float, dimensions=2))
     stress = sqlalchemy.Column(ARRAY(Float))
     dipole = sqlalchemy.Column(ARRAY(Float))
     magmoms = sqlalchemy.Column(ARRAY(Float))
-    magmom = sqlalchemy.Column(Float, )
+    magmom = sqlalchemy.Column(sqlalchemy.Float, )
     charges = sqlalchemy.Column(ARRAY(Float))
     key_value_pairs = sqlalchemy.Column(JSONB, )
     data = sqlalchemy.Column(JSONB,)
-    natoms = sqlalchemy.Column(Integer,)
-    fmax = sqlalchemy.Column(Float, )
-    smax = sqlalchemy.Column(Float, )
-    volume = sqlalchemy.Column(Float, )
-    mass = sqlalchemy.Column(Float, )
-    charge = sqlalchemy.Column(Float, )
+    natoms = sqlalchemy.Column(sqlalchemy.Integer,)
+    fmax = sqlalchemy.Column(sqlalchemy.Float, )
+    smax = sqlalchemy.Column(sqlalchemy.Float, )
+    volume = sqlalchemy.Column(sqlalchemy.Float, )
+    mass = sqlalchemy.Column(sqlalchemy.Float, )
+    charge = sqlalchemy.Column(sqlalchemy.Float, )
 
     keys = sqlalchemy.orm.relationship("Key", backref="systems", uselist=True)
 
@@ -332,13 +332,13 @@ class System(Base):
 
     @hybrid_property
     def _cifdata(self):
-        mem_file = StringIOStringIO()
+        mem_file = StringIO.StringIO()
         ase.io.write(mem_file, self._toatoms(), 'cif')
         return mem_file.getvalue()
 
     @hybrid_property
     def _trajdata(self):
-        mem_file = StringIOStringIO()
+        mem_file = StringIO.StringIO()
         ase.io.write(mem_file, self._toatoms(include_results=True), 'json')
         return mem_file.getvalue()
 
@@ -398,139 +398,44 @@ class System(Base):
 class Species(Base):
     __tablename__ = 'species'
     __table_args__ = ({'schema': SCHEMA})
-    id = sqlalchemy.Column(Integer,
+    id = sqlalchemy.Column(sqlalchemy.Integer,
                            sqlalchemy.ForeignKey(
                                '{}.systems.id'.format(SCHEMA)),
                            primary_key=True)
-    z = sqlalchemy.Column(Integer, primary_key=True,)
-    n = sqlalchemy.Column(Integer, primary_key=True,)
+    z = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
+    n = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,)
 
 
 class Key(Base):
     __tablename__ = 'keys'
     __table_args__ = ({'schema': SCHEMA})
-    id = sqlalchemy.Column(Integer,
+    id = sqlalchemy.Column(sqlalchemy.Integer,
                            sqlalchemy.ForeignKey(
                                '{}.systems.id'.format(SCHEMA)),
                            primary_key=True)
-    key = sqlalchemy.Column(String, primary_key=True)
+    key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
 
 
 class NumberKeyValue(Base):
     __tablename__ = 'number_key_values'
     __table_args__ = ({'schema': SCHEMA})
-    id = sqlalchemy.Column(Integer,
+    id = sqlalchemy.Column(sqlalchemy.Integer,
                            sqlalchemy.ForeignKey(
                                '{}.systems.id'.format(SCHEMA)),
                            primary_key=True)
-    key = sqlalchemy.Column(String, primary_key=True)
-    value = sqlalchemy.Column(Float,)
+    key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
+    value = sqlalchemy.Column(sqlalchemy.Float,)
 
 
 class TextKeyValue(Base):
     __tablename__ = 'text_key_values'
     __table_args__ = ({'schema': SCHEMA})
-    id = sqlalchemy.Column(Integer,
+    id = sqlalchemy.Column(sqlalchemy.Integer,
                            sqlalchemy.ForeignKey(
                                '{}.systems.id'.format(SCHEMA)),
                            primary_key=True)
-    key = sqlalchemy.Column(String, primary_key=True)
-    value = sqlalchemy.Column(String,)
-
-class PublicationExp(Base):
-    __tablename__ = 'publication'
-    __table_args__ = ({'schema': 'experimental'})
-    id = sqlalchemy.Column(Integer, primary_key=True)
-    pub_id = sqlalchemy.Column(String, unique=True)
-    title = sqlalchemy.Column(String, )
-    authors = sqlalchemy.Column(JSONB, )
-    journal = sqlalchemy.Column(String, )
-    volume = sqlalchemy.Column(String, )
-    number = sqlalchemy.Column(String, )
-    pages = sqlalchemy.Column(String, )
-    year = sqlalchemy.Column(Integer, )
-    publisher = sqlalchemy.Column(String, )
-    doi = sqlalchemy.Column(String, )
-    tags = sqlalchemy.Column(JSONB, )
-    stime = sqlalchemy.Column(Float, )
-
-    @hybrid_property
-    def _stime(self):
-        if not self.stime:
-            return None
-        return (
-            datetime.datetime(2000, 1, 1, 0, 0)
-            + datetime.timedelta(
-                seconds=int(
-                    round(self.stime * ase.db.core.seconds['y'], 0))
-            )
-        ).strftime('%c')
-
-class Material(Base):
-    __tablename__ = 'material'
-    __table_args__ = ({'schema': 'experimental'})
-    mat_id = sqlalchemy.Column(Integer, primary_key=True)
-    pub_id = sqlalchemy.Column(String,
-                           sqlalchemy.ForeignKey(
-                               'experimental.publication.pub_id'))
-    composition = sqlalchemy.Column(String)
-    arrangement = sqlalchemy.Column(String)
-    icsd_ids = sqlalchemy.Column(ARRAY(Integer))
-    icdd_ids = sqlalchemy.Column(ARRAY(Integer))
-    space_group = sqlalchemy.Column(String)
-    lattice_parameter = sqlalchemy.Column(String)
-    morphology = sqlalchemy.Column(String)
-    notes = sqlalchemy.Column(String)
-
-class Sample(Base):
-    __tablename__ = 'sample'
-    __table_args__ = ({'schema': 'experimental'})
-    sample_id = sqlalchemy.Column(Integer, primary_key=True)
-    mat_id = sqlalchemy.Column(Integer,
-                           sqlalchemy.ForeignKey(
-                               'experimental.material.mat_id'))
-    pub_id = sqlalchemy.Column(String,
-                           sqlalchemy.ForeignKey(
-                               'experimental.publication.pub_id'))
-    data = sqlalchemy.Column(JSONB, )
-
-class Xps(Base):
-    __tablename__ = 'xps'
-    __table_args__ = ({'schema': 'experimental'})
-    mat_id = sqlalchemy.Column(Integer,
-                       sqlalchemy.ForeignKey(
-                           'experimental.material.mat_id'),
-                                primary_key=True,)
-    sample_id = sqlalchemy.Column(Integer,
-                       sqlalchemy.ForeignKey(
-                           'experimental.sample.sample_id'))
-    xpstype = sqlalchemy.Column('type', String, )
-    binding_energy = sqlalchemy.Column(ARRAY(Float))
-    intensity = sqlalchemy.Column(ARRAY(Float))
-
-class Xrd(Base):
-    __tablename__ = 'xrd'
-    __table_args__ = ({'schema': 'experimental'})
-    mat_id = sqlalchemy.Column(Integer,
-                       sqlalchemy.ForeignKey(
-                           'experimental.material.mat_id'),
-                               primary_key=True,)
-    xrdtype = sqlalchemy.Column('type', String, )
-    degree = sqlalchemy.Column(ARRAY(Float))
-    intensity = sqlalchemy.Column(ARRAY(Float))
-
-class Echemical(Base):
-    __tablename__ = 'echemical'
-    __table_args__ = ({'schema': 'experimental'})
-    id = sqlalchemy.Column(Integer, primary_key=True)
-    cvtype = sqlalchemy.Column('type', String, )
-    total_time = sqlalchemy.Column(Float, )
-    time = sqlalchemy.Column(ARRAY(Float))
-    potential = sqlalchemy.Column(ARRAY(Float))
-    current = sqlalchemy.Column(ARRAY(Float))
-    sample_id = sqlalchemy.Column(Integer,
-                       sqlalchemy.ForeignKey(
-                           'experimental.sample.sample_id'))
+    key = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
+    value = sqlalchemy.Column(sqlalchemy.String,)
 
 
 def hybrid_prop_parameters(key):
