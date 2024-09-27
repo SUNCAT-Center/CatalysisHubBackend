@@ -1,13 +1,3 @@
 #!/usr/bin/env python
 
-import os
-import string
-
-BULK_ENUMERATOR_PATH=os.environ['BULK_ENUMERATOR_PATH']
-
-with open('requirements.template', 'r') as infile:
-    with open('requirements.txt', 'w') as outfile:
-        outfile.write(string.Template(
-            infile.read()).safe_substitute(**os.environ))
-
-os.system('wget https://www.dropbox.com/{BULK_ENUMERATOR_PATH}/BulkEnumerator-0.0.2-cp36-cp36m-linux_x86_64.whl'.format(**locals()))
+wget https://www.dropbox.com/$BULK_ENUMERATOR_PATH/BulkEnumerator-0.0.2-cp36-cp36m-linux_x86_64.whl
