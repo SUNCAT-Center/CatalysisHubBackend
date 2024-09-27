@@ -7,8 +7,8 @@ from sklearn.impute import SimpleImputer
 
 import ase.atoms
 
-from catlearn.fingerprint.adsorbate_prep import autogen_info
-from catlearn.fingerprint.setup import FeatureGenerator, default_fingerprinters
+from catlearn.featurize.adsorbate_prep import autogen_info
+from catlearn.featurize.setup import FeatureGenerator, default_fingerprinters
 from catlearn.regression.gpfunctions import io as gp_io
 
 

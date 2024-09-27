@@ -9,7 +9,7 @@ import numpy as np
 from scipy.spatial import ConvexHull
 
 import ase.units as units
-from ase.atoms import string2symbols
+from ase.symbols import string2symbols
 from ase.utils import formula_hill, basestring
 
 _solvated = []
@@ -83,7 +83,7 @@ def solvated_ase(symbols):
             count, charge, aq, s = parse_formula(name)
             energy = float(energy) * 0.001 * units.kcal / units.mol
             _solvated.append((name, count, charge, aq, energy))
-        conn.close()          
+        conn.close()
 
     references = []
     for name, count, charge, aq, energy in _solvated:
@@ -104,12 +104,12 @@ def solid_Lange(symbols,T):
 
     Data from:
 
-        experimental literatures:  
-        D. D. Wagman, et al., The NBS Tables of Chemical Thermodynamic Properties, in J. Phys. Chem. Ref. Data, 11: 2, 1982; 
-        M. W. Chase, et al., JANAF Thermochemical Tables, 3rd ed., American Chemical Society and the American Institute of Physics, 
-                              1986 (supplements to JANAF appear in J. Phys. Chem. Ref. Data); 
+        experimental literatures:
+        D. D. Wagman, et al., The NBS Tables of Chemical Thermodynamic Properties, in J. Phys. Chem. Ref. Data, 11: 2, 1982;
+        M. W. Chase, et al., JANAF Thermochemical Tables, 3rd ed., American Chemical Society and the American Institute of Physics,
+                              1986 (supplements to JANAF appear in J. Phys. Chem. Ref. Data);
         Thermodynamic Research Center, TRC Thermodynamic Tables, Texas A&M University, College Station, Texas;
-        I. Barin and O. Knacke, Thermochemical Properties of Inorganic Substances, Springer-Verlag, Berlin, 1973; 
+        I. Barin and O. Knacke, Thermochemical Properties of Inorganic Substances, Springer-Verlag, Berlin, 1973;
 
     Returns list of (name, energy) tuples.
     """
@@ -136,7 +136,7 @@ def solid_Lange(symbols,T):
                 elif T != 298.15 and entropy_f_std != "NULL" and heat_cap_std != "NULL" :
                     import math  #energy unit is eV
                     energy = (float(energy) - (T - 298.15)* float(entropy_f_std) +
-                             float(heat_cap_std)/1000*(T-298.15) - 
+                             float(heat_cap_std)/1000*(T-298.15) -
                              2.303 * T* float(heat_cap_std)/1000*math.log10(T/298.15)) *0.010364
                     _solids.append((name, count, s, energy))
 
@@ -279,7 +279,7 @@ class Pourbaix:
         names = []
 #         ion_names = []
 
-        
+
         for count, charge, aq, energy, name in self.references:
             eq = np.zeros(len(self.N))
             eq[0] = charge
@@ -294,7 +294,7 @@ class Pourbaix:
                     energy = -pH * alpha
             else:
                 bounds.append((0, 1))
-                if aq: 
+                if aq:
                     # energy -= -np.log(1e-6) * self.kT
                     for dic in self.ions_conc:
                         for ion_name, conc in dic.items():
@@ -381,7 +381,7 @@ class Pourbaix:
                       extent=[min(pH), max(pH), min(U), max(U)],
                       origin='lower',
                       aspect='auto')
-            
+
             labels_loc = ax.scatter(y_loc, x_loc)
             labels_text = [name for name in names]
 
@@ -397,7 +397,7 @@ class Pourbaix:
             if show:
                   plt.show()
 
-        return a, compositions, text, x_loc, y_loc, labels_text, fig #data_url 
+        return a, compositions, text, x_loc, y_loc, labels_text, fig #data_url
 
 
     def colorfunction(self, U, pH, colors):
@@ -408,4 +408,3 @@ class Pourbaix:
             color = len(colors)
             colors[indices] = color
         return color
-       

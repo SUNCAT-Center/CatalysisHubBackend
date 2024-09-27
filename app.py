@@ -18,20 +18,19 @@ import traceback
 from sqlalchemy.exc import OperationalError
 
 
-try:
-    from apps.pourbaix.run_pourbaix import pourbaix
-except ImportError:
-    print('pourbaix diagrams not available.')
-    traceback.print_exc()
-    pourbaix = None
+#try:
+#    from apps.pourbaix.run_pourbaix import pourbaix
+#except ImportError:
+#    print('pourbaix diagrams not available.')
+#    traceback.print_exc()
+pourbaix = None
 
-try:
-    from apps.catlearn.run_catlearn import catlearn_blueprint
-except ImportError as e:
-    print('Catlearn not available: {e}'.format(e=e))
-
-    traceback.print_exc()
-    catlearn_blueprint = None
+#try:
+#    from apps.catlearn.run_catlearn import catlearn_blueprint
+#except ImportError as e:
+    #  print('Catlearn not available: {e}'.format(e=e))
+    #traceback.print_exc()
+catlearn_blueprint = None
 
 try:
     from apps.activityMaps import activityMaps
@@ -129,7 +128,7 @@ def index():
 
 @app.route('/apps/')
 def apps():
-    return "Apps: catlearn, pourbaix"
+    return "Apps: bulkEnumerator, catKitDemo, pourbaix, prototypeSearch, upload"
 
 
 if bulk_enumerator is not None:

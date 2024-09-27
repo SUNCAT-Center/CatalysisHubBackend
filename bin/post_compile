@@ -1,0 +1,1 @@
+pip install -r requirements_no_deps.txt --no-deps
