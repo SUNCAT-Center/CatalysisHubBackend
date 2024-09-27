@@ -1,3 +1,1 @@
-#!/usr/bin/env python
-
 wget https://www.dropbox.com/$BULK_ENUMERATOR_PATH/BulkEnumerator-0.0.2-cp36-cp36m-linux_x86_64.whl
