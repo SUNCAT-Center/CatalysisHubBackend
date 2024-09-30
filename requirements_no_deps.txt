@@ -2,7 +2,6 @@ aniso8601==7.0.0
 ase==3.23.0
 autopep8==1.5.5
 blinker==1.4
-BulkEnumerator-0.0.2-cp36-cp36m-linux_x86_64.whl
 cached-property==1.5.2
 Cathub @ git+https://github.com/SUNCAT-Center/CatHub.git@66cd81ba7e5d4736773c112c82bf8e510e6b936d
 CatKit==0.5.3
