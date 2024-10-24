@@ -1,5 +1,6 @@
 # global imports
 import os
+import io
 import datetime
 import sqlalchemy
 import sqlalchemy.types
@@ -10,11 +11,6 @@ from sqlalchemy import String, Float, Integer
 from sqlalchemy.types import ARRAY
 from sqlalchemy.ext.associationproxy import association_proxy
 import graphene.types.json
-try:
-    import io as StringIO
-except ImportError:
-    # Fallback solution for python2.7
-    import StringIO
 
 import numpy as np
 
@@ -283,9 +279,7 @@ class System(Base):
                 pbc=(self.pbc & np.array([1, 2, 4])).astype(bool),
             )
         if self.constraints:
-            print(self.constraints)
             constraints = json.loads(self.constraints)
-            print(constraints)
             if len(constraints[0]['kwargs']['indices']) > 0:
                 constraints = [dict2constraint(d) for d in constraints]
         else:
@@ -301,6 +295,7 @@ class System(Base):
                                 masses=self.masses,
                                 momenta=self.momenta,
                                 constraint=constraints)
+
         atoms.info = {}
         atoms.info['unique_id'] = self.unique_id
         atoms.info['key_value_pairs'] = self.key_value_pairs
@@ -309,21 +304,16 @@ class System(Base):
         if data:
             atoms.info['data'] = data
 
-        if not self.calculator == "unknown":
-            params = self.calculator_parameters
-            atoms.calc = Calculator(self.calculator, **params)
-            atoms.calc.name = self.calculator
-        else:
-            all_properties = ['energy', 'forces', 'stress', 'dipole',
-                              'charges', 'magmom', 'magmoms', 'free_energy']
-            results = {}
-            for prop in all_properties:
-                result = getattr(self, prop, None)
-                if result is not None:
-                    results[prop] = result
-            if results:
-                atoms.calc = SinglePointCalculator(atoms, **results)
-                atoms.calc.name = getattr(self, 'calculator', 'unknown')
+        all_properties = ['energy', 'forces', 'stress', 'dipole',
+                          'charges', 'magmom', 'magmoms', 'free_energy']
+        results = {}
+        for prop in all_properties:
+            result = getattr(self, prop, None)
+            if result is not None:
+                results[prop] = result
+        if results:
+            atoms.calc = SinglePointCalculator(atoms, **results)
+            atoms.calc.name = getattr(self, 'calculator', 'unknown')
         return atoms
 
     @hybrid_property
@@ -332,13 +322,13 @@ class System(Base):
 
     @hybrid_property
     def _cifdata(self):
-        mem_file = StringIO.StringIO()
+        mem_file = io.BytesIO()
         ase.io.write(mem_file, self._toatoms(), 'cif')
-        return mem_file.getvalue()
+        return str(mem_file.getvalue(), 'utf8')
 
     @hybrid_property
     def _trajdata(self):
-        mem_file = StringIO.StringIO()
+        mem_file = io.StringIO()
         ase.io.write(mem_file, self._toatoms(include_results=True), 'json')
         return mem_file.getvalue()
 
