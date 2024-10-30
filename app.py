@@ -28,8 +28,14 @@ pourbaix = None
 #try:
 #    from apps.catlearn.run_catlearn import catlearn_blueprint
 #except ImportError as e:
+<<<<<<< HEAD
     #  print('Catlearn not available: {e}'.format(e=e))
     #traceback.print_exc()
+=======
+#    print('Catlearn not available: {e}'.format(e=e))
+
+#    traceback.print_exc()
+>>>>>>> experimental
 catlearn_blueprint = None
 
 try:
@@ -39,20 +45,20 @@ except ImportError as e:
     traceback.print_exc()
     activityMaps = None
 
-try:
-    from apps.prototypeSearch import app as prototypeSearch
-except (ImportError, OperationalError) as e:
-    print('prototypeSearch not available: {e}'.format(e=e))
-    traceback.print_exc()
-    prototypeSearch = None
+#try:
+#    from apps.prototypeSearch import app as prototypeSearch
+#except (ImportError, OperationalError) as e:
+#    print('prototypeSearch not available: {e}'.format(e=e))
+#    traceback.print_exc()
+prototypeSearch = None
 
-try:
-    from apps.bulkEnumerator import bulk_enumerator
-except ImportError as e:
-    ('prototypeSearch not available: {e}'.format(e=e))
-    print('prototypeSearch not available: {e}'.format(e=e))
-    traceback.print_exc()
-    bulk_enumerator = None
+#try:
+#    from apps.bulkEnumerator import bulk_enumerator
+#except ImportError as e:
+#    ('prototypeSearch not available: {e}'.format(e=e))
+#    print('prototypeSearch not available: {e}'.format(e=e))
+#    traceback.print_exc()
+bulk_enumerator = None
 
 try:
     from apps.catKitDemo import catKitDemo
