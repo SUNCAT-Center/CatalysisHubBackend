@@ -56,12 +56,12 @@ prototypeSearch = None
 #    traceback.print_exc()
 bulk_enumerator = None
 
-try:
-    from apps.catKitDemo import catKitDemo
-except ImportError as e:
-    print('catKitDemo not available: {e}'.format(e=e))
-    traceback.print_exc()
-    catKitDemo = None
+#try:
+#    from apps.catKitDemo import catKitDemo
+#except ImportError as e:
+#    print('catKitDemo not available: {e}'.format(e=e))
+#    traceback.print_exc()
+catKitDemo = None
 
 try:
     from apps.upload import upload
