@@ -23,7 +23,6 @@ from sqlalchemy.ext.hybrid import hybrid_property
 import ase.atoms
 from ase.constraints import dict2constraint
 from ase.calculators.singlepoint import SinglePointCalculator
-from ase.calculators.calculator import Calculator
 import ase.db.sqlite
 import ase.db.core
 import ase.io
