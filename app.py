@@ -28,14 +28,10 @@ pourbaix = None
 #try:
 #    from apps.catlearn.run_catlearn import catlearn_blueprint
 #except ImportError as e:
-<<<<<<< HEAD
-    #  print('Catlearn not available: {e}'.format(e=e))
-    #traceback.print_exc()
-=======
-#    print('Catlearn not available: {e}'.format(e=e))
 
-#    traceback.print_exc()
->>>>>>> experimental
+#  print('Catlearn not available: {e}'.format(e=e))
+#traceback.print_exc()
+
 catlearn_blueprint = None
 
 try:
