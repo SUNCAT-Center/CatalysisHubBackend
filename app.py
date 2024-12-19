@@ -133,6 +133,61 @@ def apps():
     return "Apps: bulkEnumerator, catKitDemo, pourbaix, prototypeSearch, upload"
 
 
+@app.route('/convert_atoms/', methods=['GET', 'POST'])
+def convert_atoms(request=None):
+    import ase.io
+    import ase.io.formats
+    request = flask.request if request is None else request
+
+    cif = request.args.get('cif',
+                           request.get_json().get('params', {}).get('cif', '')
+                           )
+    out_format = request.args.get(
+        'format', request.get_json().get(
+            'params', {}).get(
+            'format', ''))
+
+    if not out_format:
+        out_format = 'cif'
+    if out_format not in VALID_OUT_FORMATS:
+        return {
+            "error": "outFormat {outformat} is invalid." +
+            " Should be on of {VALID_OUT_FORMATS}".format(**locals())}
+
+    with StringIO.StringIO() as in_file:
+        in_file.write(cif)
+        in_file.seek(0)
+        atoms = ase.io.read(
+            filename=in_file,
+            index=None,
+            format='cif',
+        )
+
+    composition = atoms.get_chemical_formula(mode='metal')
+
+    with StringIO.StringIO() as out_file:
+        #  Castep file writer needs name
+        out_file.name = 'CatApp Browser Export'
+        ase.io.write(out_file, atoms, out_format)
+        out_content = out_file.getvalue()
+
+    format2extension = {value: key for key,
+                        value in ase.io.formats.extension2format.items()}
+
+    extension = format2extension.get(out_format, out_format)
+
+    return flask.jsonify({
+        'version': VERSION,
+        'image': str(out_content),
+        'input_filetype': 'cif',
+        'output_filetype': out_format,
+        'filename': 'structure_{composition}.{extension}'.format(**locals()),
+        'filename_trunk': 'structure_{composition}'.format(**locals()),
+        'extension': extension,
+    })
+
+
+
 if bulk_enumerator is not None:
     app.register_blueprint(bulk_enumerator, url_prefix='/apps/bulkEnumerator')
 if catKitDemo is not None:
