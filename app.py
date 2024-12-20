@@ -202,7 +202,7 @@ def convert_atoms(request=None):
     extension = format2extension.get(out_format, out_format)
 
     return flask.jsonify({
-        'version': VERSION,
+        'version': 1,
         'image': str(out_content),
         'input_filetype': 'cif',
         'output_filetype': out_format,
