@@ -158,7 +158,7 @@ def convert_atoms(request=None):
             " Should be on of {VALID_OUT_FORMATS}".format(**locals())}
 
     with io.StringIO() as in_file:
-        in_file.write(cif)
+        in_file.write(atoms)
         in_file.seek(0)
         atoms = ase.io.read(
             filename=in_file,
