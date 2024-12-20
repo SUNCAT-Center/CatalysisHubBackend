@@ -17,29 +17,8 @@ import api
 import traceback
 from sqlalchemy.exc import OperationalError
 
-VALID_OUT_FORMATS = [
-    "abinit",
-    "castep-cell",
-    "cfg",
-    "cif",
-    "dlp4",
-    "eon",
-    "espresso-in",
-    "extxyz",
-    "findsym",
-    "gen",
-    "gromos",
-    "json",
-    "jsv",
-    "nwchem",
-    "proteindatabank",
-    "py",
-    "traj",
-    "turbomole",
-    "v-sim",
-    "vasp",
-    "xsf",
-    "xyz"]
+VALID_OUT_FORMATS = ['db', 'cif', 'extxyz',
+    'json', 'proteindatabank','vasp', 'xyz']
 
 
 #try:
