@@ -193,11 +193,11 @@ def convert_atoms(request=None):
     if out_format in ['cif', 'traj']:
         with io.BytesIO() as out_file:
             ase.io.write(out_file, atoms, out_format)
-            out_content = out_file.getvalue()
+            out_content = str(out_file.getvalue(), 'utf8')
     else:
         with io.StringIO() as out_file:
             ase.io.write(out_file, atoms, out_format)
-            out_content = out_file.getvalue()
+            out_content = str(out_file.getvalue())
 
     format2extension = {value: key for key,
                         value in ase.io.formats.extension2format.items()}
@@ -206,7 +206,7 @@ def convert_atoms(request=None):
 
     return flask.jsonify({
         'version': 1,
-        'image': str(out_content),
+        'image': out_content,
         'input_filetype': 'cif',
         'output_filetype': out_format,
         'filename': 'structure_{composition}.{extension}'.format(**locals()),
