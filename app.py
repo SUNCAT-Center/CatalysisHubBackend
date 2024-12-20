@@ -190,11 +190,14 @@ def convert_atoms(request=None):
 
     composition = atoms.get_chemical_formula(mode='metal')
 
-    with io.StringIO() as out_file:
-        #  Castep file writer needs name
-        out_file.name = 'CatApp Browser Export'
-        ase.io.write(out_file, atoms, out_format)
-        out_content = out_file.getvalue()
+    if out_format in ['cif', 'traj']:
+        with io.BytesIO() as out_file:
+            ase.io.write(out_file, atoms, out_format)
+            out_content = out_file.getvalue()
+    else:
+        with io.StringIO() as out_file:
+            ase.io.write(out_file, atoms, out_format)
+            out_content = out_file.getvalue()
 
     format2extension = {value: key for key,
                         value in ase.io.formats.extension2format.items()}
