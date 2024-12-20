@@ -17,8 +17,7 @@ import api
 import traceback
 from sqlalchemy.exc import OperationalError
 
-VALID_OUT_FORMATS = ['db', 'cif', 'extxyz',
-    'json', 'proteindatabank','vasp', 'xyz']
+VALID_OUT_FORMATS = ['cif', 'extxyz', 'json', 'proteindatabank','vasp', 'xyz']
 
 
 #try:
@@ -143,8 +142,8 @@ def convert_atoms(request=None):
     import io
     request = flask.request if request is None else request
 
-    cif = request.args.get('cif',
-                           request.get_json().get('params', {}).get('cif', '')
+    atoms = request.args.get('atoms',
+                           request.get_json().get('params', {}).get('atoms', '')
                            )
     out_format = request.args.get(
         'format', request.get_json().get(
@@ -152,7 +151,7 @@ def convert_atoms(request=None):
             'format', ''))
 
     if not out_format:
-        out_format = 'cif'
+        out_format = 'json'
     if out_format not in VALID_OUT_FORMATS:
         return {
             "error": "outFormat {outformat} is invalid." +
@@ -164,7 +163,7 @@ def convert_atoms(request=None):
         atoms = ase.io.read(
             filename=in_file,
             index=None,
-            format='cif',
+            format='traj',
         )
 
     composition = atoms.get_chemical_formula(mode='metal')
