@@ -17,6 +17,30 @@ import api
 import traceback
 from sqlalchemy.exc import OperationalError
 
+VALID_OUT_FORMATS = [
+    "abinit",
+    "castep-cell",
+    "cfg",
+    "cif",
+    "dlp4",
+    "eon",
+    "espresso-in",
+    "extxyz",
+    "findsym",
+    "gen",
+    "gromos",
+    "json",
+    "jsv",
+    "nwchem",
+    "proteindatabank",
+    "py",
+    "traj",
+    "turbomole",
+    "v-sim",
+    "vasp",
+    "xsf",
+    "xyz"]
+
 
 #try:
 #    from apps.pourbaix.run_pourbaix import pourbaix
@@ -137,6 +161,7 @@ def apps():
 def convert_atoms(request=None):
     import ase.io
     import ase.io.formats
+    import io
     request = flask.request if request is None else request
 
     cif = request.args.get('cif',
@@ -154,7 +179,7 @@ def convert_atoms(request=None):
             "error": "outFormat {outformat} is invalid." +
             " Should be on of {VALID_OUT_FORMATS}".format(**locals())}
 
-    with StringIO.StringIO() as in_file:
+    with io.StringIO() as in_file:
         in_file.write(cif)
         in_file.seek(0)
         atoms = ase.io.read(
@@ -165,7 +190,7 @@ def convert_atoms(request=None):
 
     composition = atoms.get_chemical_formula(mode='metal')
 
-    with StringIO.StringIO() as out_file:
+    with io.StringIO() as out_file:
         #  Castep file writer needs name
         out_file.name = 'CatApp Browser Export'
         ase.io.write(out_file, atoms, out_format)
